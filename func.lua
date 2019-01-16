@@ -36,6 +36,13 @@ function Iterable:map(mapping)
 end
 
 
+function Iterable:foreach(func)
+  for value in self do
+    func(value)
+  end
+end
+
+
 function Iterable:next()
   return self:next()
 end
@@ -62,9 +69,16 @@ local function map(t, mapping)
 end
 
 
+local function foreach(t, func)
+  return iter(t):foreach(func)
+end
+
+
 local function export_funcs()
   _G.iter = iter
   _G.filter = filter
+  _G.map = map
+  _G.foreach = foreach
 
   return module
 end
@@ -139,6 +153,8 @@ internal.ERR_EXPECTED_TABLE = 'argument %s is %s, expected table'
 module.Iterable = Iterable
 module.iter = iter
 module.filter = filter
+module.map = map
+module.foreach = foreach
 module.import = export_funcs
 
 

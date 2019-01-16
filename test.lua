@@ -6,6 +6,4 @@ local it = iter(t)
   :map(function(x) return (x+1)^2, x^2 end)
   :map(function(a, b) return a - b end)
 
-for d in it do
-  print(d)
-end
+it:foreach(print)
