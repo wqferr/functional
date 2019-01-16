@@ -173,6 +173,23 @@ function exports.partial(f, ...)
 end
 
 
+function export.get(t)
+  return function(k)
+    return t[k]
+  end
+end
+
+
+function export.get_partial(t, k, ...)
+  return export.partial(t[k], ...)
+end
+
+
+function export.bound_func(t, k, ...)
+  return export.get_partial(t, k, t, ...)
+end
+
+
 local function export_funcs()
   for k, v in pairs(exports) do
     _G[k] = v
