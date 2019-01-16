@@ -154,9 +154,14 @@ function exports.negate(f)
 end
 
 
-function exports.compose(f1, f2)
-  return function(...)
-    return f1(f2(...))
+function exports.compose(f1, f2, ...)
+  if select('#', ...) > 0 then
+    local part = exports.compose(f2, ...)
+    return exports.compose(f1, part)
+  else
+    return function(...)
+      return f1(f2(...))
+    end
   end
 end
 
@@ -173,20 +178,20 @@ function exports.partial(f, ...)
 end
 
 
-function export.get(t)
+function exports.get(t)
   return function(k)
     return t[k]
   end
 end
 
 
-function export.get_partial(t, k, ...)
-  return export.partial(t[k], ...)
+function exports.get_partial(t, k, ...)
+  return exports.partial(t[k], ...)
 end
 
 
-function export.bound_func(t, k, ...)
-  return export.get_partial(t, k, t, ...)
+function exports.bound_func(t, k, ...)
+  return exports.get_partial(t, k, t, ...)
 end
 
 
