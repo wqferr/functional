@@ -5,11 +5,13 @@ local Iterable = {}
 local iter_meta = {}
 iter_meta.__index = Iterable
 
+local unpack = table.unpack
+
 
 function Iterable.create(t)
-  local iterable = internal.base_iter(internal.iter_next)
+  local copy = { unpack(t) }
+  local iterable = internal.base_iter(copy, internal.iter_next)
 
-  iterable.values = { table.unpack(t) }
   iterable.index = 0
 
   return iterable
@@ -17,9 +19,8 @@ end
 
 
 function Iterable:filter(predicate)
-  local iterable = internal.base_iter(internal.filter_next)
+  local iterable = internal.base_iter(self, internal.filter_next)
 
-  iterable.values = self
   iterable.predicate = predicate
 
   return iterable
@@ -27,9 +28,8 @@ end
 
 
 function Iterable:map(mapping)
-  local iterable = internal.base_iter(internal.map_next)
+  local iterable = internal.base_iter(self, internal.map_next)
 
-  iterable.values = self
   iterable.mapping = mapping
 
   return iterable
@@ -37,7 +37,7 @@ end
 
 
 function Iterable:next()
-  return self:next_value()
+  return self:next()
 end
 
 
@@ -73,11 +73,13 @@ end
 -- INTERNAL --
 
 
-function internal.base_iter(next_f)
+function internal.base_iter(values, next_f)
   local iterable = {}
   setmetatable(iterable, iter_meta)
+
+  iterable.values = values
   iterable.completed = false
-  iterable.next_value = next_f
+  iterable.next = next_f
   return iterable
 end
 
@@ -87,9 +89,9 @@ function internal.iter_next(iter)
     return nil
   end
   iter.index = iter.index + 1
-  local next_value = iter.values[iter.index]
-  iter.completed = next_value == nil
-  return next_value
+  local next_input = iter.values[iter.index]
+  iter.completed = next_input == nil
+  return next_input
 end
 
 
@@ -97,12 +99,12 @@ function internal.filter_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = iter.values:next_value()
-  while next_input ~= nil do
-    if iter.predicate(next_input) then
-      return next_input
+  local next_input = { iter.values:next() }
+  while #next_input > 0 do
+    if iter.predicate(unpack(next_input)) then
+      return unpack(next_input)
     end
-    next_input = iter.values:next_value()
+    next_input = { iter.values:next() }
   end
 
   iter.completed = true
@@ -114,14 +116,13 @@ function internal.map_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = iter.values:next_value()
-  if next_input == nil then
+  local next_input = { iter.values:next() }
+  if #next_input == 0 then
     iter.completed = true
     return nil
   end
 
-  -- get only 1st return value (could mess up iteration)
-  return (iter.mapping(next_input))
+  return iter.mapping(unpack(next_input))
 end
 
 
