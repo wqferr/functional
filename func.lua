@@ -26,6 +26,16 @@ function Iterable:filter(predicate)
 end
 
 
+function Iterable:map(mapping)
+  local iterable = internal.base_iter(internal.map_next)
+
+  iterable.values = self
+  iterable.mapping = mapping
+
+  return iterable
+end
+
+
 local function iter(t)
   return Iterable.create(t)
 end
@@ -33,6 +43,11 @@ end
 
 local function filter(t, predicate)
   return iter(t):filter(predicate)
+end
+
+
+local function map(t, mapping)
+  return iter(t):map(mapping)
 end
 
 
@@ -78,7 +93,24 @@ function internal.filter_next(iter)
     end
     next_input = iter.values:next_element()
   end
+
+  iter.completed = true
   return nil
+end
+
+
+function internal.map_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local next_input = iter.values:next_element()
+  if next_input == nil then
+    iter.completed = true
+    return nil
+  end
+
+  -- get only 1st return value (could mess up iteration)
+  return (iter.mapping(next_input))
 end
 
 
