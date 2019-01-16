@@ -1,3 +1,4 @@
+local module = {}
 local internal = {}
 
 local Iterable = {}
@@ -33,6 +34,17 @@ end
 local function filter(t, predicate)
   return iter(t):filter(predicate)
 end
+
+
+local function export_funcs()
+  _G.iter = iter
+  _G.filter = filter
+
+  return module
+end
+
+
+-- INTERNAL --
 
 
 function internal.base_iter(next_f)
@@ -79,8 +91,11 @@ end
 
 internal.ERR_EXPECTED_TABLE = 'argument %s is %s, expected table'
 
-return {
-  Iterable = Iterable,
-  iter = iter,
-  filter = filter
-}
+
+module.Iterable = Iterable
+module.iter = iter
+module.filter = filter
+module.import = export_funcs
+
+
+return module
