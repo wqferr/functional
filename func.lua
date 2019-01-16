@@ -66,6 +66,34 @@ function Iterable:foreach(func)
 end
 
 
+function Iterable:any(predicate)
+  if predicate then
+    return self:map(predicate):any()
+  else
+    for value in self do
+      if value then
+        return true
+      end
+    end
+    return false
+  end
+end
+
+
+function Iterable:all(predicate)
+  if predicate then
+    return self:map(predicate):all()
+  else
+    for value in self do
+      if not value then
+        return false
+      end
+    end
+    return true
+  end
+end
+
+
 function Iterable:is_complete()
   return self.is_complete
 end
@@ -96,6 +124,16 @@ end
 
 function exports.reduce(t, func, initial_value)
   return exports.iterate(t):reduce(func, initial_value)
+end
+
+
+function exports.any(t, predicate)
+  return exports.iterate(t):any(predicate)
+end
+
+
+function exports.all(t, predicate)
+  return exports.iterate(t):all(predicate)
 end
 
 
