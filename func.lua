@@ -94,6 +94,13 @@ function Iterable:all(predicate)
 end
 
 
+function Iterable:to_list()
+  local list = {}
+  self:foreach(exports.partial(table.insert, list))
+  return list
+end
+
+
 function Iterable:is_complete()
   return self.is_complete
 end
@@ -137,6 +144,15 @@ function exports.all(t, predicate)
 end
 
 
+function exports.to_list(t)
+  if internal.is_iterable(t) then
+    return t:to_list()
+  else
+    return t
+  end
+end
+
+
 function exports.clone(t)
   if internal.is_iterable(t) then
     return t:clone()
@@ -144,6 +160,9 @@ function exports.clone(t)
     return t
   end
 end
+
+
+-- MISC FUNCTIONS --
 
 
 function exports.negate(f)
