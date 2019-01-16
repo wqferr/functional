@@ -71,22 +71,31 @@ end
 
 
 function exports.filter(t, predicate)
-  return iterate(t):filter(predicate)
+  return exports.iterate(t):filter(predicate)
 end
 
 
 function exports.map(t, mapping)
-  return iterate(t):map(mapping)
+  return exports.iterate(t):map(mapping)
 end
 
 
 function exports.foreach(t, func)
-  return iterate(t):foreach(func)
+  return exports.iterate(t):foreach(func)
 end
 
 
 function exports.reduce(t, func, initial_value)
-  return iterate(t):reduce(func, initial_value)
+  return exports.iterate(t):reduce(func, initial_value)
+end
+
+
+function exports.clone(t)
+  if internal.is_iterable(t) then
+    return t:clone()
+  else
+    return t
+  end
 end
 
 
@@ -135,7 +144,7 @@ end
 
 
 function internal.iter_clone(iter)
-  local new_iter = iterate(iter.values)
+  local new_iter = exports.iterate(exports.clone(iter.values))
   new_iter.index = iter.index
   new_iter.completed = iter.completed
   return new_iter
@@ -159,6 +168,11 @@ function internal.filter_next(iter)
 end
 
 
+function internal.filter_clone(iter)
+  return exports.filter(exports.clone(iter.values), iter.predicate)
+end
+
+
 function internal.map_next(iter)
   if iter.completed then
     return nil
@@ -170,6 +184,11 @@ function internal.map_next(iter)
   end
 
   return iter.mapping(unpack(next_input))
+end
+
+
+function internal.map_clone(iter)
+  return exports.map(exports.clone(iter.values), iter.mapping)
 end
 
 
