@@ -5,4 +5,9 @@ local it = iterate(t)
   :map(function(x) return (x+1)^2, x^2 end)
   :map(function(a, b) return a - b end)
 
-foreach(it, print)
+local function add(acc, new)
+  return acc + new
+end
+
+-- print(it:reduce(add, 0))
+print(reduce(it, add, 0))

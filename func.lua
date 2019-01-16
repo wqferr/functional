@@ -1,4 +1,5 @@
 local module = {}
+local exports = {}
 local internal = {}
 
 local Iterable = {}
@@ -40,6 +41,17 @@ function Iterable:map(mapping)
 end
 
 
+function Iterable:reduce(reducer, initial_value)
+  local reduced_result = initial_value
+  local function reduce(next_value)
+    reduced_result = reducer(reduced_result, next_value)
+  end
+
+  self:foreach(reduce)
+  return reduced_result
+end
+
+
 function Iterable:foreach(func)
   for value in self do
     func(value)
@@ -58,31 +70,35 @@ iter_meta.__call = Iterable.next
 -- RAW FUNCTIONS --
 
 
-local function iterate(t)
+function exports.iterate(t)
   return Iterable.create(t)
 end
 
 
-local function filter(t, predicate)
+function exports.filter(t, predicate)
   return iterate(t):filter(predicate)
 end
 
 
-local function map(t, mapping)
+function exports.map(t, mapping)
   return iterate(t):map(mapping)
 end
 
 
-local function foreach(t, func)
+function exports.foreach(t, func)
   return iterate(t):foreach(func)
 end
 
 
+function exports.reduce(t, func, initial_value)
+  return iterate(t):reduce(func, initial_value)
+end
+
+
 local function export_funcs()
-  _G.iterate = iterate
-  _G.filter = filter
-  _G.map = map
-  _G.foreach = foreach
+  for k, v in pairs(exports) do
+    _G[k] = v
+  end
 
   return module
 end
@@ -164,11 +180,10 @@ internal.ERR_EXPECTED_TABLE = 'argument %s is %s, expected table'
 
 
 module.Iterable = Iterable
-module.iterate = iterate
-module.filter = filter
-module.map = map
-module.foreach = foreach
 module.import = export_funcs
 
+for name, exported_func in pairs(exports) do
+  module[name] = exported_func
+end
 
 return module
