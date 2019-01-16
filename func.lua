@@ -4,7 +4,6 @@ local internal = {}
 
 local Iterable = {}
 local iter_meta = {}
-iter_meta.__index = Iterable
 
 local unpack = table.unpack
 
@@ -62,9 +61,6 @@ end
 function Iterable:next()
   return self:next()
 end
-
-
-iter_meta.__call = Iterable.next
 
 
 -- RAW FUNCTIONS --
@@ -177,6 +173,10 @@ function internal.assert_table(arg, arg_name)
 end
 
 internal.ERR_EXPECTED_TABLE = 'argument %s is %s, expected table'
+
+
+iter_meta.__index = Iterable
+iter_meta.__call = Iterable.next
 
 
 module.Iterable = Iterable
