@@ -23,6 +23,11 @@ function Iterable.create(t)
 end
 
 
+function Iterable:next()
+  return self:next()
+end
+
+
 function Iterable:filter(predicate)
   local iterable = internal.base_iter(
     self, internal.filter_next, internal.filter_clone)
@@ -61,7 +66,6 @@ function Iterable:foreach(func)
 end
 
 
-
 -- RAW FUNCTIONS --
 
 
@@ -95,6 +99,21 @@ function exports.clone(t)
     return t:clone()
   else
     return t
+  end
+end
+
+
+function exports.negate(f)
+  local negate_f = function(...)
+    return not f(...)
+  end
+  return negate_f
+end
+
+
+function exports.compose(f1, f2)
+  return function(...)
+    return f1(f2(...))
   end
 end
 
