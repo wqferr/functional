@@ -60,10 +60,10 @@ end
 
 
 function Iterable:foreach(func)
-  -- TODO support multiple returns
-  -- use a while loop
-  for value in self do
-    func(value)
+  local next_input = { self:next() }
+  while not self:is_complete() do
+    func(unpack(next_input))
+    next_input = { self:next() }
   end
 end
 
@@ -252,9 +252,9 @@ function internal.is_iterable(t)
 end
 
 
-function internal.func_nil_guard(value)
-  assert(value ~= nil, 'iterated function cannot return nil')
-  return value
+function internal.func_nil_guard(value, ...)
+  assert(value ~= nil, 'iterated function cannot return nil as the first value')
+  return value, ...
 end
 
 
