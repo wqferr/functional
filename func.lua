@@ -165,13 +165,6 @@ function internal.map_next(iter)
 end
 
 
-function internal.assert_table(arg, arg_name)
-  assert(
-    type(arg) == 'table',
-    internal.ERR_EXPECTED_TABLE:format(arg_name, arg)
-  )
-end
-
 internal.ERR_EXPECTED_TABLE = 'argument %s is %s, expected table'
 
 
