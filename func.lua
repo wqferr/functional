@@ -151,12 +151,12 @@ function exports.all(t, predicate)
 end
 
 
-function exports.iter_coroutine(co)
+function module.iterate_coroutine(co)
   return internal.wrap_coroutine(co)
 end
 
 
-function exports.to_list(t)
+function module.to_list(t)
   if internal.is_iterable(t) then
     return t:to_list()
   else
@@ -165,12 +165,12 @@ function exports.to_list(t)
 end
 
 
-function exports.to_coroutine(t)
+function module.to_coroutine(t)
   return exports.iterate(t):to_coroutine()
 end
 
 
-function exports.clone(t)
+function module.clone(t)
   if internal.is_iterable(t) then
     return t:clone()
   else
@@ -182,7 +182,7 @@ end
 -- MISC FUNCTIONS --
 
 
-function exports.negate(f)
+function module.negate(f)
   local negate_f = function(...)
     return not f(...)
   end
@@ -190,7 +190,7 @@ function exports.negate(f)
 end
 
 
-function exports.compose(f1, f2, ...)
+function module.compose(f1, f2, ...)
   if select('#', ...) > 0 then
     local part = exports.compose(f2, ...)
     return exports.compose(f1, part)
@@ -202,7 +202,7 @@ function exports.compose(f1, f2, ...)
 end
 
 
-function exports.partial(f, ...)
+function module.partial(f, ...)
   local saved_args = { ... }
   return function(...)
     local args = { unpack(saved_args) }
@@ -214,20 +214,20 @@ function exports.partial(f, ...)
 end
 
 
-function exports.get(t)
+function module.index(t)
   return function(k)
     return t[k]
   end
 end
 
 
-function exports.get_partial(t, k, ...)
-  return exports.partial(t[k], ...)
+function module.get_partial(t, k, ...)
+  return module.partial(t[k], ...)
 end
 
 
-function exports.bound_func(t, k, ...)
-  return exports.get_partial(t, k, t, ...)
+function module.bound_func(t, k, ...)
+  return module.get_partial(t, k, t, ...)
 end
 
 
