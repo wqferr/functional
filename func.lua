@@ -42,7 +42,7 @@ function Iterable:map(mapping)
   local iterable = internal.base_iter(
     self, internal.map_next, internal.map_clone)
 
-  iterable.mapping = mapping
+  iterable.mapping = exports.compose(internal.func_nil_guard, mapping)
 
   return iterable
 end
@@ -179,6 +179,12 @@ Iterable[internal.iterable_flag] = true
 
 function internal.is_iterable(t)
   return t[internal.iterable_flag] ~= nil
+end
+
+
+function internal.func_nil_guard(value)
+  assert(value ~= nil, 'iterated function cannot return nil')
+  return value
 end
 
 
