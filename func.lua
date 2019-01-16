@@ -161,6 +161,18 @@ function exports.compose(f1, f2)
 end
 
 
+function exports.partial(f, ...)
+  local saved_args = { ... }
+  return function(...)
+    local args = { unpack(saved_args) }
+    for _, arg in ipairs({...}) do
+      table.insert(args, arg)
+    end
+    return f(unpack(args))
+  end
+end
+
+
 local function export_funcs()
   for k, v in pairs(exports) do
     _G[k] = v
