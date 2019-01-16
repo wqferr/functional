@@ -66,6 +66,11 @@ function Iterable:foreach(func)
 end
 
 
+function Iterable:is_complete()
+  return self.is_complete
+end
+
+
 -- RAW FUNCTIONS --
 
 
