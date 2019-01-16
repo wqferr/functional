@@ -9,12 +9,16 @@ local unpack = table.unpack
 
 
 function Iterable.create(t)
-  local copy = { unpack(t) }
-  local iterable = internal.base_iter(copy, internal.iter_next)
+  if internal.is_iterable(t) then
+    return t
+  else
+    local copy = { unpack(t) }
+    local iterable = internal.base_iter(copy, internal.iter_next)
 
-  iterable.index = 0
+    iterable.index = 0
 
-  return iterable
+    return iterable
+  end
 end
 
 
@@ -85,6 +89,15 @@ end
 
 
 -- INTERNAL --
+
+
+internal.iterable_flag = {}
+Iterable[internal.iterable_flag] = true
+
+
+function internal.is_iterable(t)
+  return t[internal.iterable_flag] ~= nil
+end
 
 
 function internal.base_iter(values, next_f)
