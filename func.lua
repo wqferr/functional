@@ -331,7 +331,8 @@ end
 
 
 function internal.wrap_coroutine(co)
-  local iter = internal.base_iter(nil, internal.iter_coroutine_next)
+  local iter = internal.base_iter(
+    nil, internal.iter_coroutine_next, internal.coroutine_try_clone)
   iter.coroutine = co
   return iter
 end
@@ -354,6 +355,11 @@ function internal.iter_coroutine_next(iter)
 end
 
 
+function internal.coroutine_try_clone(iter)
+  error(internal.ERR_COROUTINE_CLONE)
+end
+
+
 function internal.coroutine_iterate(iter)
   return function()
     iter:foreach(coroutine.yield)
@@ -361,7 +367,8 @@ function internal.coroutine_iterate(iter)
 end
 
 
-internal.ERR_EXPECTED_TABLE = 'argument %s is %s, expected table'
+internal.ERR_COROUTINE_CLONE =
+  'cannot clone coroutine iterator; try to_list and iterate over it'
 
 
 iter_meta.__index = Iterable
