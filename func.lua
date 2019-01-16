@@ -13,7 +13,8 @@ function Iterable.create(t)
     return t
   else
     local copy = { unpack(t) }
-    local iterable = internal.base_iter(copy, internal.iter_next)
+    local iterable = internal.base_iter(
+      copy, internal.iter_next, internal.iter_clone)
 
     iterable.index = 0
 
@@ -23,7 +24,8 @@ end
 
 
 function Iterable:filter(predicate)
-  local iterable = internal.base_iter(self, internal.filter_next)
+  local iterable = internal.base_iter(
+    self, internal.filter_next, internal.filter_clone)
 
   iterable.predicate = predicate
 
@@ -32,7 +34,8 @@ end
 
 
 function Iterable:map(mapping)
-  local iterable = internal.base_iter(self, internal.map_next)
+  local iterable = internal.base_iter(
+    self, internal.map_next, internal.map_clone)
 
   iterable.mapping = mapping
 
@@ -57,10 +60,6 @@ function Iterable:foreach(func)
   end
 end
 
-
-function Iterable:next()
-  return self:next()
-end
 
 
 -- RAW FUNCTIONS --
@@ -112,13 +111,14 @@ function internal.is_iterable(t)
 end
 
 
-function internal.base_iter(values, next_f)
+function internal.base_iter(values, next_f, clone)
   local iterable = {}
   setmetatable(iterable, iter_meta)
 
   iterable.values = values
   iterable.completed = false
   iterable.next = next_f
+  iterable.clone = clone
   return iterable
 end
 
@@ -131,6 +131,14 @@ function internal.iter_next(iter)
   local next_input = iter.values[iter.index]
   iter.completed = next_input == nil
   return next_input
+end
+
+
+function internal.iter_clone(iter)
+  local new_iter = iterate(iter.values)
+  new_iter.index = iter.index
+  new_iter.completed = iter.completed
+  return new_iter
 end
 
 
