@@ -42,7 +42,7 @@ function Iterable:map(mapping)
   local iterable = internal.base_iter(
     self, internal.map_next, internal.map_clone)
 
-  iterable.mapping = exports.compose(internal.func_nil_guard, mapping)
+  iterable.mapping = module.compose(internal.func_nil_guard, mapping)
 
   return iterable
 end
@@ -98,7 +98,7 @@ end
 
 function Iterable:to_list()
   local list = {}
-  self:foreach(exports.partial(table.insert, list))
+  self:foreach(module.partial(table.insert, list))
   return list
 end
 
@@ -192,8 +192,8 @@ end
 
 function module.compose(f1, f2, ...)
   if select('#', ...) > 0 then
-    local part = exports.compose(f2, ...)
-    return exports.compose(f1, part)
+    local part = module.compose(f2, ...)
+    return module.compose(f1, part)
   else
     return function(...)
       return f1(f2(...))
@@ -282,7 +282,7 @@ end
 
 
 function internal.iter_clone(iter)
-  local new_iter = exports.iterate(exports.clone(iter.values))
+  local new_iter = exports.iterate(module.clone(iter.values))
   new_iter.index = iter.index
   new_iter.completed = iter.completed
   return new_iter
@@ -307,7 +307,7 @@ end
 
 
 function internal.filter_clone(iter)
-  return exports.filter(exports.clone(iter.values), iter.predicate)
+  return exports.filter(module.clone(iter.values), iter.predicate)
 end
 
 
@@ -326,7 +326,7 @@ end
 
 
 function internal.map_clone(iter)
-  return exports.map(exports.clone(iter.values), iter.mapping)
+  return exports.map(module.clone(iter.values), iter.mapping)
 end
 
 
