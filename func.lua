@@ -60,6 +60,8 @@ end
 
 
 function Iterable:foreach(func)
+  -- TODO support multiple returns
+  -- use a while loop
   for value in self do
     func(value)
   end
@@ -107,7 +109,7 @@ end
 
 
 function Iterable:is_complete()
-  return self.complete
+  return self.completed
 end
 
 
@@ -146,6 +148,11 @@ end
 
 function exports.all(t, predicate)
   return exports.iterate(t):all(predicate)
+end
+
+
+function exports.iter_coroutine(co)
+  return internal.wrap_coroutine(co)
 end
 
 
@@ -320,6 +327,30 @@ end
 
 function internal.map_clone(iter)
   return exports.map(exports.clone(iter.values), iter.mapping)
+end
+
+
+function internal.wrap_coroutine(co)
+  local iter = internal.base_iter(nil, internal.iter_coroutine_next)
+  iter.coroutine = co
+  return iter
+end
+
+
+function internal.iter_coroutine_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local yield = { coroutine.resume(co) }
+  local status = yield[1]
+  assert(status, yield[2])
+  local next_value = { select(2, unpack(yield)) }
+  if #next_value == 0 then
+    iter.completed = true
+    return nil
+  end
+
+  return unpack(next_value)
 end
 
 
