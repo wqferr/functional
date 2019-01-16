@@ -101,8 +101,13 @@ function Iterable:to_list()
 end
 
 
+function Iterable:to_coroutine()
+  return coroutine.create(internal.coroutine_iterate(self))
+end
+
+
 function Iterable:is_complete()
-  return self.is_complete
+  return self.complete
 end
 
 
@@ -150,6 +155,11 @@ function exports.to_list(t)
   else
     return t
   end
+end
+
+
+function exports.to_coroutine(t)
+  return exports.iterate(t):to_coroutine()
 end
 
 
@@ -310,6 +320,13 @@ end
 
 function internal.map_clone(iter)
   return exports.map(exports.clone(iter.values), iter.mapping)
+end
+
+
+function internal.coroutine_iterate(iter)
+  return function()
+    iter:foreach(coroutine.yield)
+  end
 end
 
 
