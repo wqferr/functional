@@ -58,28 +58,28 @@ iter_meta.__call = Iterable.next
 -- RAW FUNCTIONS --
 
 
-local function iter(t)
+local function iterate(t)
   return Iterable.create(t)
 end
 
 
 local function filter(t, predicate)
-  return iter(t):filter(predicate)
+  return iterate(t):filter(predicate)
 end
 
 
 local function map(t, mapping)
-  return iter(t):map(mapping)
+  return iterate(t):map(mapping)
 end
 
 
 local function foreach(t, func)
-  return iter(t):foreach(func)
+  return iterate(t):foreach(func)
 end
 
 
 local function export_funcs()
-  _G.iter = iter
+  _G.iterate = iterate
   _G.filter = filter
   _G.map = map
   _G.foreach = foreach
@@ -164,7 +164,7 @@ internal.ERR_EXPECTED_TABLE = 'argument %s is %s, expected table'
 
 
 module.Iterable = Iterable
-module.iter = iter
+module.iterate = iterate
 module.filter = filter
 module.map = map
 module.foreach = foreach
