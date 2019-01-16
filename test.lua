@@ -9,5 +9,6 @@ local it = iter(t)
   :map(function(x) return x^2 end)
   :filter(function(x) return x > 10 end)
 
-print(it:next_element())
-print(it:next_element())
+for value in it do
+  print(value)
+end

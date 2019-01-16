@@ -36,6 +36,17 @@ function Iterable:map(mapping)
 end
 
 
+function Iterable:next()
+  return self:next_value()
+end
+
+
+iter_meta.__call = Iterable.next
+
+
+-- RAW FUNCTIONS --
+
+
 local function iter(t)
   return Iterable.create(t)
 end
@@ -66,7 +77,7 @@ function internal.base_iter(next_f)
   local iterable = {}
   setmetatable(iterable, iter_meta)
   iterable.completed = false
-  iterable.next_element = next_f
+  iterable.next_value = next_f
   return iterable
 end
 
@@ -86,12 +97,12 @@ function internal.filter_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = iter.values:next_element()
+  local next_input = iter.values:next_value()
   while next_input ~= nil do
     if iter.predicate(next_input) then
       return next_input
     end
-    next_input = iter.values:next_element()
+    next_input = iter.values:next_value()
   end
 
   iter.completed = true
@@ -103,7 +114,7 @@ function internal.map_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = iter.values:next_element()
+  local next_input = iter.values:next_value()
   if next_input == nil then
     iter.completed = true
     return nil
