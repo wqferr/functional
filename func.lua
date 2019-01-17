@@ -39,6 +39,15 @@ function Iterator.from_iterated_call(func)
 end
 
 
+function Iterator.clone(t)
+  if internal.is_iterator(t) then
+    return t:clone()
+  else
+    return t
+  end
+end
+
+
 function Iterator:filter(predicate)
   local iterator = internal.base_iter(
     self, internal.filter_next, internal.filter_clone)
@@ -76,6 +85,16 @@ function Iterator:foreach(func)
     func(table.unpack(next_input))
     next_input = { self:next() }
   end
+end
+
+
+function Iterator:take(n)
+  local iterator = internal.base_iter(
+    self, internal.take_next, internal.take_clone)
+
+  iterator.n_remaining = n
+
+  return iterator
 end
 
 
@@ -152,6 +171,11 @@ function exports.reduce(t, func, initial_value)
 end
 
 
+function exports.take(t, n)
+  return exports.iterate(t):take(n)
+end
+
+
 function exports.any(t, predicate)
   return exports.iterate(t):any(predicate)
 end
@@ -174,16 +198,6 @@ end
 
 function module.to_coroutine(t)
   return exports.iterate(t):to_coroutine()
-end
-
-
-function module.clone(t)
-  assert_table(t)
-  if internal.is_iterator(t) then
-    return t:clone()
-  else
-    return t
-  end
 end
 
 
@@ -300,7 +314,7 @@ end
 
 
 function internal.iter_clone(iter)
-  local new_iter = exports.iterate(module.clone(iter.values))
+  local new_iter = exports.iterate(Iterator.clone(iter.values))
   new_iter.index = iter.index
   new_iter.completed = iter.completed
   return new_iter
@@ -325,7 +339,7 @@ end
 
 
 function internal.filter_clone(iter)
-  return exports.filter(module.clone(iter.values), iter.predicate)
+  return exports.filter(Iterator.clone(iter.values), iter.predicate)
 end
 
 
@@ -344,7 +358,32 @@ end
 
 
 function internal.map_clone(iter)
-  return exports.map(module.clone(iter.values), iter.mapping)
+  return exports.map(Iterator.clone(iter.values), iter.mapping)
+end
+
+
+function internal.take_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local next_input = { iter.values:next() }
+  if #next_input == 0 then
+    iter.completed = true
+    return nil
+  end
+
+  if iter.n_remaining > 0 then
+    iter.n_remaining = iter.n_remaining - 1
+    return table.unpack(next_input)
+  else
+    iter.completed = true
+    return nil
+  end
+end
+
+
+function internal.take_clone(iter)
+  return exports.take(Iterator.clone(iter.values), iter.n_remaining)
 end
 
 
