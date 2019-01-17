@@ -23,6 +23,12 @@ function Iterator.create(t)
 end
 
 
+function Iterator.from_coroutine(co)
+  internal.assert_coroutine(co)
+  return internal.wrap_coroutine(co)
+end
+
+
 function Iterator:filter(predicate)
   local iterator = internal.base_iter(
     self, internal.filter_next, internal.filter_clone)
@@ -143,12 +149,6 @@ end
 
 function exports.all(t, predicate)
   return exports.iterate(t):all(predicate)
-end
-
-
-function module.iterate_coroutine(co)
-  internal.assert_coroutine(co)
-  return internal.wrap_coroutine(co)
 end
 
 
