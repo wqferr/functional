@@ -23,6 +23,16 @@ function Iterator.create(t)
 end
 
 
+function Iterator.counter()
+  local iterator = internal.base_iter(
+    nil, internal.counter_next, internal.counter_clone)
+  
+  iterator.n = 0
+
+  return iterator
+end
+
+
 function Iterator.from_coroutine(co)
   internal.assert_coroutine(co)
   return internal.wrap_coroutine(co)
@@ -381,6 +391,19 @@ function internal.iter_clone(iter)
   local new_iter = exports.iterate(Iterator.clone(iter.values))
   new_iter.index = iter.index
   new_iter.completed = iter.completed
+  return new_iter
+end
+
+
+function internal.counter_next(iter)
+  iter.n = iter.n + 1
+  return iter.n
+end
+
+
+function internal.counter_clone(iter)
+  local new_iter = Iterator.counter()
+  new_iter.count = iter.count
   return new_iter
 end
 
