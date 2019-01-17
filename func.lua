@@ -5,14 +5,14 @@ local internal = {}
 local Iterable = {}
 local iter_meta = {}
 
-local unpack = table.unpack
-
 
 function Iterable.create(t)
+  internal.assert_table(t)
+
   if internal.is_iterable(t) then
     return t
   else
-    local copy = { unpack(t) }
+    local copy = { table.unpack(t) }
     local iterable = internal.base_iter(
       copy, internal.iter_next, internal.iter_clone)
 
@@ -20,11 +20,6 @@ function Iterable.create(t)
 
     return iterable
   end
-end
-
-
-function Iterable:next()
-  return self:next()
 end
 
 
@@ -62,7 +57,7 @@ end
 function Iterable:foreach(func)
   local next_input = { self:next() }
   while not self:is_complete() do
-    func(unpack(next_input))
+    func(table.unpack(next_input))
     next_input = { self:next() }
   end
 end
@@ -104,7 +99,7 @@ end
 
 
 function Iterable:to_coroutine()
-  return coroutine.create(internal.coroutine_iterate(self))
+  return coroutine.create(internal.coroutine_iter_loop(self))
 end
 
 
@@ -152,11 +147,13 @@ end
 
 
 function module.iterate_coroutine(co)
+  internal.assert_coroutine(co)
   return internal.wrap_coroutine(co)
 end
 
 
 function module.to_list(t)
+  assert_table(t)
   if internal.is_iterable(t) then
     return t:to_list()
   else
@@ -171,6 +168,7 @@ end
 
 
 function module.clone(t)
+  assert_table(t)
   if internal.is_iterable(t) then
     return t:clone()
   else
@@ -183,14 +181,16 @@ end
 
 
 function module.negate(f)
-  local negate_f = function(...)
+  return function(...)
     return not f(...)
   end
-  return negate_f
 end
 
 
 function module.compose(f1, f2, ...)
+  internal.assert_not_nil(f1)
+  internal.assert_not_nil(f2)
+
   if select('#', ...) > 0 then
     local part = module.compose(f2, ...)
     return module.compose(f1, part)
@@ -205,20 +205,24 @@ end
 function module.partial(f, ...)
   local saved_args = { ... }
   return function(...)
-    local args = { unpack(saved_args) }
+    local args = { table.unpack(saved_args) }
     for _, arg in ipairs({...}) do
       table.insert(args, arg)
     end
-    return f(unpack(args))
+    return f(table.unpack(args))
   end
 end
 
 
-function module.index(t)
+function module.accessor(t)
+  assert_table(t)
   return function(k)
     return t[k]
   end
 end
+
+
+-- TODO itemgetter
 
 
 function module.get_partial(t, k, ...)
@@ -295,8 +299,8 @@ function internal.filter_next(iter)
   end
   local next_input = { iter.values:next() }
   while #next_input > 0 do
-    if iter.predicate(unpack(next_input)) then
-      return unpack(next_input)
+    if iter.predicate(table.unpack(next_input)) then
+      return table.unpack(next_input)
     end
     next_input = { iter.values:next() }
   end
@@ -321,7 +325,7 @@ function internal.map_next(iter)
     return nil
   end
 
-  return iter.mapping(unpack(next_input))
+  return iter.mapping(table.unpack(next_input))
 end
 
 
@@ -345,13 +349,14 @@ function internal.iter_coroutine_next(iter)
   local yield = { coroutine.resume(co) }
   local status = yield[1]
   assert(status, yield[2])
-  local next_value = { select(2, unpack(yield)) }
+
+  local next_value = { select(2, table.unpack(yield)) }
   if #next_value == 0 then
     iter.completed = true
     return nil
   end
 
-  return unpack(next_value)
+  return table.unpack(next_value)
 end
 
 
@@ -360,19 +365,48 @@ function internal.coroutine_try_clone(iter)
 end
 
 
-function internal.coroutine_iterate(iter)
+function internal.coroutine_iter_loop(iter)
   return function()
     iter:foreach(coroutine.yield)
   end
 end
 
 
+function internal.assert_table(value)
+  assert(
+    type(value) == 'table',
+    internal.ERR_TABLE_EXPECTED
+  )
+end
+
+
+function internal.assert_coroutine(value)
+  assert(
+    type(value) == 'thread',
+    internal.ERR_COROUTINE_EXPECTED:format(value)
+  )
+end
+
+
+function internal.assert_not_nil(value, param_name)
+  assert(
+    value ~= nil,
+    internal.ERR_NIL_VALUE:format(param_name)
+  )
+end
+
+
 internal.ERR_COROUTINE_CLONE =
   'cannot clone coroutine iterator; try to_list and iterate over it'
+internal.ERR_TABLE_EXPECTED = 'expected table, got: %s'
+internal.ERR_COROUTINE_EXPECTED = 'expected coroutine, got: %s'
+internal.ERR_NIL_VALUE = 'parameter %s is nil'
 
 
 iter_meta.__index = Iterable
-iter_meta.__call = Iterable.next
+iter_meta.__call = function(iter)
+  return iter:next()
+end
 
 
 module.Iterable = Iterable
