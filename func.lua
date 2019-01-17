@@ -147,6 +147,15 @@ function Iterator:all(predicate)
 end
 
 
+function Iterator:count(predicate)
+  if not predicate then
+    predicate = module.constant(true)
+  end
+  return self:map(predicate):map(internal.bool_to_int):reduce(internal.sum, 0)
+end
+
+
+
 function Iterator:to_list()
   local list = {}
   self:foreach(module.partial(table.insert, list))
@@ -294,6 +303,13 @@ function module.bound_func(t, k, ...)
 end
 
 
+function module.constant(value)
+  return function(...)
+    return value
+  end
+end
+
+
 local function export_funcs()
   for k, v in pairs(exports) do
     _G[k] = v
@@ -319,6 +335,23 @@ function internal.func_nil_guard(value, ...)
   assert(value ~= nil, 'iterated function cannot return nil as the first value')
   return value, ...
 end
+
+
+function internal.bool_to_int(value)
+  if value then
+    return 1
+  else
+    return 0
+  end
+end
+
+
+function internal.sum(a, b)
+  return a + b
+end
+
+
+-- ITER FUNCTIONS --
 
 
 function internal.base_iter(values, next_f, clone)
