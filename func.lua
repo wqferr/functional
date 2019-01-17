@@ -108,6 +108,17 @@ function Iterator:skip(n)
 end
 
 
+function Iterator:every(n)
+  local iterator = internal.base_iter(
+    self, internal.every_next, internal.every_clone)
+
+  iterator.n = n
+  iterator.first_call = true
+
+  return iterator
+end
+
+
 function Iterator:any(predicate)
   if predicate then
     return self:map(predicate):any()
@@ -188,6 +199,11 @@ end
 
 function exports.skip(t, n)
   return exports.iterate(t):skip(n)
+end
+
+
+function exports.every(t, n)
+  return exports.iterate(t):every(n)
 end
 
 
@@ -424,6 +440,35 @@ end
 
 function internal.skip_clone(iter)
   return exports.skip(Iterator.clone(iter.values), iter.n_remaining)
+end
+
+
+function internal.every_next(iter)
+  if iter.completed then
+    return nil
+  end
+
+  local next_input
+  if iter.first_call then
+    iter.first_call = nil
+  else
+    for i = 1, iter.n - 1 do
+      iter.values:next()
+    end
+  end
+
+  next_input = { iter.values:next() }
+  if #next_input == 0 then
+    iter.completed = true
+    return nil
+  end
+
+  return table.unpack(next_input)
+end
+
+
+function internal.every_clone(iter)
+  return exports.every(Iterator.clone(iter.values), iter.n)
 end
 
 
