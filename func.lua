@@ -624,7 +624,9 @@ iter_meta.__call = function(iter)
 end
 
 
-module.Iterator = Iterator
+exports.Iterator = Iterator
+
+
 module.import = export_funcs
 
 for name, exported_func in pairs(exports) do
