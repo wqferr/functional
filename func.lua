@@ -40,6 +40,7 @@ end
 
 
 function Iterator.from_iterated_call(func)
+  internal.assert_not_nil(func, 'func')
   local iterator = internal.base_iter(
     nil, internal.func_call_next, internal.func_try_clone)
   
@@ -50,6 +51,7 @@ end
 
 
 function Iterator.clone(t)
+  internal.assert_not_nil(t, 't')
   if internal.is_iterator(t) then
     return t:clone()
   else
@@ -59,6 +61,7 @@ end
 
 
 function Iterator:filter(predicate)
+  internal.assert_not_nil(predicate, 'predicate')
   local iterator = internal.base_iter(
     self, internal.filter_next, internal.filter_clone)
 
@@ -69,6 +72,7 @@ end
 
 
 function Iterator:map(mapping)
+  internal.assert_not_nil(mapping, 'mapping')
   local iterator = internal.base_iter(
     self, internal.map_next, internal.map_clone)
 
@@ -79,6 +83,7 @@ end
 
 
 function Iterator:reduce(reducer, initial_value)
+  internal.assert_not_nil(reducer, 'reducer')
   local reduced_result = initial_value
   local function reduce(next_value)
     reduced_result = reducer(reduced_result, next_value)
@@ -90,6 +95,8 @@ end
 
 
 function Iterator:foreach(func)
+  internal.assert_not_nil(func, 'func')
+
   local next_input = { self:next() }
   while not self:is_complete() do
     func(table.unpack(next_input))
@@ -99,6 +106,8 @@ end
 
 
 function Iterator:take(n)
+  internal.assert_integer(n, 'n')
+
   local iterator = internal.base_iter(
     self, internal.take_next, internal.take_clone)
 
@@ -109,6 +118,8 @@ end
 
 
 function Iterator:skip(n)
+  internal.assert_integer(n, 'n')
+
   local iterator = internal.base_iter(
     self, internal.skip_next, internal.skip_clone)
   
@@ -119,6 +130,8 @@ end
 
 
 function Iterator:every(n)
+  internal.assert_integer(n, 'n')
+
   local iterator = internal.base_iter(
     self, internal.every_next, internal.every_clone)
 
@@ -255,6 +268,7 @@ end
 
 
 function module.negate(f)
+  internal.assert_not_nil(f, 'f')
   return function(...)
     return not f(...)
   end
@@ -262,8 +276,8 @@ end
 
 
 function module.compose(f1, f2, ...)
-  internal.assert_not_nil(f1)
-  internal.assert_not_nil(f2)
+  internal.assert_not_nil(f1, 'f1')
+  internal.assert_not_nil(f2, 'f2')
 
   if select('#', ...) > 0 then
     local part = module.compose(f2, ...)
@@ -277,6 +291,8 @@ end
 
 
 function module.partial(f, ...)
+  internal.assert_not_nil(f, 'f')
+
   local saved_args = { ... }
   return function(...)
     local args = { table.unpack(saved_args) }
@@ -289,7 +305,7 @@ end
 
 
 function module.accessor(t)
-  assert_table(t)
+  internal.assert_table(t)
   return function(k)
     return t[k]
   end
@@ -304,11 +320,13 @@ end
 
 
 function module.get_partial(t, k, ...)
+  internal.assert_not_nil(t, 't')
   return module.partial(t[k], ...)
 end
 
 
 function module.bound_func(t, k, ...)
+  internal.assert_not_nil(t, 't')
   return module.get_partial(t, k, t, ...)
 end
 
@@ -342,7 +360,10 @@ end
 
 
 function internal.func_nil_guard(value, ...)
-  assert(value ~= nil, 'iterated function cannot return nil as the first value')
+  assert(
+    value ~= nil,
+    'iterated function cannot return nil as the first value'
+  )
   return value, ...
 end
 
@@ -585,18 +606,29 @@ function internal.func_try_clone(iter)
 end
 
 
-function internal.assert_table(value)
+-- ERROR CHECKING --
+
+
+function internal.assert_table(value, param_name)
   assert(
     type(value) == 'table',
-    internal.ERR_TABLE_EXPECTED
+    internal.ERR_TABLE_EXPECTED:format(param_name, value)
   )
 end
 
 
-function internal.assert_coroutine(value)
+function internal.assert_integer(value, param_name)
+  assert(
+    type(value) == 'number' and value % 1 == 0,
+    internal.ERR_INTEGER_EXPECTED:format(param_name, value)
+  )
+end
+
+
+function internal.assert_coroutine(value, param_name)
   assert(
     type(value) == 'thread',
-    internal.ERR_COROUTINE_EXPECTED:format(value)
+    internal.ERR_COROUTINE_EXPECTED:format(param_name, value)
   )
 end
 
@@ -613,8 +645,10 @@ internal.ERR_COROUTINE_CLONE =
   'cannot clone coroutine iterator; try to_list and iterate over it'
 internal.ERR_FUNCTION_CLONE =
   'cannot clone iterated function call; try to_list and iterate over it'
-internal.ERR_TABLE_EXPECTED = 'expected table, got: %s'
-internal.ERR_COROUTINE_EXPECTED = 'expected coroutine, got: %s'
+
+internal.ERR_INTEGER_EXPECTED = 'param %s expected integer, got: %s'
+internal.ERR_TABLE_EXPECTED = 'param %s expected table, got: %s'
+internal.ERR_COROUTINE_EXPECTED = 'param %s expected coroutine, got: %s'
 internal.ERR_NIL_VALUE = 'parameter %s is nil'
 
 
