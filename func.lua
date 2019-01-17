@@ -98,6 +98,16 @@ function Iterator:take(n)
 end
 
 
+function Iterator:skip(n)
+  local iterator = internal.base_iter(
+    self, internal.skip_next, internal.skip_clone)
+  
+  iterator.n_remaining = n
+
+  return iterator
+end
+
+
 function Iterator:any(predicate)
   if predicate then
     return self:map(predicate):any()
@@ -173,6 +183,11 @@ end
 
 function exports.take(t, n)
   return exports.iterate(t):take(n)
+end
+
+
+function exports.skip(t, n)
+  return exports.iterate(t):skip(n)
 end
 
 
@@ -384,6 +399,31 @@ end
 
 function internal.take_clone(iter)
   return exports.take(Iterator.clone(iter.values), iter.n_remaining)
+end
+
+
+function internal.skip_next(iter)
+  if iter.completed then
+    return nil
+  end
+
+  while iter.n_remaining > 0 do
+    local v = iter.values:next()
+    iter.n_remaining = iter.n_remaining - 1
+  end
+  
+  local next_input = { iter.values:next() }
+  if #next_input == 0 then
+    iter.completed = true
+    return nil
+  end
+
+  return table.unpack(next_input)
+end
+
+
+function internal.skip_clone(iter)
+  return exports.skip(Iterator.clone(iter.values), iter.n_remaining)
 end
 
 
