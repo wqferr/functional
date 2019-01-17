@@ -2,48 +2,48 @@ local module = {}
 local exports = {}
 local internal = {}
 
-local Iterable = {}
+local Iterator = {}
 local iter_meta = {}
 
 
-function Iterable.create(t)
+function Iterator.create(t)
   internal.assert_table(t)
 
-  if internal.is_iterable(t) then
+  if internal.is_iterator(t) then
     return t
   else
     local copy = { table.unpack(t) }
-    local iterable = internal.base_iter(
+    local iterator = internal.base_iter(
       copy, internal.iter_next, internal.iter_clone)
 
-    iterable.index = 0
+    iterator.index = 0
 
-    return iterable
+    return iterator
   end
 end
 
 
-function Iterable:filter(predicate)
-  local iterable = internal.base_iter(
+function Iterator:filter(predicate)
+  local iterator = internal.base_iter(
     self, internal.filter_next, internal.filter_clone)
 
-  iterable.predicate = predicate
+  iterator.predicate = predicate
 
-  return iterable
+  return iterator
 end
 
 
-function Iterable:map(mapping)
-  local iterable = internal.base_iter(
+function Iterator:map(mapping)
+  local iterator = internal.base_iter(
     self, internal.map_next, internal.map_clone)
 
-  iterable.mapping = module.compose(internal.func_nil_guard, mapping)
+  iterator.mapping = module.compose(internal.func_nil_guard, mapping)
 
-  return iterable
+  return iterator
 end
 
 
-function Iterable:reduce(reducer, initial_value)
+function Iterator:reduce(reducer, initial_value)
   local reduced_result = initial_value
   local function reduce(next_value)
     reduced_result = reducer(reduced_result, next_value)
@@ -54,7 +54,7 @@ function Iterable:reduce(reducer, initial_value)
 end
 
 
-function Iterable:foreach(func)
+function Iterator:foreach(func)
   local next_input = { self:next() }
   while not self:is_complete() do
     func(table.unpack(next_input))
@@ -63,7 +63,7 @@ function Iterable:foreach(func)
 end
 
 
-function Iterable:any(predicate)
+function Iterator:any(predicate)
   if predicate then
     return self:map(predicate):any()
   else
@@ -77,7 +77,7 @@ function Iterable:any(predicate)
 end
 
 
-function Iterable:all(predicate)
+function Iterator:all(predicate)
   if predicate then
     return self:map(predicate):all()
   else
@@ -91,19 +91,19 @@ function Iterable:all(predicate)
 end
 
 
-function Iterable:to_list()
+function Iterator:to_list()
   local list = {}
   self:foreach(module.partial(table.insert, list))
   return list
 end
 
 
-function Iterable:to_coroutine()
+function Iterator:to_coroutine()
   return coroutine.create(internal.coroutine_iter_loop(self))
 end
 
 
-function Iterable:is_complete()
+function Iterator:is_complete()
   return self.completed
 end
 
@@ -112,7 +112,7 @@ end
 
 
 function exports.iterate(t)
-  return Iterable.create(t)
+  return Iterator.create(t)
 end
 
 
@@ -154,7 +154,7 @@ end
 
 function module.to_list(t)
   assert_table(t)
-  if internal.is_iterable(t) then
+  if internal.is_iterator(t) then
     return t:to_list()
   else
     return t
@@ -169,7 +169,7 @@ end
 
 function module.clone(t)
   assert_table(t)
-  if internal.is_iterable(t) then
+  if internal.is_iterator(t) then
     return t:clone()
   else
     return t
@@ -251,12 +251,12 @@ end
 -- INTERNAL --
 
 
-internal.iterable_flag = {}
-Iterable[internal.iterable_flag] = true
+internal.iterator_flag = {}
+Iterator[internal.iterator_flag] = true
 
 
-function internal.is_iterable(t)
-  return t[internal.iterable_flag] ~= nil
+function internal.is_iterator(t)
+  return t[internal.iterator_flag] ~= nil
 end
 
 
@@ -267,14 +267,14 @@ end
 
 
 function internal.base_iter(values, next_f, clone)
-  local iterable = {}
-  setmetatable(iterable, iter_meta)
+  local iterator = {}
+  setmetatable(iterator, iter_meta)
 
-  iterable.values = values
-  iterable.completed = false
-  iterable.next = next_f
-  iterable.clone = clone
-  return iterable
+  iterator.values = values
+  iterator.completed = false
+  iterator.next = next_f
+  iterator.clone = clone
+  return iterator
 end
 
 
@@ -407,13 +407,13 @@ internal.ERR_COROUTINE_EXPECTED = 'expected coroutine, got: %s'
 internal.ERR_NIL_VALUE = 'parameter %s is nil'
 
 
-iter_meta.__index = Iterable
+iter_meta.__index = Iterator
 iter_meta.__call = function(iter)
   return iter:next()
 end
 
 
-module.Iterable = Iterable
+module.Iterator = Iterator
 module.import = export_funcs
 
 for name, exported_func in pairs(exports) do
