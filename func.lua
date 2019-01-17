@@ -222,7 +222,11 @@ function module.accessor(t)
 end
 
 
--- TODO itemgetter
+function module.itemgetter(k)
+  return function(t)
+    return t[k]
+  end
+end
 
 
 function module.get_partial(t, k, ...)
