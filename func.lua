@@ -29,6 +29,16 @@ function Iterator.from_coroutine(co)
 end
 
 
+function Iterator.from_iterated_call(func)
+  local iterator = internal.base_iter(
+    nil, internal.func_call_next, internal.func_try_clone)
+  
+  iterator.func = func
+
+  return iterator
+end
+
+
 function Iterator:filter(predicate)
   local iterator = internal.base_iter(
     self, internal.filter_next, internal.filter_clone)
@@ -376,6 +386,25 @@ function internal.coroutine_iter_loop(iter)
 end
 
 
+function internal.func_call_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local result = { iter.func() }
+  if #result == 0 then
+    iter.completed = true
+    return nil
+  end
+
+  return table.unpack(result)
+end
+
+
+function internal.func_try_clone(iter)
+  error(internal.ERR_FUNCTION_CLONE)
+end
+
+
 function internal.assert_table(value)
   assert(
     type(value) == 'table',
@@ -402,6 +431,8 @@ end
 
 internal.ERR_COROUTINE_CLONE =
   'cannot clone coroutine iterator; try to_list and iterate over it'
+internal.ERR_FUNCTION_CLONE =
+  'cannot clone iterated function call; try to_list and iterate over it'
 internal.ERR_TABLE_EXPECTED = 'expected table, got: %s'
 internal.ERR_COROUTINE_EXPECTED = 'expected coroutine, got: %s'
 internal.ERR_NIL_VALUE = 'parameter %s is nil'
