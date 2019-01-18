@@ -552,8 +552,9 @@ end
 
 
 --- Create a function that accesses <code>t</code>.
--- <p>The argument passed to the function is used as the key
--- for <code>t</code>, and the value of <code>t[k]</code> is returned.</p>
+-- <p>The argument passed to the returned function is used as the key
+-- <code>k</code> to be accessed. The value of <code>t[k]</code>
+-- is returned.</p>
 -- @tparam table t the table to be accessed
 -- @treturn function the accessor
 function M.accessor(t)
@@ -564,6 +565,12 @@ function M.accessor(t)
 end
 
 
+--- Create a function that accesses the key <code>k</code> for a table.
+-- <p>The argument passed to the returned function is used as the table
+-- <code>t</code> to be accessed. The value of <code>t[k]</code>
+-- is returned.</p>
+-- @param k the key to access
+-- @treturn function the item getter
 function M.item_getter(k)
   return function(t)
     return t[k]
