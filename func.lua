@@ -51,7 +51,7 @@ function Iterator.create(t)
 end
 
 
---- Iterate over the integers in increments of 1.
+--- Iterate over the naturals starting at 1.
 -- @treturn Iterator the counter
 -- @see Iterator:take
 -- @see Iterator:skip
@@ -66,8 +66,8 @@ function Iterator.counter()
 end
 
 
---- Iterate over the coroutine's yielded values.
--- @tparam thread co the coroutine to iterate
+--- Iterate over the <code>coroutine</code>'s yielded values.
+-- @tparam thread co the <code>coroutine</code> to iterate
 -- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator.from_coroutine(co)
   internal.assert_coroutine(co)
@@ -285,6 +285,9 @@ function Iterator:to_array()
 end
 
 
+--- Create a <code>coroutine</code> that yields the values
+-- of the <code>@{Iterator}</code>.
+-- @treturn thread The new <code>coroutine</code>
 function Iterator:to_coroutine()
   return coroutine.create(internal.coroutine_iter_loop(self))
 end
