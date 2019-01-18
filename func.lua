@@ -29,18 +29,18 @@ M._VERSION = '0.8.1'
 --- @type Iterator
 
 --- Iterate over the given <code>iterable</code>.
--- <p>If <code>t</code> is a table, create an Iterator instance
+-- <p>If <code>iterable</code> is an array, create an Iterator instance
 -- that returns its values one by one. If it is an
 -- iterator, return itself.</p>
--- @tparam iterable t the values to be iterated
+-- @tparam iterable iterable the values to be iterated
 -- @treturn Iterator the new Iterator
-function Iterator.create(t)
-  internal.assert_table(t)
+function Iterator.create(iterable)
+  internal.assert_table(iterable)
 
-  if internal.is_iterator(t) then
-    return t
+  if internal.is_iterator(iterable) then
+    return iterable
   else
-    local copy = { table.unpack(t) }
+    local copy = { table.unpack(iterable) }
     local iterator = internal.base_iter(
       copy, internal.iter_next, internal.iter_clone)
 
@@ -90,18 +90,19 @@ end
 
 
 --- Nondestructively return an indepent iterable from the given one.
--- <p>If <code>t</code> is an Iterator, clone it according to its subtype.
--- If <code>t</code> is an array, then return itself.</p>
+-- <p>If <code>iterablet</code> is an Iterator, clone it according
+-- to its subtype. If <code>iterable</code> is an array, then
+-- return itself.</p>
 -- <p>Please note that coroutine and iterated function call iterators
 -- cannot be cloned.</p>
--- @tparam iterable t the iterable to be cloned
+-- @tparam iterable iterable the iterable to be cloned
 -- @treturn iterable the clone
-function Iterator.clone(t)
-  internal.assert_not_nil(t, 't')
-  if internal.is_iterator(t) then
-    return t:clone()
+function Iterator.clone(iterable)
+  internal.assert_not_nil(iterable, 'iterable')
+  if internal.is_iterator(iterable) then
+    return iterable:clone()
   else
-    return t
+    return iterable
   end
 end
 
@@ -313,79 +314,79 @@ end
 
 --- Create an <code>@{Iterator}</code> for the <code>iterable</code>.
 -- <p>Equivalent to <code>@{Iterator.create}</code>.</p>
--- @tparam iterable t the values to be iterated
+-- @tparam iterable iterable the values to be iterated
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @function iterate
-function exports.iterate(t)
-  return Iterator.create(t)
+function exports.iterate(iterable)
+  return Iterator.create(iterable)
 end
 
 
 --- Select only values which match the predicate.
--- <p>Equivalent to <code>iterate(t):filter(predicate)</code>.</p>
--- @tparam iterable t the values to be iterated
+-- <p>Equivalent to <code>iterate(iterable):filter(predicate)</code>.</p>
+-- @tparam iterable iterable the values to be iterated
 -- @tparam predicate predicate the function to evaluate for each value
 -- @treturn Iterator the filtering <code>@{Iterator}</code>
 -- @see iterate
 -- @see Iterator:filter
 -- @function filter
-function exports.filter(t, predicate)
-  return exports.iterate(t):filter(predicate)
+function exports.filter(iterable, predicate)
+  return exports.iterate(iterable):filter(predicate)
 end
 
 
-function exports.map(t, mapping)
-  return exports.iterate(t):map(mapping)
+function exports.map(iterable, mapping)
+  return exports.iterate(iterable):map(mapping)
 end
 
 
-function exports.foreach(t, func)
-  return exports.iterate(t):foreach(func)
+function exports.foreach(iterable, func)
+  return exports.iterate(iterable):foreach(func)
 end
 
 
-function exports.reduce(t, func, initial_value)
-  return exports.iterate(t):reduce(func, initial_value)
+function exports.reduce(iterable, func, initial_value)
+  return exports.iterate(iterable):reduce(func, initial_value)
 end
 
 
-function exports.take(t, n)
-  return exports.iterate(t):take(n)
+function exports.take(iterable, n)
+  return exports.iterate(iterable):take(n)
 end
 
 
-function exports.skip(t, n)
-  return exports.iterate(t):skip(n)
+function exports.skip(iterable, n)
+  return exports.iterate(iterable):skip(n)
 end
 
 
-function exports.every(t, n)
-  return exports.iterate(t):every(n)
+function exports.every(iterable, n)
+  return exports.iterate(iterable):every(n)
 end
 
 
-function exports.any(t, predicate)
-  return exports.iterate(t):any(predicate)
+function exports.any(iterable, predicate)
+  return exports.iterate(iterable):any(predicate)
 end
 
 
-function exports.all(t, predicate)
-  return exports.iterate(t):all(predicate)
+function exports.all(iterable, predicate)
+  return exports.iterate(iterable):all(predicate)
 end
 
 
-function M.to_array(t)
-  assert_table(t)
-  if internal.is_iterator(t) then
-    return t:to_array()
+function M.to_array(iterable)
+  assert_table(iterable)
+  if internal.is_iterator(iterable) then
+    return iterable:to_array()
   else
-    return t
+    return iterable
   end
 end
 
 
-function M.to_coroutine(t)
-  return exports.iterate(t):to_coroutine()
+function M.to_coroutine(iterable)
+  return exports.iterate(iterable):to_coroutine()
 end
 
 
@@ -430,7 +431,7 @@ end
 
 
 function M.accessor(t)
-  internal.assert_table(t)
+  internal.assert_table(t, 't')
   return function(k)
     return t[k]
   end
