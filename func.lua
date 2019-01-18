@@ -1,17 +1,41 @@
 ---
 -- <h2>A module for functional programming utils.</h2>
--- <p>
--- An <code>iterable</code> refers to either of:
+-- <h3>About the module</h3>
+-- <p style="text-align: justify">This module seeks to provide some utility functions and structures
+-- which are too verbose in vanilla lua, in particular with regards to iteration
+-- and inline function definition.</p>
+-- <p style="text-align: justify">The module is writen completely in vanilla lua,
+-- with no dependencies on external packages&period; This was a decision made for
+-- portability, and has drawbacks&period; Since none of this was written as a C binding, it is not
+-- as performant as it could be.</p>
+-- <p style="text-align: justify">For example, <a href="https://github.com/luafun/luafun">luafun</a>
+-- is "high-performance functional programming library for Lua designed with
+-- <a href="http://luajit.org/luajit.html">LuaJIT</a>'s trace compiler in mind"
+-- &period; If your environment allows you to use LuaJIT and performance is a
+-- concern, perhaps luafun will be more suited for your needs.</p>
+-- <p style="text-align: justify; background: #eeeeee; border: 1px solid black;
+-- margin-left: 15%; margin-right: 15%; padding: 10px;">
+-- The motivation behind this module is, again, portability&period;
+-- If you want to embed this code on a webpage, or use it in some weird
+-- system for which a C binding wouldn't work, this project is aimed
+-- at you.</p>
+-- <h3>Definitions</h3>
+-- <h4>Array</h4>
+-- <p style="text-align: justify">As lua doesn't have a dedicated array
+-- type, the word "array" in this document referes to a table with contiguous
+-- non-<code>nil</code> values starting at index <code>1</code>.</p>
+-- <h4>Iterable</h4>
+-- <p>An <code>iterable</code> refers to either of:
 -- <ul>
--- <li> A table with contiguous non-<code>nil</code> values
--- (an "array"); or </li>
--- <li> An <code>Iterator</code> instance. </li>
--- </ul>
--- </p>
+-- <li> An array (see above); or </li>
+-- <li> An instance of <code>Iterator</code>. </li>
+-- </ul></p>
 -- @module functional
--- @release 0.8.1
 -- @alias M
+-- @release 0.8.0
 -- @author William Quelho Ferreira
+-- @copyright 2019
+-- @license MIT
 ---
 
 local M = {}
