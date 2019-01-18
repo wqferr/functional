@@ -3,7 +3,8 @@
 -- <p>
 -- An <code>iterable</code> refers to either of:
 -- <ul>
--- <li> A table with contiguous non-<code>nil</code> values (an "array"); or </li>
+-- <li> A table with contiguous non-<code>nil</code> values
+-- (an "array"); or </li>
 -- <li> An <code>Iterator</code> instance. </li>
 -- </ul>
 -- </p>
@@ -100,7 +101,7 @@ end
 
 
 --- Select only values which match the predicate.
--- @tparam predicate predicate the function to evaluate for each element
+-- @tparam predicate predicate the function to evaluate for each value
 -- @treturn Iterator the filtering Iterator
 function Iterator:filter(predicate)
   internal.assert_not_nil(predicate, 'predicate')
@@ -116,7 +117,7 @@ end
 --- Map values into new values.
 -- <p>Please note that at no point during iteration may the <code>mapping</code>
 -- function return <code>nil</code> as its first value.</p>
--- @tparam function mapping the function to evaluate for each element
+-- @tparam function mapping the function to evaluate for each value
 -- @treturn Iterator the mapping Iterator
 function Iterator:map(mapping)
   internal.assert_not_nil(mapping, 'mapping')
@@ -157,8 +158,9 @@ end
 -- return value(s) of its function, while map uses them and has restrictions
 -- on what it can return.</p>
 -- <p>Another important difference is that <code>@{Iterator:map}</code>
--- is a lazy evaluator, while <code>@{Iterator:foreach}</code> iterates over its values immediately.</p>
--- @tparam function func the function to apply for each element
+-- is a lazy evaluator, while <code>@{Iterator:foreach}</code> iterates over
+-- its values immediately.</p>
+-- @tparam function func the function to apply for each value
 function Iterator:foreach(func)
   internal.assert_not_nil(func, 'func')
 
@@ -198,8 +200,8 @@ function Iterator:skip(n)
 end
 
 
---- Take 1 element every <code>n</code>.
--- The first element is always taken.
+--- Take 1 value every <code>n</code>.
+-- The first value is always taken.
 -- @tparam integer n one more than the number of skipped values
 -- @see Iterator:skip
 function Iterator:every(n)
@@ -216,7 +218,8 @@ end
 
 
 --- Checks if any values evaluate to <code>true</code>.<br>
--- @tparam predicate predicate function to evaluate for each element, defaults to <pre>not (value == nil or value == false)</pre>
+-- @tparam predicate predicate function to evaluate for each value, defaults
+-- to <pre>not (value == nil or value == false)</pre>
 function Iterator:any(predicate)
   if predicate then
     return self:map(predicate):any()
@@ -232,7 +235,8 @@ end
 
 
 --- Checks if all values evaluate to <code>true</code>.<br>
--- @tparam predicate predicate function to evaluate for each element, defaults to <pre>not (value == nil or value == false)</pre>
+-- @tparam predicate predicate function to evaluate for each value, defaults
+-- to <pre>not (value == nil or value == false)</pre>
 function Iterator:all(predicate)
   if predicate then
     return self:map(predicate):all()
@@ -248,7 +252,8 @@ end
 
 
 --- Counts how many values evaluate to <code>true</code>.<br>
--- @tparam predicate predicate function to evaluate for each element; if <code>nil</code>, then counts all values.
+-- @tparam predicate predicate function to evaluate for each value; if
+-- <code>nil</code>, then counts all values.
 function Iterator:count(predicate)
   if not predicate then
     predicate = M.constant(true)
@@ -271,6 +276,12 @@ end
 
 
 --- Check wether or not the iterator is done.
+-- <p>Please note that even if the iterator has reached its actual last
+-- value, it has no way of knowing it was the last. Therefore, this function
+-- will only return true once the iterator returns <code>nil</code> for the
+-- first time.</p>
+-- @treturn boolean <code>true</code> if the <code>@{Iterator}</code>
+-- has iterated over all its values.
 function Iterator:is_complete()
   return self.completed
 end
