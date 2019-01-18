@@ -305,12 +305,17 @@ function Iterator:is_complete()
 end
 
 
--- RAW FUNCTIONS --
-
-
 --- @section end
 
 
+-- RAW FUNCTIONS --
+
+
+--- Create an <code>@{Iterator}</code> for the <code>iterable</code>.
+-- <p>Equivalent to <code>@{Iterator.create}</code>.</p>
+-- @tparam iterable t the values to be iterated
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @function iterate
 function exports.iterate(t)
   return Iterator.create(t)
 end
