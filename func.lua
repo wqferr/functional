@@ -391,6 +391,14 @@ function exports.foreach(iterable, func)
 end
 
 
+--- Iterate over the <code>n</code> first values and stop.
+-- <p>Equivalent to <code>iterate(iterable):take(n)</code>.</p>
+-- @tparam iterable iterable the values to be iterated over
+-- @tparam integer n amount of values to take
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see iterate
+-- @see Iterator:take
+-- @function take
 function exports.take(iterable, n)
   return exports.iterate(iterable):take(n)
 end
