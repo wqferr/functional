@@ -84,27 +84,27 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:filter">Iterator:filter (predicate)</a></td>
-	<td class="summary">Select only elements which match the predicate.</td>
+	<td class="summary">Select only values which match the predicate.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:map">Iterator:map (mapping)</a></td>
-	<td class="summary">Map elements into new values.</td>
+	<td class="summary">Map values into new values.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:reduce">Iterator:reduce (reducer, initial_value)</a></td>
-	<td class="summary">Collapse elements into a single value.</td>
+	<td class="summary">Collapse values into a single value.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:foreach">Iterator:foreach (func)</a></td>
-	<td class="summary">Apply a function to all elements.</td>
+	<td class="summary">Apply a function to all values.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:take">Iterator:take (n)</a></td>
-	<td class="summary">Iterate over the <code>n</code> first elements and stop.</td>
+	<td class="summary">Iterate over the <code>n</code> first values and stop.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:skip">Iterator:skip (n)</a></td>
-	<td class="summary">Iterate over the values, starting at the <code>n+1</code>th one.</td>
+	<td class="summary">Iterate over the values, starting at the <code>(n+1)</code>th one.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:every">Iterator:every (n)</a></td>
@@ -112,15 +112,15 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:any">Iterator:any (predicate)</a></td>
-	<td class="summary">Checks if any elements evaluate to <code>true</code>.<br></td>
+	<td class="summary">Checks if any values evaluate to <code>true</code>.<br></td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:all">Iterator:all (predicate)</a></td>
-	<td class="summary">Checks if all elements evaluate to <code>true</code>.<br></td>
+	<td class="summary">Checks if all values evaluate to <code>true</code>.<br></td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:count">Iterator:count (predicate)</a></td>
-	<td class="summary">Counts how many elements evaluate to <code>true</code>.<br></td>
+	<td class="summary">Counts how many values evaluate to <code>true</code>.<br></td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:is_complete">Iterator:is_complete ()</a></td>
@@ -203,9 +203,9 @@
 
     <h3>See also:</h3>
     <ul>
-         <li><a href="index.html#Iterator:take">take</a></li>
-         <li><a href="index.html#Iterator:skip">skip</a></li>
-         <li><a href="index.html#Iterator:every">every</a></li>
+         <li><a href="index.html#Iterator:take">Iterator:take</a></li>
+         <li><a href="index.html#Iterator:skip">Iterator:skip</a></li>
+         <li><a href="index.html#Iterator:every">Iterator:every</a></li>
     </ul>
 
 
@@ -246,7 +246,7 @@
     <strong>Iterator:filter (predicate)</strong>
     </dt>
     <dd>
-    Select only elements which match the predicate.
+    Select only values which match the predicate.
 
 
     <h3>Parameters:</h3>
@@ -273,7 +273,7 @@
     <strong>Iterator:map (mapping)</strong>
     </dt>
     <dd>
-    Map elements into new values.
+    Map values into new values.
  <p>Please note that at no point during iteration may the <code>mapping</code>
  function return <code>nil</code> as its first value.</p>
 
@@ -302,7 +302,7 @@
     <strong>Iterator:reduce (reducer, initial_value)</strong>
     </dt>
     <dd>
-    Collapse elements into a single value.
+    Collapse values into a single value.
  <p>A reducer is a function of the form
  <pre>function(accumulated_value, new_value)</pre>
  which returns the reducing or "accumulation" of
@@ -325,7 +325,7 @@
     <h3>Returns:</h3>
     <ol>
 
-        the value accumulated over all elements
+        the value accumulated over all values
     </ol>
 
 
@@ -337,13 +337,13 @@
     <strong>Iterator:foreach (func)</strong>
     </dt>
     <dd>
-    Apply a function to all elements.
+    Apply a function to all values.
  <p>The main difference between <code><a href="index.html#Iterator:foreach">Iterator:foreach</a></code> and
  <code><a href="index.html#Iterator:map">Iterator:map</a></code> is that <code>foreach</code> ignores the
  return value(s) of its function, while map uses them and has restrictions
  on what it can return.</p>
  <p>Another important difference is that <code><a href="index.html#Iterator:map">Iterator:map</a></code>
- is a lazy evaluator, while <code><a href="index.html#Iterator:foreach">Iterator:foreach</a></code> iterates over its elements immediately.</p>
+ is a lazy evaluator, while <code><a href="index.html#Iterator:foreach">Iterator:foreach</a></code> iterates over its values immediately.</p>
 
 
     <h3>Parameters:</h3>
@@ -364,14 +364,14 @@
     <strong>Iterator:take (n)</strong>
     </dt>
     <dd>
-    Iterate over the <code>n</code> first elements and stop.
+    Iterate over the <code>n</code> first values and stop.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">n</span>
             <span class="types"><span class="type">integer</span></span>
-         amount of elements to take
+         amount of values to take
         </li>
     </ul>
 
@@ -385,14 +385,14 @@
     <strong>Iterator:skip (n)</strong>
     </dt>
     <dd>
-    Iterate over the values, starting at the <code>n+1</code>th one.
+    Iterate over the values, starting at the <code>(n+1)</code>th one.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">n</span>
             <span class="types"><span class="type">integer</span></span>
-         amount of elements to skip
+         amount of values to skip
         </li>
     </ul>
 
@@ -414,12 +414,16 @@
     <ul>
         <li><span class="parameter">n</span>
             <span class="types"><span class="type">integer</span></span>
-         one more than the number of skipped elements
+         one more than the number of skipped values
         </li>
     </ul>
 
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#Iterator:skip">Iterator:skip</a>
+    </ul>
 
 
 </dd>
@@ -428,7 +432,7 @@
     <strong>Iterator:any (predicate)</strong>
     </dt>
     <dd>
-    Checks if any elements evaluate to <code>true</code>.<br>
+    Checks if any values evaluate to <code>true</code>.<br>
 
 
     <h3>Parameters:</h3>
@@ -449,7 +453,7 @@
     <strong>Iterator:all (predicate)</strong>
     </dt>
     <dd>
-    Checks if all elements evaluate to <code>true</code>.<br>
+    Checks if all values evaluate to <code>true</code>.<br>
 
 
     <h3>Parameters:</h3>
@@ -470,14 +474,14 @@
     <strong>Iterator:count (predicate)</strong>
     </dt>
     <dd>
-    Counts how many elements evaluate to <code>true</code>.<br>
+    Counts how many values evaluate to <code>true</code>.<br>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">predicate</span>
             <span class="types"><span class="type">predicate</span></span>
-         function to evaluate for each element; if <code>nil</code>, then counts all elements.
+         function to evaluate for each element; if <code>nil</code>, then counts all values.
         </li>
     </ul>
 
@@ -507,7 +511,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2019-01-18 02:47:53 </i>
+<i style="float:right;">Last updated 2019-01-18 02:51:28 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

@@ -52,9 +52,9 @@ end
 
 --- Iterate over the integers in increments of 1.
 -- @treturn Iterator the counter
--- @see take
--- @see skip
--- @see every
+-- @see Iterator:take
+-- @see Iterator:skip
+-- @see Iterator:every
 function Iterator.counter()
   local iterator = internal.base_iter(
     nil, internal.counter_next, internal.counter_clone)
@@ -184,7 +184,7 @@ function Iterator:take(n)
 end
 
 
---- Iterate over the values, starting at the <code>n+1</code>th one.
+--- Iterate over the values, starting at the <code>(n+1)</code>th one.
 -- @tparam integer n amount of values to skip
 function Iterator:skip(n)
   internal.assert_integer(n, 'n')
@@ -201,6 +201,7 @@ end
 --- Take 1 element every <code>n</code>.
 -- The first element is always taken.
 -- @tparam integer n one more than the number of skipped values
+-- @see Iterator:skip
 function Iterator:every(n)
   internal.assert_integer(n, 'n')
 
