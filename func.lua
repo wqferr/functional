@@ -404,6 +404,14 @@ function exports.take(iterable, n)
 end
 
 
+--- Iterate over the values, starting at the <code>(n+1)</code>th one.
+-- <p>Equivalent to <code>iterate(iterable):skip(n)</code>.</p>
+-- @tparam iterable iterable the values to be iterated over
+-- @tparam integer n amount of values to skip
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see iterate
+-- @see Iterator:skip
+-- @function skip
 function exports.skip(iterable, n)
   return exports.iterate(iterable):skip(n)
 end
