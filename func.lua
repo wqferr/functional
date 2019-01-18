@@ -77,7 +77,7 @@ end
 
 --- Iterate over the function's returned values upon repeated calls
 -- @tparam function func the function to call
--- @tparam Iterator the new <code>@{Iterator}</code>
+-- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator.from_iterated_call(func)
   internal.assert_not_nil(func, 'func')
   local iterator = internal.base_iter(
