@@ -282,7 +282,7 @@ end
 -- @treturn array the array of values
 function Iterator:to_array()
   local array = {}
-  self:foreach(M.partial(table.insert, array))
+  self:foreach(M.bind(table.insert, array))
   return array
 end
 
@@ -530,14 +530,14 @@ end
 
 
 --- Create a function with bound arguments.
--- <p>The partial function returned will call <code>func</code>
+-- <p>The bound function returned will call <code>func</code>
 -- with the arguments passed on to its creation.</p>
 -- <p>If more arguments are given during its call, they are
 -- appended to the original ones.</p>
--- @tparam function func the function to create a partial out of
+-- @tparam function func the function to create a binding of
 -- @param ... the arguments to bind to the function.
--- @treturn function the partial function
-function M.partial(func, ...)
+-- @treturn function the bound function
+function M.bind(func, ...)
   internal.assert_not_nil(func, 'func')
 
   local saved_args = { ... }
@@ -571,15 +571,15 @@ function M.item_getter(k)
 end
 
 
-function M.get_partial(t, k, ...)
+function M.bound_item(t, k, ...)
   internal.assert_not_nil(t, 't')
-  return M.partial(t[k], ...)
+  return M.bind(t[k], ...)
 end
 
 
-function M.bound_func(t, k, ...)
+function M.bind_self(t, k, ...)
   internal.assert_not_nil(t, 't')
-  return M.get_partial(t, k, t, ...)
+  return M.bind_item(t, k, t, ...)
 end
 
 
