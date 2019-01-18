@@ -122,8 +122,9 @@ end
 
 
 --- Map values into new values.
--- <p>Please note that at no point during iteration may the <code>mapping</code>
--- function return <code>nil</code> as its first value.</p>
+-- <p>Please note that at no point during iteration may
+-- the <code>mapping</code> function return <code>nil</code>
+-- as its first value.</p>
 -- @tparam function mapping the function to evaluate for each value
 -- @treturn Iterator the mapping <code>@{Iterator}</code>
 function Iterator:map(mapping)
@@ -324,7 +325,7 @@ end
 
 --- Select only values which match the predicate.
 -- <p>Equivalent to <code>iterate(iterable):filter(predicate)</code>.</p>
--- @tparam iterable iterable the values to be iterated
+-- @tparam iterable iterable the values to be filtered
 -- @tparam predicate predicate the function to evaluate for each value
 -- @treturn Iterator the filtering <code>@{Iterator}</code>
 -- @see iterate
@@ -335,6 +336,17 @@ function exports.filter(iterable, predicate)
 end
 
 
+--- Map values into new values.
+-- <p>Please note that at no point during iteration may
+-- the <code>mapping</code> function return <code>nil</code>
+-- as its first value.</p>
+-- <p>Equivalent to <code>iterate(iterable):map(mapping)</code>.</p>
+-- @tparam iterable iterable the values to be mapped
+-- @tparam function mapping the function to evaluate for each value
+-- @treturn Iterator the mapping <code>@{Iterator}</code>
+-- @see iterate
+-- @see Iterator:map
+-- @function map
 function exports.map(iterable, mapping)
   return exports.iterate(iterable):map(mapping)
 end
