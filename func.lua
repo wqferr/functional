@@ -232,7 +232,7 @@ end
 -- @tparam predicate predicate the function to evaluate for each value,
 -- defaults to <pre>not (value == nil or value == false)</pre>
 -- @treturn boolean <code>true</code> if and only if at least one of the
--- values evaluate to true
+-- values evaluate to <code>true</code>
 function Iterator:any(predicate)
   if predicate then
     return self:map(predicate):any()
@@ -248,10 +248,10 @@ end
 
 
 --- Checks if all values evaluate to <code>true</code>.<br>
--- @tparam predicate predicate function to evaluate for each value, defaults
--- to <pre>not (value == nil or value == false)</pre>
+-- @tparam predicate predicate the function to evaluate for each value,
+-- defaults to <pre>not (value == nil or value == false)</pre>
 -- @treturn boolean <code>true</code> if and only if all of the
--- values evaluate to true
+-- values evaluate to <code>true</code>
 function Iterator:all(predicate)
   if predicate then
     return self:map(predicate):all()
