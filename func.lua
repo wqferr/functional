@@ -32,6 +32,7 @@ M._VERSION = '0.8.1'
 -- that returns its values one by one. If it is an
 -- iterator, return itself.</p>
 -- @tparam iterable t the values to be iterated
+-- @treturn Iterator the new Iterator
 function Iterator.create(t)
   internal.assert_table(t)
 
@@ -98,6 +99,9 @@ function Iterator.clone(t)
 end
 
 
+--- Select only elements which match the predicate.
+-- @tparam predicate predicate the function to evaluate for each element
+-- @treturn Iterator the filtering Iterator
 function Iterator:filter(predicate)
   internal.assert_not_nil(predicate, 'predicate')
   local iterator = internal.base_iter(
@@ -109,6 +113,11 @@ function Iterator:filter(predicate)
 end
 
 
+--- Map elements into new values.
+-- <p>Please note that at no point during iteration may the <code>mapping</code>
+-- function return <code>nil</code> as its first value.</p>
+-- @tparam function mapping the function to evaluate for each element
+-- @treturn Iterator the mapping Iterator
 function Iterator:map(mapping)
   internal.assert_not_nil(mapping, 'mapping')
   local iterator = internal.base_iter(
@@ -120,6 +129,16 @@ function Iterator:map(mapping)
 end
 
 
+--- Collapse elements into a single value.
+-- <p>A reducer is a function of the form
+-- <pre>function(accumulated_value, new_value)</pre>
+-- which returns the reducing or "accumulation" of
+-- <code>accumulated_value</code> and <code>new_value</code></p>
+-- <p>The definition of "reducing" is flexible, and a few common examples
+-- include sum and concatenation.</p>
+-- @tparam reducer reducer the function to collapse the values
+-- @param initial_value the initial value passed to the <code>reducer</code>
+-- @return the value accumulated over all elements
 function Iterator:reduce(reducer, initial_value)
   internal.assert_not_nil(reducer, 'reducer')
   local reduced_result = initial_value
@@ -242,6 +261,7 @@ function Iterator:to_coroutine()
 end
 
 
+--- Check wether or not the iterator is done.
 function Iterator:is_complete()
   return self.completed
 end
