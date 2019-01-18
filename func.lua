@@ -293,7 +293,7 @@ function Iterator:to_coroutine()
 end
 
 
---- Check wether or not the iterator is done.
+--- Check whether or not the iterator is done.
 -- <p>Please note that even if the iterator has reached its actual last
 -- value, it has no way of knowing it was the last. Therefore, this function
 -- will only return true once the iterator returns <code>nil</code> for the
@@ -321,6 +321,14 @@ function exports.iterate(t)
 end
 
 
+--- Select only values which match the predicate.
+-- <p>Equivalent to <code>iterate(t):filter(predicate)</code>.</p>
+-- @tparam iterable t the values to be iterated
+-- @tparam predicate predicate the function to evaluate for each value
+-- @treturn Iterator the filtering <code>@{Iterator}</code>
+-- @see iterate
+-- @see Iterator:filter
+-- @function filter
 function exports.filter(t, predicate)
   return exports.iterate(t):filter(predicate)
 end
