@@ -66,6 +66,9 @@ function Iterator.counter()
 end
 
 
+--- Iterate over the coroutine's yielded values.
+-- @tparam thread co the coroutine to iterate
+-- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator.from_coroutine(co)
   internal.assert_coroutine(co)
   return internal.wrap_coroutine(co)
@@ -102,7 +105,7 @@ end
 
 --- Select only values which match the predicate.
 -- @tparam predicate predicate the function to evaluate for each value
--- @treturn Iterator the filtering Iterator
+-- @treturn Iterator the filtering <code>@{Iterator}</code>
 function Iterator:filter(predicate)
   internal.assert_not_nil(predicate, 'predicate')
   local iterator = internal.base_iter(
@@ -118,7 +121,7 @@ end
 -- <p>Please note that at no point during iteration may the <code>mapping</code>
 -- function return <code>nil</code> as its first value.</p>
 -- @tparam function mapping the function to evaluate for each value
--- @treturn Iterator the mapping Iterator
+-- @treturn Iterator the mapping <code>@{Iterator}</code>
 function Iterator:map(mapping)
   internal.assert_not_nil(mapping, 'mapping')
   local iterator = internal.base_iter(
@@ -174,6 +177,7 @@ end
 
 --- Iterate over the <code>n</code> first values and stop.
 -- @tparam integer n amount of values to take
+-- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator:take(n)
   internal.assert_integer(n, 'n')
 
@@ -188,6 +192,7 @@ end
 
 --- Iterate over the values, starting at the <code>(n+1)</code>th one.
 -- @tparam integer n amount of values to skip
+-- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator:skip(n)
   internal.assert_integer(n, 'n')
 
@@ -203,6 +208,7 @@ end
 --- Take 1 value every <code>n</code>.
 -- The first value is always taken.
 -- @tparam integer n one more than the number of skipped values
+-- @treturn Iterator the new <code>@{Iterator}</code>
 -- @see Iterator:skip
 function Iterator:every(n)
   internal.assert_integer(n, 'n')
@@ -220,6 +226,8 @@ end
 --- Checks if any values evaluate to <code>true</code>.<br>
 -- @tparam predicate predicate function to evaluate for each value, defaults
 -- to <pre>not (value == nil or value == false)</pre>
+-- @treturn boolean <code>true</code> if and only if at least one of the
+-- values evaluate to true
 function Iterator:any(predicate)
   if predicate then
     return self:map(predicate):any()
@@ -237,6 +245,8 @@ end
 --- Checks if all values evaluate to <code>true</code>.<br>
 -- @tparam predicate predicate function to evaluate for each value, defaults
 -- to <pre>not (value == nil or value == false)</pre>
+-- @treturn boolean <code>true</code> if and only if all of the
+-- values evaluate to true
 function Iterator:all(predicate)
   if predicate then
     return self:map(predicate):all()
@@ -254,6 +264,7 @@ end
 --- Counts how many values evaluate to <code>true</code>.<br>
 -- @tparam predicate predicate function to evaluate for each value; if
 -- <code>nil</code>, then counts all values.
+-- @treturn integer the number of values that match the <code>predicate</code>
 function Iterator:count(predicate)
   if not predicate then
     predicate = M.constant(true)
