@@ -497,8 +497,7 @@ end
 -- MISC FUNCTIONS --
 
 
---- Create a function whose return value is the negated version of
--- <code>predicate</code> for the given arguments.
+--- Create a negated function of <code>predicate</code>.
 -- @tparam predicate predicate the function to be negated
 -- @treturn predicate the inverted predicate
 function M.negate(predicate)
