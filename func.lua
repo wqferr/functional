@@ -75,6 +75,9 @@ function Iterator.from_coroutine(co)
 end
 
 
+--- Iterate over the function's returned values upon repeated calls
+-- @tparam function func the function to call
+-- @tparam Iterator the new <code>@{Iterator}</code>
 function Iterator.from_iterated_call(func)
   internal.assert_not_nil(func, 'func')
   local iterator = internal.base_iter(
@@ -273,7 +276,8 @@ function Iterator:count(predicate)
 end
 
 
-
+--- Create an array out of the <code>@{Iterator}</code>'s values.
+-- @treturn array the array of values
 function Iterator:to_array()
   local array = {}
   self:foreach(M.partial(table.insert, array))
