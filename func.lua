@@ -510,6 +510,12 @@ function M.negate(predicate)
 end
 
 
+--- Create a function composition from the given functions.
+-- @tparam function f1 the outermost function of the composition
+-- @tparam function f2 the second outermost function of the composition
+-- @tparam function... ... any further functions to add to the composition,
+-- in order
+-- @treturn function the composite function
 function M.compose(f1, f2, ...)
   internal.assert_not_nil(f1, 'f1')
   internal.assert_not_nil(f2, 'f2')
