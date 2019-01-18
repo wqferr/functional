@@ -147,7 +147,7 @@ end
 -- include sum and concatenation.</p>
 -- @tparam reducer reducer the collapsing function
 -- @param initial_value the initial value passed to the <code>reducer</code>
--- @return the value accumulated over all values
+-- @return the accumulation of all values
 function Iterator:reduce(reducer, initial_value)
   internal.assert_not_nil(reducer, 'reducer')
   local reduced_result = initial_value
@@ -352,6 +352,26 @@ function exports.map(iterable, mapping)
 end
 
 
+--- Collapse values into a single value.
+-- <p>A reducer is a function of the form
+-- <pre>function(accumulated_value, new_value)</pre>
+-- which returns the reducing or "accumulation" of
+-- <code>accumulated_value</code> and <code>new_value</code></p>
+-- <p>The definition of "reducing" is flexible, and a few common examples
+-- include sum and concatenation.</p>
+-- <p>Equivalent to <code>iterate(iterable):reduce(reducer)</code>.</p>
+-- @tparam iterable iterable the values to be collapsed
+-- @tparam reducer reducer the collapsing function
+-- @param initial_value the initial value passed to the <code>reducer</code>
+-- @return the accumulation of all values
+-- @see iterate
+-- @see Iterator:reduce
+-- @function reduce
+function exports.reduce(iterable, reducer, initial_value)
+  return exports.iterate(iterable):reduce(reducer, initial_value)
+end
+
+
 --- Apply a function to all values.
 -- <p>The main difference between <code>@{foreach}</code> and
 -- <code>@{map}</code> is that <code>foreach</code> ignores the
@@ -368,11 +388,6 @@ end
 -- @function foreach
 function exports.foreach(iterable, func)
   return exports.iterate(iterable):foreach(func)
-end
-
-
-function exports.reduce(iterable, func, initial_value)
-  return exports.iterate(iterable):reduce(func, initial_value)
 end
 
 
