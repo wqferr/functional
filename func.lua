@@ -1,11 +1,14 @@
 ---
--- A module for functional programming utils.
+-- <h2>A module for functional programming utils.</h2>
+-- <p>
 -- An <code>iterable</code> refers to either of:
 -- <ul>
 -- <li> A table with contiguous non-<code>nil</code> values; or </li>
 -- <li> An <code>Iterator</code> instance. </li>
 -- </ul>
+-- </p>
 -- @module functional
+-- @release 0.8.1
 -- @alias M
 -- @author William Quelho Ferreira
 ---
@@ -22,7 +25,10 @@ local iter_meta = {}
 M._VERSION = '0.8.1'
 
 
---- Create an iterator over the given values.
+--- Iterate over the given <code>iterable</code>.
+-- <p>If <code>t</code> is a table, create an Iterator instance
+-- that returns its values one by one. If it is an
+-- iterator, return itself.</p>
 -- @tparam iterable t the values to be iterated
 function Iterator.create(t)
   internal.assert_table(t)
@@ -41,6 +47,10 @@ function Iterator.create(t)
 end
 
 
+--- <p>Iterate over the integers in increments of 1.</p>
+-- @see take
+-- @see skip
+-- @see every
 function Iterator.counter()
   local iterator = internal.base_iter(
     nil, internal.counter_next, internal.counter_clone)
@@ -123,6 +133,8 @@ function Iterator:foreach(func)
 end
 
 
+--- <p>Iterate over the <code>n</code> first elements and stop.</p>
+-- @tparam integer n amount of elements to take
 function Iterator:take(n)
   internal.assert_integer(n, 'n')
 
@@ -135,6 +147,8 @@ function Iterator:take(n)
 end
 
 
+--- <p>Iterate over the values, starting at the <code>n+1</code>th one.</p>
+-- @tparam integer n amount of elements to skip
 function Iterator:skip(n)
   internal.assert_integer(n, 'n')
 
