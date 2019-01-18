@@ -501,7 +501,6 @@ end
 -- <code>predicate</code> for the given arguments.
 -- @tparam predicate predicate the function to be negated
 -- @treturn predicate the inverted predicate
--- @function negate
 function M.negate(predicate)
   internal.assert_not_nil(predicate, 'predicate')
   return function(...)
@@ -531,8 +530,16 @@ function M.compose(f1, f2, ...)
 end
 
 
-function M.partial(f, ...)
-  internal.assert_not_nil(f, 'f')
+--- Create a function with bound arguments.
+-- <p>The partial function returned will call <code>func</code>
+-- with the arguments passed on to its creation.</p>
+-- <p>If more arguments are given during its call, they are
+-- appended to the original ones.</p>
+-- @tparam function func the function to create a partial out of
+-- @param ... the arguments to bind to the function.
+-- @treturn function the partial function
+function M.partial(func, ...)
+  internal.assert_not_nil(func, 'func')
 
   local saved_args = { ... }
   return function(...)
@@ -540,7 +547,7 @@ function M.partial(f, ...)
     for _, arg in ipairs({...}) do
       table.insert(args, arg)
     end
-    return f(table.unpack(args))
+    return func(table.unpack(args))
   end
 end
 
