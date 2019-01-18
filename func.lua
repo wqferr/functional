@@ -3,7 +3,7 @@
 -- <p>
 -- An <code>iterable</code> refers to either of:
 -- <ul>
--- <li> A table with contiguous non-<code>nil</code> values; or </li>
+-- <li> A table with contiguous non-<code>nil</code> values (an "array"); or </li>
 -- <li> An <code>Iterator</code> instance. </li>
 -- </ul>
 -- </p>
@@ -78,7 +78,13 @@ function Iterator.from_iterated_call(func)
 end
 
 
---- Create a nondestructive copy of the given iterable.
+--- Nondestructively return an indepent iterable from the given one.
+-- <p>If <code>t</code> is an Iterator, clone it according to its subtype.
+-- If <code>t</code> is an array, then return itself.</p>
+-- <p>Please note that coroutine and iterated function call iterators
+-- cannot be cloned.</p>
+-- @tparam iterable t the iterable to be cloned
+-- @treturn iterable the clone
 function Iterator.clone(t)
   internal.assert_not_nil(t, 't')
   if internal.is_iterator(t) then
