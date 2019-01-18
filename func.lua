@@ -274,10 +274,10 @@ end
 
 
 
-function Iterator:to_list()
-  local list = {}
-  self:foreach(M.partial(table.insert, list))
-  return list
+function Iterator:to_array()
+  local array = {}
+  self:foreach(M.partial(table.insert, array))
+  return array
 end
 
 
@@ -354,10 +354,10 @@ function exports.all(t, predicate)
 end
 
 
-function M.to_list(t)
+function M.to_array(t)
   assert_table(t)
   if internal.is_iterator(t) then
-    return t:to_list()
+    return t:to_array()
   else
     return t
   end
@@ -747,9 +747,9 @@ end
 
 
 internal.ERR_COROUTINE_CLONE =
-  'cannot clone coroutine iterator; try to_list and iterate over it'
+  'cannot clone coroutine iterator; try to_array and iterate over it'
 internal.ERR_FUNCTION_CLONE =
-  'cannot clone iterated function call; try to_list and iterate over it'
+  'cannot clone iterated function call; try to_array and iterate over it'
 
 internal.ERR_INTEGER_EXPECTED = 'param %s expected integer, got: %s'
 internal.ERR_TABLE_EXPECTED = 'param %s expected table, got: %s'
