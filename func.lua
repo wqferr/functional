@@ -32,7 +32,7 @@ M._VERSION = '0.8.1'
 -- <p>If <code>iterable</code> is an array, create an Iterator instance
 -- that returns its values one by one. If it is an
 -- iterator, return itself.</p>
--- @tparam iterable iterable the values to be iterated
+-- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new Iterator
 function Iterator.create(iterable)
   internal.assert_table(iterable)
@@ -315,7 +315,7 @@ end
 
 --- Create an <code>@{Iterator}</code> for the <code>iterable</code>.
 -- <p>Equivalent to <code>@{Iterator.create}</code>.</p>
--- @tparam iterable iterable the values to be iterated
+-- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @function iterate
 function exports.iterate(iterable)
@@ -352,6 +352,20 @@ function exports.map(iterable, mapping)
 end
 
 
+--- Apply a function to all values.
+-- <p>The main difference between <code>@{foreach}</code> and
+-- <code>@{map}</code> is that <code>foreach</code> ignores the
+-- return value(s) of its function, while map uses them and has restrictions
+-- on what it can return.</p>
+-- <p>Another important difference is that <code>@{map}</code>
+-- is a lazy evaluator, while <code>@{foreach}</code> iterates over
+-- its values immediately.</p>
+-- <p>Equivalent to <code>iterate(iterable):foreach(func)</code>.</p>
+-- @tparam iterable iterable the values to be iterated over
+-- @tparam function func the function to apply for each value
+-- @see iterate
+-- @see Iterator:foreach
+-- @function foreach
 function exports.foreach(iterable, func)
   return exports.iterate(iterable):foreach(func)
 end
