@@ -601,6 +601,25 @@ function M.constant(value)
 end
 
 
+--- Import <code>@{Iterator}</code> and commonly used
+-- functions into global scope.
+-- <p>Upon calling this, the following values will be
+-- added to global scope (<code>_G</code>) with the same names:
+-- <ul>
+-- <li> @{Iterator} </li>
+-- <li> @{iterate} </li>
+-- <li> @{filter} </li>
+-- <li> @{map} </li>
+-- <li> @{reduce} </li>
+-- <li> @{foreach} </li>
+-- <li> @{take} </li>
+-- <li> @{skip} </li>
+-- <li> @{every} </li>
+-- <li> @{any} </li>
+-- <li> @{all} </li>
+-- </ul></p>
+-- <p>They can still be accessed through the module after the call.</p>
+-- @function import
 local function export_funcs()
   for k, v in pairs(exports) do
     _G[k] = v
