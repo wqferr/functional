@@ -229,8 +229,8 @@ end
 
 
 --- Checks if any values evaluate to <code>true</code>.<br>
--- @tparam predicate predicate function to evaluate for each value, defaults
--- to <pre>not (value == nil or value == false)</pre>
+-- @tparam predicate predicate the function to evaluate for each value,
+-- defaults to <pre>not (value == nil or value == false)</pre>
 -- @treturn boolean <code>true</code> if and only if at least one of the
 -- values evaluate to true
 function Iterator:any(predicate)
@@ -420,6 +420,7 @@ end
 --- Take 1 value every <code>n</code>.
 -- <p>Equivalent to <pre>iterate(iterable):every(n)</pre>.</p>
 -- <p>The first value is always taken.</p>
+-- @tparam iterable iterable the values to be iterated over
 -- @tparam integer n one more than the number of skipped values
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @see Iterator:every
@@ -431,6 +432,16 @@ function exports.every(iterable, n)
 end
 
 
+--- Checks if any values evaluate to <code>true</code>.<br>
+-- <p>Equivalent to <pre>iterate(iterable):any(predicate)</pre>.</p>
+-- @tparam iterable iterable the values to be iterated over
+-- @tparam predicate predicate the function to evaluate for each value,
+-- defaults to <pre>not (value == nil or value == false)</pre>
+-- @treturn boolean <code>true</code> if and only if at least one of the
+-- values evaluate to true
+-- @see Iterator:any
+-- @see iterate
+-- @function any
 function exports.any(iterable, predicate)
   return exports.iterate(iterable):any(predicate)
 end
