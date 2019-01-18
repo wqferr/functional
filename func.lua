@@ -497,10 +497,15 @@ end
 -- MISC FUNCTIONS --
 
 
-function M.negate(f)
-  internal.assert_not_nil(f, 'f')
+--- Create a function whose return value is the negated version of
+-- <code>predicate</code> for the given arguments.
+-- @tparam predicate predicate the function to be negated
+-- @treturn predicate the inverted predicate
+-- @function negate
+function M.negate(predicate)
+  internal.assert_not_nil(predicate, 'predicate')
   return function(...)
-    return not f(...)
+    return not predicate(...)
   end
 end
 
