@@ -211,7 +211,7 @@ end
 
 
 --- Take 1 value every <code>n</code>.
--- The first value is always taken.
+-- <p>The first value is always taken.</p>
 -- @tparam integer n one more than the number of skipped values
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @see Iterator:skip
@@ -417,6 +417,15 @@ function exports.skip(iterable, n)
 end
 
 
+--- Take 1 value every <code>n</code>.
+-- <p>The first value is always taken.</p>
+-- <p>Equivalent to <code>iterate(iterable):every(n)</code>.</p>
+-- @tparam integer n one more than the number of skipped values
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see Iterator:every
+-- @see iterate
+-- @see skip
+-- @function every
 function exports.every(iterable, n)
   return exports.iterate(iterable):every(n)
 end
