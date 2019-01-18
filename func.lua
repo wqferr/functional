@@ -228,7 +228,7 @@ function Iterator:every(n)
 end
 
 
---- Checks if any values evaluate to <code>true</code>.<br>
+--- Checks if any values evaluate to <code>true</code>.
 -- @tparam predicate predicate the function to evaluate for each value,
 -- defaults to <pre>not (value == nil or value == false)</pre>
 -- @treturn boolean <code>true</code> if and only if at least one of the
@@ -247,7 +247,7 @@ function Iterator:any(predicate)
 end
 
 
---- Checks if all values evaluate to <code>true</code>.<br>
+--- Checks if all values evaluate to <code>true</code>.
 -- @tparam predicate predicate the function to evaluate for each value,
 -- defaults to <pre>not (value == nil or value == false)</pre>
 -- @treturn boolean <code>true</code> if and only if all of the
@@ -266,7 +266,7 @@ function Iterator:all(predicate)
 end
 
 
---- Counts how many values evaluate to <code>true</code>.<br>
+--- Counts how many values evaluate to <code>true</code>.
 -- @tparam predicate predicate function to evaluate for each value; if
 -- <code>nil</code>, then counts all values.
 -- @treturn integer the number of values that match the <code>predicate</code>
@@ -432,7 +432,7 @@ function exports.every(iterable, n)
 end
 
 
---- Checks if any values evaluate to <code>true</code>.<br>
+--- Checks if any values evaluate to <code>true</code>.
 -- <p>Equivalent to <pre>iterate(iterable):any(predicate)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @tparam predicate predicate the function to evaluate for each value,
@@ -447,7 +447,7 @@ function exports.any(iterable, predicate)
 end
 
 
---- Checks if all values evaluate to <code>true</code>.<br>
+--- Checks if all values evaluate to <code>true</code>.
 -- <p>Equivalent to <pre>iterate(iterable):all(predicate)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @tparam predicate predicate the function to evaluate for each value,
