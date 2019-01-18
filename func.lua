@@ -438,7 +438,7 @@ end
 -- @tparam predicate predicate the function to evaluate for each value,
 -- defaults to <pre>not (value == nil or value == false)</pre>
 -- @treturn boolean <code>true</code> if and only if at least one of the
--- values evaluate to true
+-- values evaluate to <code>true</code>
 -- @see Iterator:any
 -- @see iterate
 -- @function any
@@ -447,6 +447,16 @@ function exports.any(iterable, predicate)
 end
 
 
+--- Checks if all values evaluate to <code>true</code>.<br>
+-- <p>Equivalent to <pre>iterate(iterable):all(predicate)</pre>.</p>
+-- @tparam iterable iterable the values to be iterated over
+-- @tparam predicate predicate the function to evaluate for each value,
+-- defaults to <pre>not (value == nil or value == false)</pre>
+-- @treturn boolean <code>true</code> if and only if all of the
+-- values evaluate to <code>true</code>
+-- @see Iterator:all
+-- @see iterate
+-- @function all
 function exports.all(iterable, predicate)
   return exports.iterate(iterable):all(predicate)
 end
