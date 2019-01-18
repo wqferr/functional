@@ -1,8 +1,8 @@
 package = 'functional'
-version = '0.9-2'
+version = '0.9-3'
 source = {
   url = 'git://github.com/wqferr/lua-func',
-  tag = 'v0.9.2'
+  tag = 'v0.9.3'
 }
 
 description = {
@@ -15,10 +15,6 @@ description = {
   ]],
   homepage = 'https://wqferr.github.io/lua-func/',
   license = 'MIT'
-}
-
-dependencies = {
-  'lua >= 5.2'
 }
 
 build = {
