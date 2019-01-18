@@ -591,6 +591,9 @@ function M.bind_self(t, k, ...)
 end
 
 
+--- Create a function that always returns the same value.
+-- @param value the constant to be returned
+-- @treturn function the constant function
 function M.constant(value)
   return function(...)
     return value
