@@ -47,7 +47,7 @@ function Iterator.create(t)
 end
 
 
---- <p>Iterate over the integers in increments of 1.</p>
+--- Iterate over the integers in increments of 1.
 -- @see take
 -- @see skip
 -- @see every
@@ -78,6 +78,7 @@ function Iterator.from_iterated_call(func)
 end
 
 
+--- Create a nondestructive copy of the given iterable.
 function Iterator.clone(t)
   internal.assert_not_nil(t, 't')
   if internal.is_iterator(t) then
@@ -133,7 +134,7 @@ function Iterator:foreach(func)
 end
 
 
---- <p>Iterate over the <code>n</code> first elements and stop.</p>
+--- Iterate over the <code>n</code> first elements and stop.
 -- @tparam integer n amount of elements to take
 function Iterator:take(n)
   internal.assert_integer(n, 'n')
@@ -147,7 +148,7 @@ function Iterator:take(n)
 end
 
 
---- <p>Iterate over the values, starting at the <code>n+1</code>th one.</p>
+--- Iterate over the values, starting at the <code>n+1</code>th one.
 -- @tparam integer n amount of elements to skip
 function Iterator:skip(n)
   internal.assert_integer(n, 'n')
