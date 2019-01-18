@@ -578,15 +578,9 @@ function M.item_getter(k)
 end
 
 
-function M.bound_item(t, k, ...)
-  internal.assert_not_nil(t, 't')
-  return M.bind(t[k], ...)
-end
-
-
 function M.bind_self(t, k, ...)
   internal.assert_not_nil(t, 't')
-  return M.bind_item(t, k, t, ...)
+  return M.bind(t[k], t, ...)
 end
 
 
