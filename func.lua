@@ -25,6 +25,8 @@ local iter_meta = {}
 M._VERSION = '0.8.1'
 
 
+--- @type Iterator
+
 --- Iterate over the given <code>iterable</code>.
 -- <p>If <code>t</code> is a table, create an Iterator instance
 -- that returns its values one by one. If it is an
@@ -48,6 +50,7 @@ end
 
 
 --- Iterate over the integers in increments of 1.
+-- @treturn Iterator the counter
 -- @see take
 -- @see skip
 -- @see every
@@ -245,6 +248,9 @@ end
 
 
 -- RAW FUNCTIONS --
+
+
+--- @section end
 
 
 function exports.iterate(t)
@@ -706,8 +712,6 @@ iter_meta.__call = function(iter)
 end
 
 
---- Base prototype for iterating types.
--- @prototype Iterator
 exports.Iterator = Iterator
 
 
