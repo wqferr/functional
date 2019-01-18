@@ -99,7 +99,7 @@ function Iterator.clone(t)
 end
 
 
---- Select only elements which match the predicate.
+--- Select only values which match the predicate.
 -- @tparam predicate predicate the function to evaluate for each element
 -- @treturn Iterator the filtering Iterator
 function Iterator:filter(predicate)
@@ -113,7 +113,7 @@ function Iterator:filter(predicate)
 end
 
 
---- Map elements into new values.
+--- Map values into new values.
 -- <p>Please note that at no point during iteration may the <code>mapping</code>
 -- function return <code>nil</code> as its first value.</p>
 -- @tparam function mapping the function to evaluate for each element
@@ -129,16 +129,16 @@ function Iterator:map(mapping)
 end
 
 
---- Collapse elements into a single value.
+--- Collapse values into a single value.
 -- <p>A reducer is a function of the form
 -- <pre>function(accumulated_value, new_value)</pre>
 -- which returns the reducing or "accumulation" of
 -- <code>accumulated_value</code> and <code>new_value</code></p>
 -- <p>The definition of "reducing" is flexible, and a few common examples
 -- include sum and concatenation.</p>
--- @tparam reducer reducer the function to collapse the values
+-- @tparam reducer reducer the collapsing function
 -- @param initial_value the initial value passed to the <code>reducer</code>
--- @return the value accumulated over all elements
+-- @return the value accumulated over all values
 function Iterator:reduce(reducer, initial_value)
   internal.assert_not_nil(reducer, 'reducer')
   local reduced_result = initial_value
@@ -151,6 +151,14 @@ function Iterator:reduce(reducer, initial_value)
 end
 
 
+--- Apply a function to all values.
+-- <p>The main difference between <code>@{Iterator:foreach}</code> and
+-- <code>@{Iterator:map}</code> is that <code>foreach</code> ignores the
+-- return value(s) of its function, while map uses them and has restrictions
+-- on what it can return.</p>
+-- <p>Another important difference is that <code>@{Iterator:map}</code>
+-- is a lazy evaluator, while <code>@{Iterator:foreach}</code> iterates over its values immediately.</p>
+-- @tparam function func the function to apply for each element
 function Iterator:foreach(func)
   internal.assert_not_nil(func, 'func')
 
@@ -162,8 +170,8 @@ function Iterator:foreach(func)
 end
 
 
---- Iterate over the <code>n</code> first elements and stop.
--- @tparam integer n amount of elements to take
+--- Iterate over the <code>n</code> first values and stop.
+-- @tparam integer n amount of values to take
 function Iterator:take(n)
   internal.assert_integer(n, 'n')
 
@@ -177,7 +185,7 @@ end
 
 
 --- Iterate over the values, starting at the <code>n+1</code>th one.
--- @tparam integer n amount of elements to skip
+-- @tparam integer n amount of values to skip
 function Iterator:skip(n)
   internal.assert_integer(n, 'n')
 
@@ -192,7 +200,7 @@ end
 
 --- Take 1 element every <code>n</code>.
 -- The first element is always taken.
--- @tparam integer n one more than the number of skipped elements
+-- @tparam integer n one more than the number of skipped values
 function Iterator:every(n)
   internal.assert_integer(n, 'n')
 
@@ -206,7 +214,7 @@ function Iterator:every(n)
 end
 
 
---- Checks if any elements evaluate to <code>true</code>.<br>
+--- Checks if any values evaluate to <code>true</code>.<br>
 -- @tparam predicate predicate function to evaluate for each element, defaults to <pre>not (value == nil or value == false)</pre>
 function Iterator:any(predicate)
   if predicate then
@@ -222,7 +230,7 @@ function Iterator:any(predicate)
 end
 
 
---- Checks if all elements evaluate to <code>true</code>.<br>
+--- Checks if all values evaluate to <code>true</code>.<br>
 -- @tparam predicate predicate function to evaluate for each element, defaults to <pre>not (value == nil or value == false)</pre>
 function Iterator:all(predicate)
   if predicate then
@@ -238,8 +246,8 @@ function Iterator:all(predicate)
 end
 
 
---- Counts how many elements evaluate to <code>true</code>.<br>
--- @tparam predicate predicate function to evaluate for each element; if <code>nil</code>, then counts all elements.
+--- Counts how many values evaluate to <code>true</code>.<br>
+-- @tparam predicate predicate function to evaluate for each element; if <code>nil</code>, then counts all values.
 function Iterator:count(predicate)
   if not predicate then
     predicate = M.constant(true)
