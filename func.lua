@@ -1,4 +1,13 @@
-local module = {}
+---
+-- Test description header.
+-- More description.<br>
+-- More more more.
+-- @module functional
+-- @alias M
+-- @author William Quelho Ferreira
+---
+
+local M = {}
 local exports = {}
 local internal = {}
 
@@ -6,6 +15,12 @@ local Iterator = {}
 local iter_meta = {}
 
 
+--- Module version.
+M._VERSION = '0.8.1'
+
+
+--- Create an iterator over the given values.
+-- @param t the values to be iterated
 function Iterator.create(t)
   internal.assert_table(t)
 
@@ -76,7 +91,7 @@ function Iterator:map(mapping)
   local iterator = internal.base_iter(
     self, internal.map_next, internal.map_clone)
 
-  iterator.mapping = module.compose(internal.func_nil_guard, mapping)
+  iterator.mapping = M.compose(internal.func_nil_guard, mapping)
 
   return iterator
 end
@@ -142,6 +157,8 @@ function Iterator:every(n)
 end
 
 
+--- Checks if any elements evaluate to <code>true</code>.<br>
+-- @param predicate predicate to evaluate for each element, defaults to <pre>not (value == nil or value == false)</pre>
 function Iterator:any(predicate)
   if predicate then
     return self:map(predicate):any()
@@ -172,7 +189,7 @@ end
 
 function Iterator:count(predicate)
   if not predicate then
-    predicate = module.constant(true)
+    predicate = M.constant(true)
   end
   return self:map(predicate):map(internal.bool_to_int):reduce(internal.sum, 0)
 end
@@ -181,7 +198,7 @@ end
 
 function Iterator:to_list()
   local list = {}
-  self:foreach(module.partial(table.insert, list))
+  self:foreach(M.partial(table.insert, list))
   return list
 end
 
@@ -249,7 +266,7 @@ function exports.all(t, predicate)
 end
 
 
-function module.to_list(t)
+function M.to_list(t)
   assert_table(t)
   if internal.is_iterator(t) then
     return t:to_list()
@@ -259,7 +276,7 @@ function module.to_list(t)
 end
 
 
-function module.to_coroutine(t)
+function M.to_coroutine(t)
   return exports.iterate(t):to_coroutine()
 end
 
@@ -267,7 +284,7 @@ end
 -- MISC FUNCTIONS --
 
 
-function module.negate(f)
+function M.negate(f)
   internal.assert_not_nil(f, 'f')
   return function(...)
     return not f(...)
@@ -275,13 +292,13 @@ function module.negate(f)
 end
 
 
-function module.compose(f1, f2, ...)
+function M.compose(f1, f2, ...)
   internal.assert_not_nil(f1, 'f1')
   internal.assert_not_nil(f2, 'f2')
 
   if select('#', ...) > 0 then
-    local part = module.compose(f2, ...)
-    return module.compose(f1, part)
+    local part = M.compose(f2, ...)
+    return M.compose(f1, part)
   else
     return function(...)
       return f1(f2(...))
@@ -290,7 +307,7 @@ function module.compose(f1, f2, ...)
 end
 
 
-function module.partial(f, ...)
+function M.partial(f, ...)
   internal.assert_not_nil(f, 'f')
 
   local saved_args = { ... }
@@ -304,7 +321,7 @@ function module.partial(f, ...)
 end
 
 
-function module.accessor(t)
+function M.accessor(t)
   internal.assert_table(t)
   return function(k)
     return t[k]
@@ -312,26 +329,26 @@ function module.accessor(t)
 end
 
 
-function module.itemgetter(k)
+function M.itemgetter(k)
   return function(t)
     return t[k]
   end
 end
 
 
-function module.get_partial(t, k, ...)
+function M.get_partial(t, k, ...)
   internal.assert_not_nil(t, 't')
-  return module.partial(t[k], ...)
+  return M.partial(t[k], ...)
 end
 
 
-function module.bound_func(t, k, ...)
+function M.bound_func(t, k, ...)
   internal.assert_not_nil(t, 't')
-  return module.get_partial(t, k, t, ...)
+  return M.get_partial(t, k, t, ...)
 end
 
 
-function module.constant(value)
+function M.constant(value)
   return function(...)
     return value
   end
@@ -343,7 +360,7 @@ local function export_funcs()
     _G[k] = v
   end
 
-  return module
+  return M
 end
 
 
@@ -658,13 +675,16 @@ iter_meta.__call = function(iter)
 end
 
 
+--- Base prototype for iterating types.
+-- @prototype Iterator
 exports.Iterator = Iterator
 
 
-module.import = export_funcs
+M.import = export_funcs
 
 for name, exported_func in pairs(exports) do
-  module[name] = exported_func
+  M[name] = exported_func
 end
 
-return module
+
+return M
