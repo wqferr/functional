@@ -578,6 +578,13 @@ function M.item_getter(k)
 end
 
 
+--- Create f bound function whose first argument is <code>t</code>.
+-- <p>Particularly useful to pass a method as a function.</p>
+-- <p>Equivalent to <pre>bind(t[k], t, ...)</pre>.</p>
+-- @tparam table t the table to be accessed
+-- @param k the key to be accessed
+-- @param ... further arguments to bind to the function
+-- @treturn function the binding for <code>t[k]</code>
 function M.bind_self(t, k, ...)
   internal.assert_not_nil(t, 't')
   return M.bind(t[k], t, ...)
