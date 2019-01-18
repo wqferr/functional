@@ -551,6 +551,11 @@ function M.partial(func, ...)
 end
 
 
+--- Create a function that accesses <code>t</code>.
+-- <p>The argument passed to the function is used as the key
+-- for <code>t</code>, and the value of <code>t[k]</code> is returned.</p>
+-- @tparam table t the table to be accessed
+-- @treturn function the accessor
 function M.accessor(t)
   internal.assert_table(t, 't')
   return function(k)
