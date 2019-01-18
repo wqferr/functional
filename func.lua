@@ -462,6 +462,15 @@ function exports.all(iterable, predicate)
 end
 
 
+--- Return an array version of the <code>iterable</code>.
+-- <p>If <code>iterable</code> is an array, return itself.</p>
+-- <p>If <code>iterable</code> is an <code>@{Iterator}</code>,
+-- return <pre>iterable:to_array()</pre>
+-- @tparam iterable iterable the values to make an array out of
+-- @treturn array the array
+-- @see Iterator:to_array
+-- @see iterate
+-- @function to_array
 function M.to_array(iterable)
   assert_table(iterable)
   if internal.is_iterator(iterable) then
