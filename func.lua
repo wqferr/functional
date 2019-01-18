@@ -564,7 +564,7 @@ function M.accessor(t)
 end
 
 
-function M.itemgetter(k)
+function M.item_getter(k)
   return function(t)
     return t[k]
   end
