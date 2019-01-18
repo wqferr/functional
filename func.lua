@@ -481,6 +481,14 @@ function M.to_array(iterable)
 end
 
 
+--- Create a <code>coroutine</code> that yields the values
+-- of the <code>iterable</code>.
+-- <p>Equivalent to <pre>iterate(iterable):to_coroutine()</pre>.</p>
+-- @tparam iterable iterable the values to be iterated over
+-- @treturn thread The new <code>coroutine</code>
+-- @see Iterator:to_coroutine
+-- @see iterate
+-- @function to_coroutine
 function M.to_coroutine(iterable)
   return exports.iterate(iterable):to_coroutine()
 end
