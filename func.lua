@@ -314,7 +314,7 @@ end
 
 
 --- Create an <code>@{Iterator}</code> for the <code>iterable</code>.
--- <p>Equivalent to <code>@{Iterator.create}</code>.</p>
+-- <p>Equivalent to <pre>Iterator.create(iterable)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @function iterate
@@ -324,7 +324,7 @@ end
 
 
 --- Select only values which match the predicate.
--- <p>Equivalent to <code>iterate(iterable):filter(predicate)</code>.</p>
+-- <p>Equivalent to <pre>iterate(iterable):filter(predicate)</pre>.</p>
 -- @tparam iterable iterable the values to be filtered
 -- @tparam predicate predicate the function to evaluate for each value
 -- @treturn Iterator the filtering <code>@{Iterator}</code>
@@ -337,10 +337,10 @@ end
 
 
 --- Map values into new values.
+-- <p>Equivalent to <pre>iterate(iterable):map(mapping)</pre>.</p>
 -- <p>Please note that at no point during iteration may
 -- the <code>mapping</code> function return <code>nil</code>
 -- as its first value.</p>
--- <p>Equivalent to <code>iterate(iterable):map(mapping)</code>.</p>
 -- @tparam iterable iterable the values to be mapped
 -- @tparam function mapping the function to evaluate for each value
 -- @treturn Iterator the mapping <code>@{Iterator}</code>
@@ -353,13 +353,13 @@ end
 
 
 --- Collapse values into a single value.
+-- <p>Equivalent to <pre>iterate(iterable):reduce(reducer)</pre>.</p>
 -- <p>A reducer is a function of the form
 -- <pre>function(accumulated_value, new_value)</pre>
 -- which returns the reducing or "accumulation" of
 -- <code>accumulated_value</code> and <code>new_value</code></p>
 -- <p>The definition of "reducing" is flexible, and a few common examples
 -- include sum and concatenation.</p>
--- <p>Equivalent to <code>iterate(iterable):reduce(reducer)</code>.</p>
 -- @tparam iterable iterable the values to be collapsed
 -- @tparam reducer reducer the collapsing function
 -- @param initial_value the initial value passed to the <code>reducer</code>
@@ -373,6 +373,7 @@ end
 
 
 --- Apply a function to all values.
+-- <p>Equivalent to <pre>iterate(iterable):foreach(func)</pre>.</p>
 -- <p>The main difference between <code>@{foreach}</code> and
 -- <code>@{map}</code> is that <code>foreach</code> ignores the
 -- return value(s) of its function, while map uses them and has restrictions
@@ -380,7 +381,6 @@ end
 -- <p>Another important difference is that <code>@{map}</code>
 -- is a lazy evaluator, while <code>@{foreach}</code> iterates over
 -- its values immediately.</p>
--- <p>Equivalent to <code>iterate(iterable):foreach(func)</code>.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @tparam function func the function to apply for each value
 -- @see iterate
@@ -392,7 +392,7 @@ end
 
 
 --- Iterate over the <code>n</code> first values and stop.
--- <p>Equivalent to <code>iterate(iterable):take(n)</code>.</p>
+-- <p>Equivalent to <pre>iterate(iterable):take(n)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @tparam integer n amount of values to take
 -- @treturn Iterator the new <code>@{Iterator}</code>
@@ -405,7 +405,7 @@ end
 
 
 --- Iterate over the values, starting at the <code>(n+1)</code>th one.
--- <p>Equivalent to <code>iterate(iterable):skip(n)</code>.</p>
+-- <p>Equivalent to <pre>iterate(iterable):skip(n)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @tparam integer n amount of values to skip
 -- @treturn Iterator the new <code>@{Iterator}</code>
@@ -418,8 +418,8 @@ end
 
 
 --- Take 1 value every <code>n</code>.
+-- <p>Equivalent to <pre>iterate(iterable):every(n)</pre>.</p>
 -- <p>The first value is always taken.</p>
--- <p>Equivalent to <code>iterate(iterable):every(n)</code>.</p>
 -- @tparam integer n one more than the number of skipped values
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @see Iterator:every
