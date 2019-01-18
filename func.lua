@@ -1,7 +1,10 @@
 ---
--- Test description header.
--- More description.<br>
--- More more more.
+-- A module for functional programming utils.
+-- An <code>iterable</code> refers to either of:
+-- <ul>
+-- <li> A table with contiguous non-<code>nil</code> values; or </li>
+-- <li> An <code>Iterator</code> instance. </li>
+-- </ul>
 -- @module functional
 -- @alias M
 -- @author William Quelho Ferreira
@@ -20,7 +23,7 @@ M._VERSION = '0.8.1'
 
 
 --- Create an iterator over the given values.
--- @param t the values to be iterated
+-- @tparam iterable t the values to be iterated
 function Iterator.create(t)
   internal.assert_table(t)
 
@@ -144,6 +147,9 @@ function Iterator:skip(n)
 end
 
 
+--- Take 1 element every <code>n</code>.
+-- The first element is always taken.
+-- @tparam integer n one more than the number of skipped elements
 function Iterator:every(n)
   internal.assert_integer(n, 'n')
 
@@ -158,7 +164,7 @@ end
 
 
 --- Checks if any elements evaluate to <code>true</code>.<br>
--- @param predicate predicate to evaluate for each element, defaults to <pre>not (value == nil or value == false)</pre>
+-- @tparam predicate predicate function to evaluate for each element, defaults to <pre>not (value == nil or value == false)</pre>
 function Iterator:any(predicate)
   if predicate then
     return self:map(predicate):any()
@@ -173,6 +179,8 @@ function Iterator:any(predicate)
 end
 
 
+--- Checks if all elements evaluate to <code>true</code>.<br>
+-- @tparam predicate predicate function to evaluate for each element, defaults to <pre>not (value == nil or value == false)</pre>
 function Iterator:all(predicate)
   if predicate then
     return self:map(predicate):all()
@@ -187,6 +195,8 @@ function Iterator:all(predicate)
 end
 
 
+--- Counts how many elements evaluate to <code>true</code>.<br>
+-- @tparam predicate predicate function to evaluate for each element; if <code>nil</code>, then counts all elements.
 function Iterator:count(predicate)
   if not predicate then
     predicate = M.constant(true)
