@@ -1,8 +1,8 @@
 package = 'functional'
-version = '0.9-4'
+version = '0.10-0'
 source = {
   url = 'git://github.com/wqferr/lua-func',
-  tag = 'v0.9.4'
+  tag = 'v0.10.0'
 }
 
 description = {
@@ -24,6 +24,6 @@ dependencies = {
 build = {
   type = 'builtin',
   modules = {
-    functional = 'func.lua'
+    functional = 'init.lua'
   }
 }
