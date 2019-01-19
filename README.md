@@ -1,4 +1,4 @@
-# lua-func
+# functional
 Functional programming utilities implemented in pure lua.
 
 > The motivation behind this module is, again, portability.
