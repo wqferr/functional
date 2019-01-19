@@ -1,8 +1,8 @@
 package = 'functional'
-version = '0.10-0'
+version = '0.11-0'
 source = {
-  url = 'git://github.com/wqferr/lua-func',
-  tag = 'v0.10.0'
+  url = 'git://github.com/wqferr/functional',
+  tag = 'v0.11.0'
 }
 
 description = {
@@ -13,7 +13,7 @@ description = {
     in particular with regards to iteration and inline
     function definition.
   ]],
-  homepage = 'https://wqferr.github.io/lua-func/',
+  homepage = 'https://wqferr.github.io/functional/',
   license = 'MIT'
 }
 
