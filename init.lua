@@ -37,7 +37,6 @@
 -- @copyright 2019
 -- @license MIT
 ---
-
 local M = {}
 local exports = {}
 local internal = {}
@@ -45,12 +44,10 @@ local internal = {}
 local Iterator = {}
 local iter_meta = {}
 
-
 local unpack = table.unpack or unpack
 
 --- Module version.
-M._VERSION = '1.0.0'
-
+M._VERSION = "1.0.0"
 
 --- @type Iterator
 
@@ -61,14 +58,13 @@ M._VERSION = '1.0.0'
 -- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new Iterator
 function Iterator.create(iterable)
-  internal.assert_table(iterable, 'iterable')
+  internal.assert_table(iterable, "iterable")
 
   if internal.is_iterator(iterable) then
     return iterable
   else
-    local copy = { unpack(iterable) }
-    local iterator = internal.base_iter(
-      copy, internal.iter_next, internal.iter_clone)
+    local copy = {unpack(iterable)}
+    local iterator = internal.base_iter(copy, internal.iter_next, internal.iter_clone)
 
     iterator.index = 0
 
@@ -76,44 +72,38 @@ function Iterator.create(iterable)
   end
 end
 
-
 --- Iterate over the naturals starting at 1.
 -- @treturn Iterator the counter
 -- @see Iterator:take
 -- @see Iterator:skip
 -- @see Iterator:every
 function Iterator.counter()
-  local iterator = internal.base_iter(
-    nil, internal.counter_next, internal.counter_clone)
-  
+  local iterator = internal.base_iter(nil, internal.counter_next, internal.counter_clone)
+
   iterator.n = 0
 
   return iterator
 end
 
-
 --- Iterate over the <code>coroutine</code>'s yielded values.
 -- @tparam thread co the <code>coroutine</code> to iterate
 -- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator.from_coroutine(co)
-  internal.assert_coroutine(co, 'co')
+  internal.assert_coroutine(co, "co")
   return internal.wrap_coroutine(co)
 end
-
 
 --- Iterate over the function's returned values upon repeated calls
 -- @tparam function func the function to call
 -- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator.from_iterated_call(func)
-  internal.assert_not_nil(func, 'func')
-  local iterator = internal.base_iter(
-    nil, internal.func_call_next, internal.func_try_clone)
-  
+  internal.assert_not_nil(func, "func")
+  local iterator = internal.base_iter(nil, internal.func_call_next, internal.func_try_clone)
+
   iterator.func = func
 
   return iterator
 end
-
 
 --- Nondestructively return an indepent iterable from the given one.
 -- <p>If <code>iterablet</code> is an Iterator, clone it according
@@ -124,7 +114,7 @@ end
 -- @tparam iterable iterable the iterable to be cloned
 -- @treturn iterable the clone
 function Iterator.clone(iterable)
-  internal.assert_not_nil(iterable, 'iterable')
+  internal.assert_not_nil(iterable, "iterable")
   if internal.is_iterator(iterable) then
     return iterable:clone()
   else
@@ -132,20 +122,17 @@ function Iterator.clone(iterable)
   end
 end
 
-
 --- Select only values which match the predicate.
 -- @tparam predicate predicate the function to evaluate for each value
 -- @treturn Iterator the filtering <code>@{Iterator}</code>
 function Iterator:filter(predicate)
-  internal.assert_not_nil(predicate, 'predicate')
-  local iterator = internal.base_iter(
-    self, internal.filter_next, internal.filter_clone)
+  internal.assert_not_nil(predicate, "predicate")
+  local iterator = internal.base_iter(self, internal.filter_next, internal.filter_clone)
 
   iterator.predicate = predicate
 
   return iterator
 end
-
 
 --- Map values into new values.
 -- <p>Please note that at no point during iteration may
@@ -154,15 +141,13 @@ end
 -- @tparam function mapping the function to evaluate for each value
 -- @treturn Iterator the mapping <code>@{Iterator}</code>
 function Iterator:map(mapping)
-  internal.assert_not_nil(mapping, 'mapping')
-  local iterator = internal.base_iter(
-    self, internal.map_next, internal.map_clone)
+  internal.assert_not_nil(mapping, "mapping")
+  local iterator = internal.base_iter(self, internal.map_next, internal.map_clone)
 
   iterator.mapping = M.compose(internal.func_nil_guard, mapping)
 
   return iterator
 end
-
 
 --- Collapse values into a single value.
 -- <p>A reducer is a function of the form
@@ -175,7 +160,7 @@ end
 -- @param initial_value the initial value passed to the <code>reducer</code>
 -- @return the accumulation of all values
 function Iterator:reduce(reducer, initial_value)
-  internal.assert_not_nil(reducer, 'reducer')
+  internal.assert_not_nil(reducer, "reducer")
   local reduced_result = initial_value
   local function reduce(next_value)
     reduced_result = reducer(reduced_result, next_value)
@@ -184,7 +169,6 @@ function Iterator:reduce(reducer, initial_value)
   self:foreach(reduce)
   return reduced_result
 end
-
 
 --- Apply a function to all values.
 -- <p>The main difference between <code>@{Iterator:foreach}</code> and
@@ -196,45 +180,40 @@ end
 -- its values immediately.</p>
 -- @tparam function func the function to apply for each value
 function Iterator:foreach(func)
-  internal.assert_not_nil(func, 'func')
+  internal.assert_not_nil(func, "func")
 
-  local next_input = { self:next() }
+  local next_input = {self:next()}
   while not self:is_complete() do
     func(unpack(next_input))
-    next_input = { self:next() }
+    next_input = {self:next()}
   end
 end
-
 
 --- Iterate over the <code>n</code> first values and stop.
 -- @tparam integer n amount of values to take
 -- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator:take(n)
-  internal.assert_integer(n, 'n')
+  internal.assert_integer(n, "n")
 
-  local iterator = internal.base_iter(
-    self, internal.take_next, internal.take_clone)
+  local iterator = internal.base_iter(self, internal.take_next, internal.take_clone)
 
   iterator.n_remaining = n
 
   return iterator
 end
-
 
 --- Iterate over the values, starting at the <code>(n+1)</code>th one.
 -- @tparam integer n amount of values to skip
 -- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator:skip(n)
-  internal.assert_integer(n, 'n')
+  internal.assert_integer(n, "n")
 
-  local iterator = internal.base_iter(
-    self, internal.skip_next, internal.skip_clone)
-  
+  local iterator = internal.base_iter(self, internal.skip_next, internal.skip_clone)
+
   iterator.n_remaining = n
 
   return iterator
 end
-
 
 --- Take 1 value every <code>n</code>.
 -- <p>The first value is always taken.</p>
@@ -242,17 +221,15 @@ end
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @see Iterator:skip
 function Iterator:every(n)
-  internal.assert_integer(n, 'n')
+  internal.assert_integer(n, "n")
 
-  local iterator = internal.base_iter(
-    self, internal.every_next, internal.every_clone)
+  local iterator = internal.base_iter(self, internal.every_next, internal.every_clone)
 
   iterator.n = n
   iterator.first_call = true
 
   return iterator
 end
-
 
 --- Checks if any values evaluate to <code>true</code>.
 -- @tparam predicate predicate the function to evaluate for each value,
@@ -272,7 +249,6 @@ function Iterator:any(predicate)
   end
 end
 
-
 --- Checks if all values evaluate to <code>true</code>.
 -- @tparam predicate predicate the function to evaluate for each value,
 -- defaults to <pre>not (value == nil or value == false)</pre>
@@ -291,7 +267,6 @@ function Iterator:all(predicate)
   end
 end
 
-
 --- Counts how many values evaluate to <code>true</code>.
 -- @tparam predicate predicate function to evaluate for each value; if
 -- <code>nil</code>, then counts all values.
@@ -303,7 +278,6 @@ function Iterator:count(predicate)
   return self:map(predicate):map(internal.bool_to_int):reduce(internal.sum, 0)
 end
 
-
 --- Create an array out of the <code>@{Iterator}</code>'s values.
 -- @treturn array the array of values
 function Iterator:to_array()
@@ -312,14 +286,12 @@ function Iterator:to_array()
   return array
 end
 
-
 --- Create a <code>coroutine</code> that yields the values
 -- of the <code>@{Iterator}</code>.
 -- @treturn thread The new <code>coroutine</code>
 function Iterator:to_coroutine()
   return coroutine.create(internal.coroutine_iter_loop(self))
 end
-
 
 --- Check whether or not the iterator is done.
 -- <p>Please note that even if the iterator has reached its actual last
@@ -332,12 +304,9 @@ function Iterator:is_complete()
   return self.completed
 end
 
-
 --- @section end
 
-
 -- RAW FUNCTIONS --
-
 
 --- Create an <code>@{Iterator}</code> for the <code>iterable</code>.
 -- <p>Equivalent to <pre>Iterator.create(iterable)</pre>.</p>
@@ -347,7 +316,6 @@ end
 function exports.iterate(iterable)
   return Iterator.create(iterable)
 end
-
 
 --- Select only values which match the predicate.
 -- <p>Equivalent to <pre>iterate(iterable):filter(predicate)</pre>.</p>
@@ -360,7 +328,6 @@ end
 function exports.filter(iterable, predicate)
   return exports.iterate(iterable):filter(predicate)
 end
-
 
 --- Map values into new values.
 -- <p>Equivalent to <pre>iterate(iterable):map(mapping)</pre>.</p>
@@ -376,7 +343,6 @@ end
 function exports.map(iterable, mapping)
   return exports.iterate(iterable):map(mapping)
 end
-
 
 --- Collapse values into a single value.
 -- <p>Equivalent to <pre>iterate(iterable):reduce(reducer, initial_value)</pre>.</p>
@@ -397,7 +363,6 @@ function exports.reduce(iterable, reducer, initial_value)
   return exports.iterate(iterable):reduce(reducer, initial_value)
 end
 
-
 --- Apply a function to all values.
 -- <p>Equivalent to <pre>iterate(iterable):foreach(func)</pre>.</p>
 -- <p>The main difference between <code>@{foreach}</code> and
@@ -416,7 +381,6 @@ function exports.foreach(iterable, func)
   return exports.iterate(iterable):foreach(func)
 end
 
-
 --- Iterate over the <code>n</code> first values and stop.
 -- <p>Equivalent to <pre>iterate(iterable):take(n)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
@@ -429,7 +393,6 @@ function exports.take(iterable, n)
   return exports.iterate(iterable):take(n)
 end
 
-
 --- Iterate over the values, starting at the <code>(n+1)</code>th one.
 -- <p>Equivalent to <pre>iterate(iterable):skip(n)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
@@ -441,7 +404,6 @@ end
 function exports.skip(iterable, n)
   return exports.iterate(iterable):skip(n)
 end
-
 
 --- Take 1 value every <code>n</code>.
 -- <p>Equivalent to <pre>iterate(iterable):every(n)</pre>.</p>
@@ -457,7 +419,6 @@ function exports.every(iterable, n)
   return exports.iterate(iterable):every(n)
 end
 
-
 --- Checks if any values evaluate to <code>true</code>.
 -- <p>Equivalent to <pre>iterate(iterable):any(predicate)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
@@ -471,7 +432,6 @@ end
 function exports.any(iterable, predicate)
   return exports.iterate(iterable):any(predicate)
 end
-
 
 --- Checks if all values evaluate to <code>true</code>.
 -- <p>Equivalent to <pre>iterate(iterable):all(predicate)</pre>.</p>
@@ -487,7 +447,6 @@ function exports.all(iterable, predicate)
   return exports.iterate(iterable):all(predicate)
 end
 
-
 --- Return an array version of the <code>iterable</code>.
 -- <p>If <code>iterable</code> is an array, return itself.</p>
 -- <p>If <code>iterable</code> is an <code>@{Iterator}</code>,
@@ -498,14 +457,13 @@ end
 -- @see iterate
 -- @function to_array
 function M.to_array(iterable)
-  assert_table(iterable, 'iterable')
+  assert_table(iterable, "iterable")
   if internal.is_iterator(iterable) then
     return iterable:to_array()
   else
     return iterable
   end
 end
-
 
 --- Create a <code>coroutine</code> that yields the values
 -- of the <code>iterable</code>.
@@ -519,20 +477,17 @@ function M.to_coroutine(iterable)
   return exports.iterate(iterable):to_coroutine()
 end
 
-
 -- MISC FUNCTIONS --
-
 
 --- Create a negated function of <code>predicate</code>.
 -- @tparam predicate predicate the function to be negated
 -- @treturn predicate the inverted predicate
 function M.negate(predicate)
-  internal.assert_not_nil(predicate, 'predicate')
+  internal.assert_not_nil(predicate, "predicate")
   return function(...)
     return not predicate(...)
   end
 end
-
 
 --- Create a function composition from the given functions.
 -- @tparam function f1 the outermost function of the composition
@@ -541,10 +496,10 @@ end
 -- in order
 -- @treturn function the composite function
 function M.compose(f1, f2, ...)
-  internal.assert_not_nil(f1, 'f1')
-  internal.assert_not_nil(f2, 'f2')
+  internal.assert_not_nil(f1, "f1")
+  internal.assert_not_nil(f2, "f2")
 
-  if select('#', ...) > 0 then
+  if select("#", ...) > 0 then
     local part = M.compose(f2, ...)
     return M.compose(f1, part)
   else
@@ -553,7 +508,6 @@ function M.compose(f1, f2, ...)
     end
   end
 end
-
 
 --- Create a function with bound arguments.
 -- <p>The bound function returned will call <code>func</code>
@@ -564,18 +518,17 @@ end
 -- @param ... the arguments to bind to the function.
 -- @treturn function the bound function
 function M.bind(func, ...)
-  internal.assert_not_nil(func, 'func')
+  internal.assert_not_nil(func, "func")
 
-  local saved_args = { ... }
+  local saved_args = {...}
   return function(...)
-    local args = { unpack(saved_args) }
+    local args = {unpack(saved_args)}
     for _, arg in ipairs({...}) do
       table.insert(args, arg)
     end
     return func(unpack(args))
   end
 end
-
 
 --- Create a function that accesses <code>t</code>.
 -- <p>The argument passed to the returned function is used as the key
@@ -584,12 +537,11 @@ end
 -- @tparam table t the table to be accessed
 -- @treturn function the accessor
 function M.accessor(t)
-  internal.assert_table(t, 't')
+  internal.assert_table(t, "t")
   return function(k)
     return t[k]
   end
 end
-
 
 --- Create a function that accesses the key <code>k</code> for a table.
 -- <p>The argument passed to the returned function is used as the table
@@ -603,7 +555,6 @@ function M.item_getter(k)
   end
 end
 
-
 --- Create a bound function whose first argument is <code>t</code>.
 -- <p>Particularly useful to pass a method as a function.</p>
 -- <p>Equivalent to <pre>bind(t[k], t, ...)</pre>.</p>
@@ -612,10 +563,9 @@ end
 -- @param ... further arguments to bind to the function
 -- @treturn function the binding for <code>t[k]</code>
 function M.bind_self(t, k, ...)
-  internal.assert_not_nil(t, 't')
+  internal.assert_not_nil(t, "t")
   return M.bind(t[k], t, ...)
 end
-
 
 --- Create a function that always returns the same value.
 -- @param value the constant to be returned
@@ -625,7 +575,6 @@ function M.constant(value)
     return value
   end
 end
-
 
 --- Import <code>@{Iterator}</code> and commonly used
 -- functions into global scope.
@@ -654,27 +603,19 @@ local function export_funcs()
   return M
 end
 
-
 -- INTERNAL --
-
 
 internal.iterator_flag = {}
 Iterator[internal.iterator_flag] = true
-
 
 function internal.is_iterator(t)
   return t[internal.iterator_flag] ~= nil
 end
 
-
 function internal.func_nil_guard(value, ...)
-  assert(
-    value ~= nil,
-    'iterated function cannot return nil as the first value'
-  )
+  assert(value ~= nil, "iterated function cannot return nil as the first value")
   return value, ...
 end
-
 
 function internal.bool_to_int(value)
   if value then
@@ -684,14 +625,11 @@ function internal.bool_to_int(value)
   end
 end
 
-
 function internal.sum(a, b)
   return a + b
 end
 
-
 -- ITER FUNCTIONS --
-
 
 function internal.base_iter(values, next_f, clone)
   local iterator = {}
@@ -704,7 +642,6 @@ function internal.base_iter(values, next_f, clone)
   return iterator
 end
 
-
 function internal.iter_next(iter)
   if iter.completed then
     return nil
@@ -715,7 +652,6 @@ function internal.iter_next(iter)
   return next_input
 end
 
-
 function internal.iter_clone(iter)
   local new_iter = exports.iterate(Iterator.clone(iter.values))
   new_iter.index = iter.index
@@ -723,12 +659,10 @@ function internal.iter_clone(iter)
   return new_iter
 end
 
-
 function internal.counter_next(iter)
   iter.n = iter.n + 1
   return iter.n
 end
-
 
 function internal.counter_clone(iter)
   local new_iter = Iterator.counter()
@@ -736,34 +670,31 @@ function internal.counter_clone(iter)
   return new_iter
 end
 
-
 function internal.filter_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = { iter.values:next() }
+  local next_input = {iter.values:next()}
   while #next_input > 0 do
     if iter.predicate(unpack(next_input)) then
       return unpack(next_input)
     end
-    next_input = { iter.values:next() }
+    next_input = {iter.values:next()}
   end
 
   iter.completed = true
   return nil
 end
 
-
 function internal.filter_clone(iter)
   return exports.filter(Iterator.clone(iter.values), iter.predicate)
 end
-
 
 function internal.map_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = { iter.values:next() }
+  local next_input = {iter.values:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -772,17 +703,15 @@ function internal.map_next(iter)
   return iter.mapping(unpack(next_input))
 end
 
-
 function internal.map_clone(iter)
   return exports.map(Iterator.clone(iter.values), iter.mapping)
 end
-
 
 function internal.take_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = { iter.values:next() }
+  local next_input = {iter.values:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -797,11 +726,9 @@ function internal.take_next(iter)
   end
 end
 
-
 function internal.take_clone(iter)
   return exports.take(Iterator.clone(iter.values), iter.n_remaining)
 end
-
 
 function internal.skip_next(iter)
   if iter.completed then
@@ -812,8 +739,8 @@ function internal.skip_next(iter)
     local v = iter.values:next()
     iter.n_remaining = iter.n_remaining - 1
   end
-  
-  local next_input = { iter.values:next() }
+
+  local next_input = {iter.values:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -822,11 +749,9 @@ function internal.skip_next(iter)
   return unpack(next_input)
 end
 
-
 function internal.skip_clone(iter)
   return exports.skip(Iterator.clone(iter.values), iter.n_remaining)
 end
-
 
 function internal.every_next(iter)
   if iter.completed then
@@ -842,7 +767,7 @@ function internal.every_next(iter)
     end
   end
 
-  next_input = { iter.values:next() }
+  next_input = {iter.values:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -851,29 +776,25 @@ function internal.every_next(iter)
   return unpack(next_input)
 end
 
-
 function internal.every_clone(iter)
   return exports.every(Iterator.clone(iter.values), iter.n)
 end
 
-
 function internal.wrap_coroutine(co)
-  local iter = internal.base_iter(
-    nil, internal.iter_coroutine_next, internal.coroutine_try_clone)
+  local iter = internal.base_iter(nil, internal.iter_coroutine_next, internal.coroutine_try_clone)
   iter.coroutine = co
   return iter
 end
-
 
 function internal.iter_coroutine_next(iter)
   if iter.completed then
     return nil
   end
-  local yield = { coroutine.resume(co) }
+  local yield = {coroutine.resume(co)}
   local status = yield[1]
   assert(status, yield[2])
 
-  local next_value = { select(2, unpack(yield)) }
+  local next_value = {select(2, unpack(yield))}
   if #next_value == 0 then
     iter.completed = true
     return nil
@@ -882,11 +803,9 @@ function internal.iter_coroutine_next(iter)
   return unpack(next_value)
 end
 
-
 function internal.coroutine_try_clone(iter)
   error(internal.ERR_COROUTINE_CLONE)
 end
-
 
 function internal.coroutine_iter_loop(iter)
   return function()
@@ -894,12 +813,11 @@ function internal.coroutine_iter_loop(iter)
   end
 end
 
-
 function internal.func_call_next(iter)
   if iter.completed then
     return nil
   end
-  local result = { iter.func() }
+  local result = {iter.func()}
   if #result == 0 then
     iter.completed = true
     return nil
@@ -908,41 +826,29 @@ function internal.func_call_next(iter)
   return unpack(result)
 end
 
-
 function internal.func_try_clone(iter)
   error(internal.ERR_FUNCTION_CLONE)
 end
 
-
 -- ERROR CHECKING --
 
-
 function internal.assert_table(value, param_name)
-  if type(value) ~= 'table' then
-    error(
-      internal.ERR_TABLE_EXPECTED:format(param_name, tostring(value))
-    )
+  if type(value) ~= "table" then
+    error(internal.ERR_TABLE_EXPECTED:format(param_name, tostring(value)))
   end
 end
-
 
 function internal.assert_integer(value, param_name)
-  if type(value) ~= 'number' or value % 1 ~= 0 then
-    error(
-      internal.ERR_INTEGER_EXPECTED:format(param_name, tostring(value))
-    )
+  if type(value) ~= "number" or value % 1 ~= 0 then
+    error(internal.ERR_INTEGER_EXPECTED:format(param_name, tostring(value)))
   end
 end
-
 
 function internal.assert_coroutine(value, param_name)
-  if type(value) ~= 'thread' then
-    error(
-      internal.ERR_COROUTINE_EXPECTED:format(param_name, tostring(value))
-    )
+  if type(value) ~= "thread" then
+    error(internal.ERR_COROUTINE_EXPECTED:format(param_name, tostring(value)))
   end
 end
-
 
 function internal.assert_not_nil(value, param_name)
   if value == nil then
@@ -950,32 +856,26 @@ function internal.assert_not_nil(value, param_name)
   end
 end
 
-
-internal.ERR_COROUTINE_CLONE =
-  'cannot clone coroutine iterator; try to_array and iterate over it'
+internal.ERR_COROUTINE_CLONE = "cannot clone coroutine iterator; try to_array and iterate over it"
 internal.ERR_FUNCTION_CLONE =
-  'cannot clone iterated function call; try to_array and iterate over it'
+  "cannot clone iterated function call; try to_array and iterate over it"
 
-internal.ERR_INTEGER_EXPECTED = 'param %s expected integer, got: %s'
-internal.ERR_TABLE_EXPECTED = 'param %s expected table, got: %s'
-internal.ERR_COROUTINE_EXPECTED = 'param %s expected coroutine, got: %s'
-internal.ERR_NIL_VALUE = 'parameter %s is nil'
-
+internal.ERR_INTEGER_EXPECTED = "param %s expected integer, got: %s"
+internal.ERR_TABLE_EXPECTED = "param %s expected table, got: %s"
+internal.ERR_COROUTINE_EXPECTED = "param %s expected coroutine, got: %s"
+internal.ERR_NIL_VALUE = "parameter %s is nil"
 
 iter_meta.__index = Iterator
 iter_meta.__call = function(iter)
   return iter:next()
 end
 
-
 exports.Iterator = Iterator
-
 
 M.import = export_funcs
 
 for name, exported_func in pairs(exports) do
   M[name] = exported_func
 end
-
 
 return M
