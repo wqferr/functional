@@ -32,7 +32,7 @@
 -- </ul></p>
 -- @module functional
 -- @alias M
--- @release 0.8.0
+-- @release 1.0.0
 -- @author William Quelho Ferreira
 -- @copyright 2019
 -- @license MIT
@@ -46,8 +46,10 @@ local Iterator = {}
 local iter_meta = {}
 
 
+local unpack = table.unpack or unpack
+
 --- Module version.
-M._VERSION = '0.8.1'
+M._VERSION = '1.0.0'
 
 
 --- @type Iterator
@@ -59,12 +61,12 @@ M._VERSION = '0.8.1'
 -- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new Iterator
 function Iterator.create(iterable)
-  internal.assert_table(iterable)
+  internal.assert_table(iterable, 'iterable')
 
   if internal.is_iterator(iterable) then
     return iterable
   else
-    local copy = { table.unpack(iterable) }
+    local copy = { unpack(iterable) }
     local iterator = internal.base_iter(
       copy, internal.iter_next, internal.iter_clone)
 
@@ -94,7 +96,7 @@ end
 -- @tparam thread co the <code>coroutine</code> to iterate
 -- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator.from_coroutine(co)
-  internal.assert_coroutine(co)
+  internal.assert_coroutine(co, 'co')
   return internal.wrap_coroutine(co)
 end
 
@@ -198,7 +200,7 @@ function Iterator:foreach(func)
 
   local next_input = { self:next() }
   while not self:is_complete() do
-    func(table.unpack(next_input))
+    func(unpack(next_input))
     next_input = { self:next() }
   end
 end
@@ -377,7 +379,7 @@ end
 
 
 --- Collapse values into a single value.
--- <p>Equivalent to <pre>iterate(iterable):reduce(reducer)</pre>.</p>
+-- <p>Equivalent to <pre>iterate(iterable):reduce(reducer, initial_value)</pre>.</p>
 -- <p>A reducer is a function of the form
 -- <pre>function(accumulated_value, new_value)</pre>
 -- which returns the reducing or "accumulation" of
@@ -496,7 +498,7 @@ end
 -- @see iterate
 -- @function to_array
 function M.to_array(iterable)
-  assert_table(iterable)
+  assert_table(iterable, 'iterable')
   if internal.is_iterator(iterable) then
     return iterable:to_array()
   else
@@ -566,11 +568,11 @@ function M.bind(func, ...)
 
   local saved_args = { ... }
   return function(...)
-    local args = { table.unpack(saved_args) }
+    local args = { unpack(saved_args) }
     for _, arg in ipairs({...}) do
       table.insert(args, arg)
     end
-    return func(table.unpack(args))
+    return func(unpack(args))
   end
 end
 
@@ -602,7 +604,7 @@ function M.item_getter(k)
 end
 
 
---- Create f bound function whose first argument is <code>t</code>.
+--- Create a bound function whose first argument is <code>t</code>.
 -- <p>Particularly useful to pass a method as a function.</p>
 -- <p>Equivalent to <pre>bind(t[k], t, ...)</pre>.</p>
 -- @tparam table t the table to be accessed
@@ -741,8 +743,8 @@ function internal.filter_next(iter)
   end
   local next_input = { iter.values:next() }
   while #next_input > 0 do
-    if iter.predicate(table.unpack(next_input)) then
-      return table.unpack(next_input)
+    if iter.predicate(unpack(next_input)) then
+      return unpack(next_input)
     end
     next_input = { iter.values:next() }
   end
@@ -767,7 +769,7 @@ function internal.map_next(iter)
     return nil
   end
 
-  return iter.mapping(table.unpack(next_input))
+  return iter.mapping(unpack(next_input))
 end
 
 
@@ -788,7 +790,7 @@ function internal.take_next(iter)
 
   if iter.n_remaining > 0 then
     iter.n_remaining = iter.n_remaining - 1
-    return table.unpack(next_input)
+    return unpack(next_input)
   else
     iter.completed = true
     return nil
@@ -817,7 +819,7 @@ function internal.skip_next(iter)
     return nil
   end
 
-  return table.unpack(next_input)
+  return unpack(next_input)
 end
 
 
@@ -846,7 +848,7 @@ function internal.every_next(iter)
     return nil
   end
 
-  return table.unpack(next_input)
+  return unpack(next_input)
 end
 
 
@@ -871,13 +873,13 @@ function internal.iter_coroutine_next(iter)
   local status = yield[1]
   assert(status, yield[2])
 
-  local next_value = { select(2, table.unpack(yield)) }
+  local next_value = { select(2, unpack(yield)) }
   if #next_value == 0 then
     iter.completed = true
     return nil
   end
 
-  return table.unpack(next_value)
+  return unpack(next_value)
 end
 
 
@@ -903,7 +905,7 @@ function internal.func_call_next(iter)
     return nil
   end
 
-  return table.unpack(result)
+  return unpack(result)
 end
 
 
@@ -916,34 +918,36 @@ end
 
 
 function internal.assert_table(value, param_name)
-  assert(
-    type(value) == 'table',
-    internal.ERR_TABLE_EXPECTED:format(param_name, value)
-  )
+  if type(value) ~= 'table' then
+    error(
+      internal.ERR_TABLE_EXPECTED:format(param_name, tostring(value))
+    )
+  end
 end
 
 
 function internal.assert_integer(value, param_name)
-  assert(
-    type(value) == 'number' and value % 1 == 0,
-    internal.ERR_INTEGER_EXPECTED:format(param_name, value)
-  )
+  if type(value) ~= 'number' or value % 1 ~= 0 then
+    error(
+      internal.ERR_INTEGER_EXPECTED:format(param_name, tostring(value))
+    )
+  end
 end
 
 
 function internal.assert_coroutine(value, param_name)
-  assert(
-    type(value) == 'thread',
-    internal.ERR_COROUTINE_EXPECTED:format(param_name, value)
-  )
+  if type(value) ~= 'thread' then
+    error(
+      internal.ERR_COROUTINE_EXPECTED:format(param_name, tostring(value))
+    )
+  end
 end
 
 
 function internal.assert_not_nil(value, param_name)
-  assert(
-    value ~= nil,
-    internal.ERR_NIL_VALUE:format(param_name)
-  )
+  if value == nil then
+    error(internal.ERR_NIL_VALUE:format(param_name))
+  end
 end
 
 

@@ -1,8 +1,8 @@
 package = 'functional'
-version = '0.11-0'
+version = '1.0-0'
 source = {
   url = 'git://github.com/wqferr/functional',
-  tag = 'v0.11.0'
+  tag = 'v1.0.0'
 }
 
 description = {
