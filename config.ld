@@ -1,6 +1,5 @@
 project = "functional"
-file = "func.lua"
+file = "init.lua"
+dir = "docs"
 title = "functional documentation"
-description = "D E S C R I P T I O N"
-
-new_type('prototype', 'Prototypes')
+description = "Functional programming utilities written in pure lua"
