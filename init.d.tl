@@ -1,5 +1,6 @@
 local record Iterator<T>
   create: function({T}): Iterator<T>
+  create: function(Iterator<T>): Iterator<T>
   counter: function(): Iterator<integer>
   from_coroutine: function(thread): Iterator<any>
   from_iterated_call: function((function(): T)): Iterator<T>
@@ -24,6 +25,35 @@ local record Iterator<T>
   any: function(Iterator<T>, (function(T): boolean)): boolean
   all: function(Iterator<T>, (function(T): boolean)): boolean
   count: function(Iterator<T>, (function(T): boolean)): integer
+end
+
+global record exports
+  iterate: function<T>({T}): Iterator<T>
+  iterate: function<T>(Iterator<T>): Iterator<T>
+
+  filter: function<T>({T}, (function(T): boolean)): Iterator<T>
+  filter: function<T>(Iterator<T>, (function(T): boolean)): Iterator<T>
+
+  map: function<T, U>({T}, (function(T): U)): Iterator<U>
+  map: function<T, U>(Iterator<T>, (function(T): U)): Iterator<U>
+
+  reduce: function<T>({T}, (function(T, T): T)): T
+  reduce: function<T>(Iterator<T>, (function(T, T): T)): T
+  reduce: function<T, A>({T}, (function(A, T): A), A): A
+  reduce: function<T, A>(Iterator<T>, (function(A, T): A, A)): A
+
+  foreach: function<T>({T}, (function(T)))
+  foreach: function<T>(Iterator<T>, (function(T)))
+
+  take: function<T>({T}, integer): Iterator<T>
+  take: function<T>(Iterator<T>, integer): Iterator<T>
+  skip: function<T>({T}, integer): Iterator<T>
+  skip: function<T>(Iterator<T>, integer): Iterator<T>
+  every: function<T>({T}, integer): Iterator<T>
+  every: function<T>(Iterator<T>, integer): Iterator<T>
+
+  any: function<T>({T}, (function(T): boolean)): boolean
+  all: function<T>({T}, (function(T): boolean)): boolean
 end
 
 -- FIXME this is wrong, it returns something else
