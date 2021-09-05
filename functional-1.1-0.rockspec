@@ -22,9 +22,18 @@ dependencies = {
 }
 
 build = {
-  type = "builtin",
-  modules = {
-    functional = "init.lua",
+  type = "make",
+  build_variables = {
+    -- This is just here so luarocks doesn't complain I didn't pass it.
+    -- It's not used at all, the Makefile just copies the files over.
+    CFLAGS="$(CFLAGS)",
   },
-  copy_directories = {"doc", "teal"}
+  install_variables = {
+    SOURCES="functional.lua functional.d.tl",
+    INST_PREFIX="$(PREFIX)",
+    INST_BINDIR="$(BINDIR)",
+    INST_LIBDIR="$(LIBDIR)",
+    INST_LUADIR="$(LUADIR)",
+    INST_CONFDIR="$(CONFDIR)",
+  },
 }
