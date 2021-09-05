@@ -1,8 +1,8 @@
 package = "functional"
-version = "1.0-0"
+version = "1.1-0"
 source = {
   url = "git://github.com/wqferr/functional",
-  tag = "v1.0.0"
+  tag = "v1.1.0"
 }
 
 description = {
@@ -24,6 +24,7 @@ dependencies = {
 build = {
   type = "builtin",
   modules = {
-    functional = "init.lua"
+    functional = "init.lua",
+    ["functional.d.tl"] = "init.d.tl"
   }
 }
