@@ -70,7 +70,7 @@ local record module
 
   accessor: function<K, V>({K: V}): (function(K): V)
   item_getter: function<K>(K): (function<V>({K: V}): V)
-  constant: function<T>(T): function(...: any): T
+  constant: function<T>(T): function(): T
 end
 
 return module
