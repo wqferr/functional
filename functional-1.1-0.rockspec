@@ -23,7 +23,7 @@ dependencies = {
 
 build = {
   type = "make",
-  copy_directories = {"docs"}
+  copy_directories = {"docs"},
   build_variables = {
     -- This is just here so luarocks doesn't complain I didn't pass it.
     -- It's not used at all, the Makefile just copies the files over.
