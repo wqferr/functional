@@ -275,7 +275,13 @@ function Iterator:count(predicate)
   if not predicate then
     predicate = M.constant(true)
   end
-  return self:map(predicate):map(internal.bool_to_int):reduce(internal.sum, 0)
+  local c = 0
+  for e in self do
+    if predicate(e) then
+      c = c + 1
+    end
+  end
+  return c
 end
 
 --- Create an array out of the <code>@{Iterator}</code>'s values.
@@ -615,18 +621,6 @@ end
 function internal.func_nil_guard(value, ...)
   assert(value ~= nil, "iterated function cannot return nil as the first value")
   return value, ...
-end
-
-function internal.bool_to_int(value)
-  if value then
-    return 1
-  else
-    return 0
-  end
-end
-
-function internal.sum(a, b)
-  return a + b
 end
 
 -- ITER FUNCTIONS --
