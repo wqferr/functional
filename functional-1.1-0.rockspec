@@ -25,7 +25,6 @@ build = {
   type = "builtin",
   modules = {
     functional = "init.lua",
-    -- TODO find out how to add the .d.tl
   },
-  copy_directories = {"doc"}
+  copy_directories = {"doc", "teal"}
 }
