@@ -1,8 +1,8 @@
 package = "functional"
-version = "1.0-0"
+version = "1.1-0"
 source = {
   url = "git://github.com/wqferr/functional",
-  tag = "v1.0.0"
+  tag = "v1.1.0"
 }
 
 description = {
@@ -18,12 +18,22 @@ description = {
 }
 
 dependencies = {
-  "lua >= 5.1"
+  "lua >= 5.1, < 5.5"
 }
 
 build = {
-  type = "builtin",
-  modules = {
-    functional = "init.lua"
-  }
+  type = "make",
+  build_variables = {
+    -- This is just here so luarocks doesn't complain I didn't pass it.
+    -- It's not used at all, the Makefile just copies the files over.
+    CFLAGS="$(CFLAGS)",
+  },
+  install_variables = {
+    SOURCES="functional.lua functional.d.tl",
+    INST_PREFIX="$(PREFIX)",
+    INST_BINDIR="$(BINDIR)",
+    INST_LIBDIR="$(LIBDIR)",
+    INST_LUADIR="$(LUADIR)",
+    INST_CONFDIR="$(CONFDIR)",
+  },
 }
