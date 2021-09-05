@@ -1,29 +1,29 @@
-package = 'functional'
-version = '1.0-0'
+package = "functional"
+version = "1.0-0"
 source = {
-  url = 'git://github.com/wqferr/functional',
-  tag = 'v1.0.0'
+  url = "git://github.com/wqferr/functional",
+  tag = "v1.0.0"
 }
 
 description = {
-  summary = 'Functional programming utilities implemented in pure lua.',
+  summary = "Functional programming utilities implemented in pure lua.",
   detailed = [[
     This module seeks to provide some utility functions
     and structures which are too verbose in vanilla lua,
     in particular with regards to iteration and inline
     function definition.
   ]],
-  homepage = 'https://wqferr.github.io/functional/',
-  license = 'MIT'
+  homepage = "https://wqferr.github.io/functional/",
+  license = "MIT"
 }
 
 dependencies = {
-  'lua >= 5.1'
+  "lua >= 5.1"
 }
 
 build = {
-  type = 'builtin',
+  type = "builtin",
   modules = {
-    functional = 'init.lua'
+    functional = "init.lua"
   }
 }
