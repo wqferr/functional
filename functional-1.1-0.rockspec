@@ -18,13 +18,14 @@ description = {
 }
 
 dependencies = {
-  "lua >= 5.1"
+  "lua >= 5.1, < 5.5"
 }
 
 build = {
   type = "builtin",
   modules = {
     functional = "init.lua",
-    ["functional.d.tl"] = "init.d.tl"
-  }
+    -- TODO find out how to add the .d.tl
+  },
+  copy_directories = {"doc"}
 }
