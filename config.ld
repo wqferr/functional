@@ -1,5 +1,5 @@
 project = "functional"
 file = "functional.lua"
-dir = "doc"
+dir = "docs"
 title = "functional documentation"
 description = "Functional programming utilities written in pure lua"
