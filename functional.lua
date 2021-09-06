@@ -32,7 +32,7 @@
 -- </ul></p>
 -- @module functional
 -- @alias M
--- @release 1.1.0
+-- @release 1.2.0
 -- @author William Quelho Ferreira
 -- @copyright 2021
 -- @license MIT
@@ -47,7 +47,7 @@ local iter_meta = {}
 local unpack = table.unpack or unpack
 
 --- Module version.
-M._VERSION = "1.1.0"
+M._VERSION = "1.2.0"
 
 --- @type Iterator
 
