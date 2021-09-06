@@ -216,6 +216,19 @@ function Iterator:take_until(predicate)
   return self:take_while(M.negate(predicate))
 end
 
+--- Iterate over the values, starting at the <code>(n+1)</code>th one.
+-- @tparam integer n amount of values to skip
+-- @treturn Iterator the new <code>@{Iterator}</code>
+function Iterator:skip(n)
+  internal.assert_integer(n, "n")
+
+  local iterator = internal.base_iter(self, internal.skip_next, internal.skip_clone)
+
+  iterator.n_remaining = n
+
+  return iterator
+end
+
 function Iterator:skip_while(predicate)
   internal.assert_not_nil(predicate, "predicate")
 
@@ -229,19 +242,6 @@ end
 
 function Iterator:skip_until(predicate)
   return self:skip_while(M.negate(predicate))
-end
-
---- Iterate over the values, starting at the <code>(n+1)</code>th one.
--- @tparam integer n amount of values to skip
--- @treturn Iterator the new <code>@{Iterator}</code>
-function Iterator:skip(n)
-  internal.assert_integer(n, "n")
-
-  local iterator = internal.base_iter(self, internal.skip_next, internal.skip_clone)
-
-  iterator.n_remaining = n
-
-  return iterator
 end
 
 --- Take 1 value every <code>n</code>.
@@ -779,19 +779,27 @@ function internal.skip_while_next(iter)
   if iter.completed then
     return nil
   end
-  while not iter.done_skipping do
-    local next_input = {iter.values:next()}
+  local next_input
+  repeat
+    next_input = {iter.values:next()}
     if #next_input == 0 then
       iter.completed = true
       iter.done_skipping = true
       return nil
     end
 
+    if iter.done_skipping then
+      -- Early break so it doesn't evaluate predicate when
+      -- it doesn't need to
+      break
+    end
+
     if not iter.predicate(unpack(next_input)) then
       iter.done_skipping = true
-      return unpack(next_input)
+      break
     end
-  end
+  until false
+  return unpack(next_input)
 end
 
 function internal.skip_next(iter)
