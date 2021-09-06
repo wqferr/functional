@@ -379,6 +379,9 @@ function exports.range(arg1, arg2, arg3)
     start = arg1
     stop = arg2
     step = arg3
+    if step <= 0 then
+      error("step must be a positive integer")
+    end
   else
     step = 1
     if arg2 then
