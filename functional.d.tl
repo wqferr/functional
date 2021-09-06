@@ -10,6 +10,7 @@ local record module
     create: function({T}): Iterator<T>
     create: function(Iterator<T>): Iterator<T>
     counter: function(): Iterator<integer>
+    range: function(integer, integer, integer): Iterator<integer>
     from_coroutine: function(thread): Iterator<any>
     from_iterated_call: function(producer<T>): Iterator<T>
     clone: function(Iterator<T>): Iterator<T>
@@ -42,6 +43,9 @@ local record module
 
     metamethod __call: function(Iterator<T>): T
   end
+
+  counter: function(): Iterator<integer>
+  range: function(integer, integer, integer): Iterator<integer>
 
   iterate: function<T>({T}): Iterator<T>
   iterate: function<T>(Iterator<T>): Iterator<T>

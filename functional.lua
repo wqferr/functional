@@ -85,6 +85,45 @@ function Iterator.counter()
   return iterator
 end
 
+--- Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.
+-- @tparam[opt=1] integer start the start of the integer range
+-- @tparam integer stop the end of the integer range (inclusive)
+-- @tparam[opt=1] integer step the difference between consecutive elements
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see range
+function Iterator.range(start, stop, step)
+  local iterator = internal.base_iter(nil, internal.range_next, internal.range_clone)
+  local arg1, arg2, arg3 = start, stop, step
+
+  if arg3 then
+    internal.assert_not_nil(arg1, "start")
+    internal.assert_not_nil(arg2, "stop")
+    start = arg1
+    stop = arg2
+    step = arg3
+    if step == 0 then
+      error("param step must not be zero")
+    end
+  else
+    step = 1
+    if arg2 then
+      internal.assert_not_nil(arg1, "start")
+      start = arg1
+      stop = arg2
+    else
+      internal.assert_not_nil(arg1, "stop")
+      start = 1
+      stop = arg1
+    end
+  end
+
+  iterator.curr = start
+  iterator.stop = stop
+  iterator.step = step
+
+  return iterator
+end
+
 --- Iterate over the <code>coroutine</code>'s yielded values.
 -- @tparam thread co the <code>coroutine</code> to iterate
 -- @treturn Iterator the new <code>@{Iterator}</code>
@@ -365,37 +404,24 @@ function exports.iterate(iterable)
   return Iterator.create(iterable)
 end
 
+--- Iterate over the naturals starting at 1.
+-- @treturn Iterator the counter
+-- @see Iterator:take
+-- @see Iterator:skip
+-- @see Iterator:every
+function exports.counter(...)
+  return Iterator.counter(...)
+end
+
 --- Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.
 -- @tparam[opt=1] integer start the start of the integer range
 -- @tparam integer stop the end of the integer range (inclusive)
 -- @tparam[opt=1] integer step the difference between consecutive elements
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @function range
-function exports.range(arg1, arg2, arg3)
-  local start, stop, step
-  if arg3 then
-    internal.assert_not_nil(arg1, "start")
-    internal.assert_not_nil(arg2, "stop")
-    start = arg1
-    stop = arg2
-    step = arg3
-    if step <= 0 then
-      error("parameter step must be a positive integer")
-    end
-  else
-    step = 1
-    if arg2 then
-      internal.assert_not_nil(arg1, "start")
-      start = arg1
-      stop = arg2
-    else
-      internal.assert_not_nil(arg1, "stop")
-      start = 1
-      stop = arg1
-    end
-  end
-
-  return Iterator.counter():skip(start - 1):take(stop - start):every(step)
+-- @see Iterator.range
+function exports.range(...)
+  return Iterator.range(...)
 end
 
 --- Select only values which match the predicate.
@@ -739,6 +765,20 @@ function internal.counter_clone(iter)
   return new_iter
 end
 
+function internal.range_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local val = iter.curr
+  iter.curr = iter.curr + iter.step
+  if iter.step > 0 and val <= iter.stop or iter.step < 0 and val >= iter.stop then
+    return val
+  else
+    iter.completed = true
+    return nil
+  end
+end
+
 function internal.filter_next(iter)
   if iter.completed then
     return nil
@@ -985,7 +1025,7 @@ internal.ERR_FUNCTION_CLONE =
 internal.ERR_INTEGER_EXPECTED = "param %s expected integer, got: %s"
 internal.ERR_TABLE_EXPECTED = "param %s expected table, got: %s"
 internal.ERR_COROUTINE_EXPECTED = "param %s expected coroutine, got: %s"
-internal.ERR_NIL_VALUE = "parameter %s is nil"
+internal.ERR_NIL_VALUE = "param %s is nil"
 
 iter_meta.__index = Iterator
 iter_meta.__call = function(iter)
