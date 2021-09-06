@@ -365,6 +365,16 @@ function exports.iterate(iterable)
   return Iterator.create(iterable)
 end
 
+--- Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.
+-- @tparam[opt=1] integer start the start of the integer range
+-- @tparam integer stop the end of the integer range (inclusive)
+-- @tparam[opt=1] integer step the difference between consecutive elements
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @function range
+function exports.range(start, stop, step)
+  return Iterator.counter():skip(start):take(stop - start):every(step)
+end
+
 --- Select only values which match the predicate.
 -- <p>Equivalent to <pre>iterate(iterable):filter(predicate)</pre>.</p>
 -- @tparam iterable iterable the values to be filtered
