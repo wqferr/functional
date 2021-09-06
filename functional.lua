@@ -371,7 +371,27 @@ end
 -- @tparam[opt=1] integer step the difference between consecutive elements
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @function range
-function exports.range(start, stop, step)
+function exports.range(arg1, arg2, arg3)
+  local start, stop, step
+  if arg3 then
+    assert_not_nil(arg1, "start")
+    assert_not_nil(arg2, "stop")
+    start = arg1
+    stop = arg2
+    step = arg3
+  else
+    step = 1
+    if arg2 then
+      assert_not_nil(arg1, "start")
+      start = arg1
+      stop = arg2
+    else
+      assert_not_nil(arg1, "stop")
+      start = 1
+      stop = arg1
+    end
+  end
+
   return Iterator.counter():skip(start):take(stop - start):every(step)
 end
 
