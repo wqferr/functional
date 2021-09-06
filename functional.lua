@@ -202,6 +202,9 @@ function Iterator:take(n)
   return iterator
 end
 
+--- Iterate while <code>predicate</code> is <code>true</code> and stop.
+-- @tparam predicate predicate the predicate to check against
+-- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator:take_while(predicate)
   internal.assert_not_nil(predicate, "predicate")
 
@@ -213,6 +216,9 @@ function Iterator:take_while(predicate)
   return iterator
 end
 
+--- Iterate while <code>predicate</code> is <code>false</code> and stop.
+-- @tparam predicate predicate the predicate to check against
+-- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator:take_until(predicate)
   return self:take_while(M.negate(predicate))
 end
@@ -230,6 +236,9 @@ function Iterator:skip(n)
   return iterator
 end
 
+--- Iterate over the values, starting whenever <code>predicate</code> becomes <code>false</code> for the first time.
+-- @tparam predicate predicate the predicate to check against
+-- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator:skip_while(predicate)
   internal.assert_not_nil(predicate, "predicate")
 
@@ -241,6 +250,9 @@ function Iterator:skip_while(predicate)
   return iterator
 end
 
+--- Iterate over the values, starting whenever <code>predicate</code> becomes <code>true</code> for the first time.
+-- @tparam predicate predicate the predicate to check against
+-- @treturn Iterator the new <code>@{Iterator}</code>
 function Iterator:skip_until(predicate)
   return self:skip_while(M.negate(predicate))
 end
