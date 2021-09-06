@@ -202,6 +202,35 @@ function Iterator:take(n)
   return iterator
 end
 
+function Iterator:take_while(predicate)
+  internal.assert_not_nil(predicate, "predicate")
+
+  local iterator = internal.base_iter(self, internal.take_while_next, internal.take_while_clone)
+
+  iterator.predicate = predicate
+
+  return iterator
+end
+
+function Iterator:take_until(predicate)
+  return self:take_while(M.negate(predicate))
+end
+
+function Iterator:skip_while(predicate)
+  internal.assert_not_nil(predicate, "predicate")
+
+  local iterator = internal.base_iter(self, internal.skip_while_next, internal.skip_while_clone)
+
+  iterator.predicate = predicate
+  iterator.done_skipping = false
+
+  return iterator
+end
+
+function Iterator:skip_until(predicate)
+  return self:skip_while(M.negate(predicate))
+end
+
 --- Iterate over the values, starting at the <code>(n+1)</code>th one.
 -- @tparam integer n amount of values to skip
 -- @treturn Iterator the new <code>@{Iterator}</code>
@@ -722,6 +751,47 @@ end
 
 function internal.take_clone(iter)
   return exports.take(Iterator.clone(iter.values), iter.n_remaining)
+end
+
+function internal.take_while_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local next_input = {iter.values:next()}
+  if #next_input == 0 then
+    iter.completed = true
+    return nil
+  end
+
+  if iter.predicate(unpack(next_input)) then
+    return unpack(next_input)
+  else
+    iter.completed = true
+    return nil
+  end
+end
+
+function internal.take_while_clone(iter)
+  return exports.take_while(Iterator.clone(iter.values), iter.predicate)
+end
+
+function internal.skip_while_next(iter)
+  if iter.completed then
+    return nil
+  end
+  while not iter.done_skipping do
+    local next_input = {iter.values:next()}
+    if #next_input == 0 then
+      iter.completed = true
+      iter.done_skipping = true
+      return nil
+    end
+
+    if not iter.predicate(unpack(next_input)) then
+      iter.done_skipping = true
+      return unpack(next_input)
+    end
+  end
 end
 
 function internal.skip_next(iter)
