@@ -27,7 +27,7 @@ local record module
     foreach: function(Iterator<T>, consumer<T>)
 
     take: function(Iterator<T>, integer): Iterator<T>
-    tkae_while: function(Iterator<T>, predicate<T>): Iterator<T>
+    take_while: function(Iterator<T>, predicate<T>): Iterator<T>
     take_until: function(Iterator<T>, predicate<T>): Iterator<T>
 
     skip: function(Iterator<T>, integer): Iterator<T>

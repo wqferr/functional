@@ -208,6 +208,7 @@ function Iterator:take_while(predicate)
   local iterator = internal.base_iter(self, internal.take_while_next, internal.take_while_clone)
 
   iterator.predicate = predicate
+  iterator.done_taking = false
 
   return iterator
 end
@@ -754,6 +755,10 @@ function internal.take_clone(iter)
 end
 
 function internal.take_while_next(iter)
+  if iter.done_taking then
+    iter.completed = true
+  end
+
   if iter.completed then
     return nil
   end
@@ -763,12 +768,12 @@ function internal.take_while_next(iter)
     return nil
   end
 
-  if iter.predicate(unpack(next_input)) then
-    return unpack(next_input)
-  else
-    iter.completed = true
-    return nil
+  if not iter.predicate(unpack(next_input)) then
+    -- Still needs to return this one, but will
+    -- correctly set completed tag on next call
+    iter.done_taking = true
   end
+  return unpack(next_input)
 end
 
 function internal.take_while_clone(iter)
