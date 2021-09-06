@@ -80,7 +80,7 @@
     <h3>Info:</h3>
     <ul>
         <li><strong>Copyright</strong>: 2021</li>
-        <li><strong>Release</strong>: 1.1.0</li>
+        <li><strong>Release</strong>: 1.2.0</li>
         <li><strong>License</strong>: MIT</li>
         <li><strong>Author</strong>: William Quelho Ferreira</li>
     </ul>
@@ -91,6 +91,14 @@
 	<tr>
 	<td class="name" nowrap><a href="#iterate">iterate (iterable)</a></td>
 	<td class="summary">Create an <code><a href="index.html#Iterator">Iterator</a></code> for the <code>iterable</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#exports.counter">exports.counter (...)</a></td>
+	<td class="summary">Iterate over the naturals starting at 1.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#range">range ([start=1], stop[, step=1])</a></td>
+	<td class="summary">Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#filter">filter (iterable, predicate)</a></td>
@@ -189,6 +197,10 @@
 	<td class="summary">Iterate over the naturals starting at 1.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#Iterator.range">Iterator.range ([start=1], stop[, step=1])</a></td>
+	<td class="summary">Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#Iterator.from_coroutine">Iterator.from_coroutine (co)</a></td>
 	<td class="summary">Iterate over the <code>coroutine</code>'s yielded values.</td>
 	</tr>
@@ -221,8 +233,24 @@
 	<td class="summary">Iterate over the <code>n</code> first values and stop.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#Iterator:take_while">Iterator:take_while (predicate)</a></td>
+	<td class="summary">Iterate while <code>predicate</code> is <code>true</code> and stop.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Iterator:take_until">Iterator:take_until (predicate)</a></td>
+	<td class="summary">Iterate while <code>predicate</code> is <code>false</code> and stop.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#Iterator:skip">Iterator:skip (n)</a></td>
 	<td class="summary">Iterate over the values, starting at the <code>(n+1)</code>th one.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Iterator:skip_while">Iterator:skip_while (predicate)</a></td>
+	<td class="summary">Iterate over the values, starting whenever <code>predicate</code> becomes <code>false</code> for the first time.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Iterator:skip_until">Iterator:skip_until (predicate)</a></td>
+	<td class="summary">Iterate over the values, starting whenever <code>predicate</code> becomes <code>true</code> for the first time.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:every">Iterator:every (n)</a></td>
@@ -287,6 +315,79 @@
     </ol>
 
 
+
+
+</dd>
+    <dt>
+    <a name = "exports.counter"></a>
+    <strong>exports.counter (...)</strong>
+    </dt>
+    <dd>
+    Iterate over the naturals starting at 1.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the counter
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#Iterator:take">Iterator:take</a></li>
+         <li><a href="index.html#Iterator:skip">Iterator:skip</a></li>
+         <li><a href="index.html#Iterator:every">Iterator:every</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "range"></a>
+    <strong>range ([start=1], stop[, step=1])</strong>
+    </dt>
+    <dd>
+    Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">start</span>
+            <span class="types"><span class="type">integer</span></span>
+         the start of the integer range
+         (<em>default</em> 1)
+        </li>
+        <li><span class="parameter">stop</span>
+            <span class="types"><span class="type">integer</span></span>
+         the end of the integer range (inclusive)
+        </li>
+        <li><span class="parameter">step</span>
+            <span class="types"><span class="type">integer</span></span>
+         the difference between consecutive elements
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the new <code><a href="index.html#Iterator">Iterator</a></code>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#Iterator.range">Iterator.range</a>
+    </ul>
 
 
 </dd>
@@ -1037,6 +1138,47 @@
 
 </dd>
     <dt>
+    <a name = "Iterator.range"></a>
+    <strong>Iterator.range ([start=1], stop[, step=1])</strong>
+    </dt>
+    <dd>
+    Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">start</span>
+            <span class="types"><span class="type">integer</span></span>
+         the start of the integer range
+         (<em>default</em> 1)
+        </li>
+        <li><span class="parameter">stop</span>
+            <span class="types"><span class="type">integer</span></span>
+         the end of the integer range (inclusive)
+        </li>
+        <li><span class="parameter">step</span>
+            <span class="types"><span class="type">integer</span></span>
+         the difference between consecutive elements
+         (<em>default</em> 1)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the new <code><a href="index.html#Iterator">Iterator</a></code>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#range">range</a>
+    </ul>
+
+
+</dd>
+    <dt>
     <a name = "Iterator.from_coroutine"></a>
     <strong>Iterator.from_coroutine (co)</strong>
     </dt>
@@ -1270,6 +1412,60 @@
 
 </dd>
     <dt>
+    <a name = "Iterator:take_while"></a>
+    <strong>Iterator:take_while (predicate)</strong>
+    </dt>
+    <dd>
+    Iterate while <code>predicate</code> is <code>true</code> and stop.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">predicate</span>
+            <span class="types"><span class="type">predicate</span></span>
+         the predicate to check against
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the new <code><a href="index.html#Iterator">Iterator</a></code>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Iterator:take_until"></a>
+    <strong>Iterator:take_until (predicate)</strong>
+    </dt>
+    <dd>
+    Iterate while <code>predicate</code> is <code>false</code> and stop.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">predicate</span>
+            <span class="types"><span class="type">predicate</span></span>
+         the predicate to check against
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the new <code><a href="index.html#Iterator">Iterator</a></code>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
     <a name = "Iterator:skip"></a>
     <strong>Iterator:skip (n)</strong>
     </dt>
@@ -1282,6 +1478,60 @@
         <li><span class="parameter">n</span>
             <span class="types"><span class="type">integer</span></span>
          amount of values to skip
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the new <code><a href="index.html#Iterator">Iterator</a></code>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Iterator:skip_while"></a>
+    <strong>Iterator:skip_while (predicate)</strong>
+    </dt>
+    <dd>
+    Iterate over the values, starting whenever <code>predicate</code> becomes <code>false</code> for the first time.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">predicate</span>
+            <span class="types"><span class="type">predicate</span></span>
+         the predicate to check against
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the new <code><a href="index.html#Iterator">Iterator</a></code>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Iterator:skip_until"></a>
+    <strong>Iterator:skip_until (predicate)</strong>
+    </dt>
+    <dd>
+    Iterate over the values, starting whenever <code>predicate</code> becomes <code>true</code> for the first time.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">predicate</span>
+            <span class="types"><span class="type">predicate</span></span>
+         the predicate to check against
         </li>
     </ul>
 
@@ -1487,7 +1737,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-09-05 18:25:56 </i>
+<i style="float:right;">Last updated 2021-09-05 23:41:35 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

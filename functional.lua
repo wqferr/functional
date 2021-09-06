@@ -32,7 +32,7 @@
 -- </ul></p>
 -- @module functional
 -- @alias M
--- @release 1.1.0
+-- @release 1.2.0
 -- @author William Quelho Ferreira
 -- @copyright 2021
 -- @license MIT
@@ -47,7 +47,7 @@ local iter_meta = {}
 local unpack = table.unpack or unpack
 
 --- Module version.
-M._VERSION = "1.1.0"
+M._VERSION = "1.2.0"
 
 --- @type Iterator
 
@@ -81,6 +81,45 @@ function Iterator.counter()
   local iterator = internal.base_iter(nil, internal.counter_next, internal.counter_clone)
 
   iterator.n = 0
+
+  return iterator
+end
+
+--- Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.
+-- @tparam[opt=1] integer start the start of the integer range
+-- @tparam integer stop the end of the integer range (inclusive)
+-- @tparam[opt=1] integer step the difference between consecutive elements
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see range
+function Iterator.range(start, stop, step)
+  local iterator = internal.base_iter(nil, internal.range_next, internal.range_clone)
+  local arg1, arg2, arg3 = start, stop, step
+
+  if arg3 then
+    internal.assert_not_nil(arg1, "start")
+    internal.assert_not_nil(arg2, "stop")
+    start = arg1
+    stop = arg2
+    step = arg3
+    if step == 0 then
+      error("param step must not be zero")
+    end
+  else
+    step = 1
+    if arg2 then
+      internal.assert_not_nil(arg1, "start")
+      start = arg1
+      stop = arg2
+    else
+      internal.assert_not_nil(arg1, "stop")
+      start = 1
+      stop = arg1
+    end
+  end
+
+  iterator.curr = start
+  iterator.stop = stop
+  iterator.step = step
 
   return iterator
 end
@@ -202,6 +241,27 @@ function Iterator:take(n)
   return iterator
 end
 
+--- Iterate while <code>predicate</code> is <code>true</code> and stop.
+-- @tparam predicate predicate the predicate to check against
+-- @treturn Iterator the new <code>@{Iterator}</code>
+function Iterator:take_while(predicate)
+  internal.assert_not_nil(predicate, "predicate")
+
+  local iterator = internal.base_iter(self, internal.take_while_next, internal.take_while_clone)
+
+  iterator.predicate = predicate
+  iterator.done_taking = false
+
+  return iterator
+end
+
+--- Iterate while <code>predicate</code> is <code>false</code> and stop.
+-- @tparam predicate predicate the predicate to check against
+-- @treturn Iterator the new <code>@{Iterator}</code>
+function Iterator:take_until(predicate)
+  return self:take_while(M.negate(predicate))
+end
+
 --- Iterate over the values, starting at the <code>(n+1)</code>th one.
 -- @tparam integer n amount of values to skip
 -- @treturn Iterator the new <code>@{Iterator}</code>
@@ -213,6 +273,27 @@ function Iterator:skip(n)
   iterator.n_remaining = n
 
   return iterator
+end
+
+--- Iterate over the values, starting whenever <code>predicate</code> becomes <code>false</code> for the first time.
+-- @tparam predicate predicate the predicate to check against
+-- @treturn Iterator the new <code>@{Iterator}</code>
+function Iterator:skip_while(predicate)
+  internal.assert_not_nil(predicate, "predicate")
+
+  local iterator = internal.base_iter(self, internal.skip_while_next, internal.skip_while_clone)
+
+  iterator.predicate = predicate
+  iterator.done_skipping = false
+
+  return iterator
+end
+
+--- Iterate over the values, starting whenever <code>predicate</code> becomes <code>true</code> for the first time.
+-- @tparam predicate predicate the predicate to check against
+-- @treturn Iterator the new <code>@{Iterator}</code>
+function Iterator:skip_until(predicate)
+  return self:skip_while(M.negate(predicate))
 end
 
 --- Take 1 value every <code>n</code>.
@@ -321,6 +402,26 @@ end
 -- @function iterate
 function exports.iterate(iterable)
   return Iterator.create(iterable)
+end
+
+--- Iterate over the naturals starting at 1.
+-- @treturn Iterator the counter
+-- @see Iterator:take
+-- @see Iterator:skip
+-- @see Iterator:every
+function exports.counter(...)
+  return Iterator.counter(...)
+end
+
+--- Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.
+-- @tparam[opt=1] integer start the start of the integer range
+-- @tparam integer stop the end of the integer range (inclusive)
+-- @tparam[opt=1] integer step the difference between consecutive elements
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @function range
+-- @see Iterator.range
+function exports.range(...)
+  return Iterator.range(...)
 end
 
 --- Select only values which match the predicate.
@@ -664,6 +765,20 @@ function internal.counter_clone(iter)
   return new_iter
 end
 
+function internal.range_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local val = iter.curr
+  iter.curr = iter.curr + iter.step
+  if iter.step > 0 and val <= iter.stop or iter.step < 0 and val >= iter.stop then
+    return val
+  else
+    iter.completed = true
+    return nil
+  end
+end
+
 function internal.filter_next(iter)
   if iter.completed then
     return nil
@@ -722,6 +837,59 @@ end
 
 function internal.take_clone(iter)
   return exports.take(Iterator.clone(iter.values), iter.n_remaining)
+end
+
+function internal.take_while_next(iter)
+  if iter.done_taking then
+    iter.completed = true
+  end
+
+  if iter.completed then
+    return nil
+  end
+  local next_input = {iter.values:next()}
+  if #next_input == 0 then
+    iter.completed = true
+    return nil
+  end
+
+  if not iter.predicate(unpack(next_input)) then
+    -- Still needs to return this one, but will
+    -- correctly set completed tag on next call
+    iter.done_taking = true
+  end
+  return unpack(next_input)
+end
+
+function internal.take_while_clone(iter)
+  return exports.take_while(Iterator.clone(iter.values), iter.predicate)
+end
+
+function internal.skip_while_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local next_input
+  repeat
+    next_input = {iter.values:next()}
+    if #next_input == 0 then
+      iter.completed = true
+      iter.done_skipping = true
+      return nil
+    end
+
+    if iter.done_skipping then
+      -- Early break so it doesn't evaluate predicate when
+      -- it doesn't need to
+      break
+    end
+
+    if not iter.predicate(unpack(next_input)) then
+      iter.done_skipping = true
+      break
+    end
+  until false
+  return unpack(next_input)
 end
 
 function internal.skip_next(iter)
@@ -857,7 +1025,7 @@ internal.ERR_FUNCTION_CLONE =
 internal.ERR_INTEGER_EXPECTED = "param %s expected integer, got: %s"
 internal.ERR_TABLE_EXPECTED = "param %s expected table, got: %s"
 internal.ERR_COROUTINE_EXPECTED = "param %s expected coroutine, got: %s"
-internal.ERR_NIL_VALUE = "parameter %s is nil"
+internal.ERR_NIL_VALUE = "param %s is nil"
 
 iter_meta.__index = Iterator
 iter_meta.__call = function(iter)
