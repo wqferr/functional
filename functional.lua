@@ -374,28 +374,28 @@ end
 function exports.range(arg1, arg2, arg3)
   local start, stop, step
   if arg3 then
-    assert_not_nil(arg1, "start")
-    assert_not_nil(arg2, "stop")
+    internal.assert_not_nil(arg1, "start")
+    internal.assert_not_nil(arg2, "stop")
     start = arg1
     stop = arg2
     step = arg3
     if step <= 0 then
-      error("step must be a positive integer")
+      error("parameter step must be a positive integer")
     end
   else
     step = 1
     if arg2 then
-      assert_not_nil(arg1, "start")
+      internal.assert_not_nil(arg1, "start")
       start = arg1
       stop = arg2
     else
-      assert_not_nil(arg1, "stop")
+      internal.assert_not_nil(arg1, "stop")
       start = 1
       stop = arg1
     end
   end
 
-  return Iterator.counter():skip(start):take(stop - start):every(step)
+  return Iterator.counter():skip(start - 1):take(stop - start):every(step)
 end
 
 --- Select only values which match the predicate.
