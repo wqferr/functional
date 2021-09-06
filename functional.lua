@@ -93,14 +93,20 @@ function Iterator.from_coroutine(co)
   return internal.wrap_coroutine(co)
 end
 
---- Iterate over the function's returned values upon repeated calls
+--- Iterate over the function's returned values upon repeated calls.
+-- This can effectively convert a vanilla-Lua iterator into a functional-style
+-- one (e.g., Iterator.from(io.lines "my_file.txt") gives you a string iterator).
 -- @tparam function func the function to call
+-- @tparam any ms mutable state passed to func
+-- @tparam any is initial immutable state passed to func
 -- @treturn Iterator the new <code>@{Iterator}</code>
-function Iterator.from_iterated_call(func)
+function Iterator.from(func, ms, is)
   internal.assert_not_nil(func, "func")
   local iterator = internal.base_iter(nil, internal.func_call_next, internal.func_try_clone)
 
   iterator.func = func
+  iterator.ms = ms
+  iterator.is = is
 
   return iterator
 end
@@ -811,12 +817,13 @@ function internal.func_call_next(iter)
   if iter.completed then
     return nil
   end
-  local result = {iter.func()}
+  local result = {iter.func(iter.ms, iter.is)}
   if #result == 0 then
     iter.completed = true
     return nil
   end
 
+  iter.is = result[1]
   return unpack(result)
 end
 

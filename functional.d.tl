@@ -1,17 +1,23 @@
 local record module
   type producer = function<T>(): T
   type consumer = function<T>(T)
+  type vanilla_iter = function<T, S>(S, T): T...
 
   type predicate = function<T>(T): boolean
   type mapping = function<T, U>(T): U
   type reducer = function<T, A>(A, T): A
 
+  -- FIXME in order to properly support iterators with multiple
+  -- types per return,
+  --    https://github.com/teal-language/tl/pull/449
+  -- needs to be merged
   record Iterator<T>
     create: function({T}): Iterator<T>
     create: function(Iterator<T>): Iterator<T>
     counter: function(): Iterator<integer>
+    from: function(vanilla_iter<T, nil>): Iterator<T>
+    from: function<S>(vanilla_iter<T, S>, S, T): Iterator<T>
     from_coroutine: function(thread): Iterator<any>
-    from_iterated_call: function(producer<T>): Iterator<T>
     clone: function(Iterator<T>): Iterator<T>
 
     is_complete: function(Iterator<T>): boolean
