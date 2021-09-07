@@ -1,5 +1,5 @@
 # functional
-Functional programming utilities implemented in pure lua.
+Functional programming utilities implemented in pure Lua.
 
 > The motivation behind this module is, again, portability.
 If you want to embed this code on a webpage, or use it in some weird
@@ -12,10 +12,10 @@ published as a rock at [luarocks.org/modules/wqferr/functional](http://luarocks.
 
 # About
 This module seeks to provide some utility functions and structures
-which are too verbose in vanilla lua, in particular with regards to iteration
+which are too verbose in vanilla Lua, in particular with regards to iteration
 and inline function definition.
 
-The module is writen completely in vanilla lua,
+The module is writen completely in vanilla Lua,
 with no dependencies on external packages. This was a decision made for
 portability, and has drawbacks. Since none of this was written as a C binding, it is not
 as performant as it could be.
@@ -30,3 +30,143 @@ concern, perhaps luafun will be more suited for your needs.
 If you want to embed this code on a webpage, or use it in some weird
 system for which a C binding wouldn't work, this project is aimed
 at you.**
+
+## Teal
+This project also includes `functional.d.tl`, which allows it to be used with
+[Teal](https://github.com/teal-language/tl): a typed dialect of Lua. The Makefile
+included is a workaround so LuaRocks actually installs the `.d.tl` file as well.
+
+Teal support is not complete, however, since some functions require features not
+yet stable on the Teal compiler side.
+
+# Learning the Ropes
+
+If this is your first time using (or even seeing) these kinds of "stream manipulating
+operators" and all those other fancy words, don't worry: we'll start from the beginning.
+
+## Iterators
+
+Sometimes called "streams", they are just that: some... *thing* that can produce values
+over time through iteration.
+
+Let's say we want to get an array with the numbers from 1 to 10. Sounds easy?
+
+```lua
+local f = require "functional"
+
+local my_counter = f.counter()
+local my_capped_counter = my_counter:take(10)
+local my_array = my_capped_counter:to_array()
+
+print(type(my_array))
+for i, v in ipairs(my_array) do
+  print(i, v)
+end
+```
+
+That may seem like a lot, but those three lines make sense if you think of each step
+individually. Starting from the top down:
+
+`f.counter()` is a function that creates an iterator that just counts up. Forever.
+Well, this is a start, but we don't want an infinite array! We want to cut it short!
+
+`my_counter:take(10)` will do just that: cut the previous thing short, and stop
+after 10 elements have gone through this step.
+
+The `to_array` method just collects all the items in the stream into an array. That
+transforms the abstract and scary "iterator" into a more familiar face.
+
+From that point on, it's just regular Lua: `ipairs` into printing.
+
+## Operator Chains
+
+Now here's the neat part: you don't have to assign each step to a new variable. We don't
+even use most of them except to define the next step.
+
+Instead, we can just collapse them all, as below:
+
+```lua
+local f = require "functional"
+
+local my_array = f.counter()   -- my_counter
+                    :take(10)  -- my_capped_counter
+                    :to_array()
+for i, v in ipairs(my_array) do
+  print(i, v)
+end
+```
+
+And of course, the line breaks between each step are optional: I just put them there for clarity.
+In other words, you can create that 1-10 array in a single line!
+
+What? You could've just typed `{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}`, yeah, but what about getting
+an array with all numbers from 1 to 1000? You'd have to write a for loop, and for loops in Lua
+are verbose.
+
+And this is the bare-bones example: how about we try something a little more interesting?
+
+## Filtering
+
+Given a list of names, which ones contain the letter B? Let's assume you already have this
+chunk of code:
+
+```lua
+local names = {
+  "Arya",
+  "Beatrice",
+  "Caleb",
+  "Dennis"
+}
+
+local function has_b(name)
+  if name:find("[Bb]") then
+    return true
+  else
+    return false
+  end
+end
+```
+
+In pure Lua, you could write something like:
+```lua
+local names_with_b = {}
+for _, name in ipairs(names) do
+  if has_b(name) then
+    table.insert(names_with_b, name)
+  end
+end
+```
+
+Here, `has_b` is called a predicate: a simple function which returns `true` or `false` for any given name.
+Predicates are especially good for filtering. Either you keep something, or you throw it out. In fact, the
+whole loop is a really common pattern: `if predicate(val): keep(val)`. `functional` has the operator
+`:filter` to do just that:
+
+```lua
+local names_with_b = iterate(names):filter(has_b):to_array()
+```
+
+Here, `iterate` just transforms an input array into an iterator, so we can use `:filter` or any other
+operators directly on it.
+
+## Mapping
+
+Now, what if you wanted all these names in all caps? In pure Lua, you'd have to change
+the core loop:
+
+```lua
+local names_with_b = {}
+for _, name in ipairs(names) do
+  if has_b(name) then
+    table.insert(names_with_b, string.upper(name))
+  end
+end
+```
+
+In a functional environment, you can just add another operator. Since we're applying the same
+function to all elements in a stream, we can use the `:map` operator. It transforms (or "maps")
+every element in the stream to the return value of a function.
+
+```lua
+local names_with_b = iterate(names):filter(has_b):map(string.upper):to_array()
+```

@@ -17,6 +17,7 @@ local record module
     counter: function(): Iterator<integer>
     from: function(vanilla_iter<T, nil>): Iterator<T>
     from: function<S>(vanilla_iter<T, S>, S, T): Iterator<T>
+    range: function(integer, integer, integer): Iterator<integer>
     from_coroutine: function(thread): Iterator<any>
     clone: function(Iterator<T>): Iterator<T>
 
@@ -33,7 +34,13 @@ local record module
     foreach: function(Iterator<T>, consumer<T>)
 
     take: function(Iterator<T>, integer): Iterator<T>
+    take_while: function(Iterator<T>, predicate<T>): Iterator<T>
+    take_until: function(Iterator<T>, predicate<T>): Iterator<T>
+
     skip: function(Iterator<T>, integer): Iterator<T>
+    skip_while: function(Iterator<T>, predicate<T>): Iterator<T>
+    skip_until: function(Iterator<T>, predicate<T>): Iterator<T>
+
     every: function(Iterator<T>, integer): Iterator<T>
 
     any: function(Iterator<T>, predicate<T>): boolean
@@ -42,6 +49,9 @@ local record module
 
     metamethod __call: function(Iterator<T>): T
   end
+
+  counter: function(): Iterator<integer>
+  range: function(integer, integer, integer): Iterator<integer>
 
   iterate: function<T>({T}): Iterator<T>
   iterate: function<T>(Iterator<T>): Iterator<T>
