@@ -41,6 +41,7 @@ local M = {}
 local exports = {}
 local internal = {}
 
+--- @class Iterator
 local Iterator = {}
 local iter_meta = {}
 
@@ -136,18 +137,32 @@ end
 -- This can effectively convert a vanilla-Lua iterator into a functional-style
 -- one (e.g., Iterator.from(io.lines "my_file.txt") gives you a string iterator).
 -- @tparam function func the function to call
--- @tparam any ms mutable state passed to func
--- @tparam any is initial immutable state passed to func
+-- @param is invariant state passed to func
+-- @param vars initial variable passed to func
 -- @treturn Iterator the new <code>@{Iterator}</code>
-function Iterator.from(func, ms, is)
+function Iterator.from(func, is, var)
   internal.assert_not_nil(func, "func")
   local iterator = internal.base_iter(nil, internal.func_call_next, internal.func_try_clone)
 
   iterator.func = func
-  iterator.ms = ms
   iterator.is = is
+  iterator.var = var
 
   return iterator
+end
+
+--- Iterate over the function's returned values (packed into a table) upon repeated calls.
+-- This is similar to @{Iterator.from}, but instead of the created Iterator
+-- generating multiple return values per call, it returns them all
+-- packed into an array.
+-- @tparam function func the function to call
+-- @param is invariant state passed to func
+-- @param vars initial variable passed to fund
+-- @treturn iterator the new <code>@{Iterator}</code>
+function Iterator.from_packed(func, is, var)
+  internal.assert_not_nil(func, "func")
+  local iterator = Iterator.from(func, is, var)
+  return iterator:map(internal.pack)
 end
 
 --- Nondestructively return an indepent iterable from the given one.
@@ -415,8 +430,8 @@ end
 -- @see Iterator:take
 -- @see Iterator:skip
 -- @see Iterator:every
-function exports.counter(...)
-  return Iterator.counter(...)
+function exports.counter()
+  return Iterator.counter()
 end
 
 --- Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.
@@ -570,7 +585,7 @@ end
 -- @see iterate
 -- @function to_array
 function M.to_array(iterable)
-  assert_table(iterable, "iterable")
+  internal.assert_table(iterable, "iterable")
   if internal.is_iterator(iterable) then
     return iterable:to_array()
   else
@@ -684,7 +699,7 @@ end
 -- @param value the constant to be returned
 -- @treturn function the constant function
 function M.constant(value)
-  return function(...)
+  return function()
     return value
   end
 end
@@ -728,6 +743,10 @@ end
 function internal.func_nil_guard(value, ...)
   assert(value ~= nil, "iterated function cannot return nil as the first value")
   return value, ...
+end
+
+function internal.pack(...)
+  return {...}
 end
 
 -- ITER FUNCTIONS --
@@ -904,7 +923,7 @@ function internal.skip_next(iter)
   end
 
   while iter.n_remaining > 0 do
-    local v = iter.values:next()
+    iter.values:next()
     iter.n_remaining = iter.n_remaining - 1
   end
 
@@ -930,7 +949,7 @@ function internal.every_next(iter)
   if iter.first_call then
     iter.first_call = nil
   else
-    for i = 1, iter.n - 1 do
+    for _ = 1, iter.n - 1 do
       iter.values:next()
     end
   end
@@ -958,7 +977,7 @@ function internal.iter_coroutine_next(iter)
   if iter.completed then
     return nil
   end
-  local yield = {coroutine.resume(co)}
+  local yield = {coroutine.resume(iter.co)}
   local status = yield[1]
   assert(status, yield[2])
 
@@ -971,7 +990,7 @@ function internal.iter_coroutine_next(iter)
   return unpack(next_value)
 end
 
-function internal.coroutine_try_clone(iter)
+function internal.coroutine_try_clone()
   error(internal.ERR_COROUTINE_CLONE)
 end
 
@@ -985,17 +1004,17 @@ function internal.func_call_next(iter)
   if iter.completed then
     return nil
   end
-  local result = {iter.func(iter.ms, iter.is)}
+  local result = {iter.func(iter.is, iter.var)}
   if #result == 0 then
     iter.completed = true
     return nil
   end
 
-  iter.is = result[1]
+  iter.var = result[1]
   return unpack(result)
 end
 
-function internal.func_try_clone(iter)
+function internal.func_try_clone()
   error(internal.ERR_FUNCTION_CLONE)
 end
 

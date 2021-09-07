@@ -1,22 +1,29 @@
 local record module
   type producer = function<T>(): T
   type consumer = function<T>(T)
-  type vanilla_iter = function<T, S>(S, T): T...
 
   type predicate = function<T>(T): boolean
   type mapping = function<T, U>(T): U
   type reducer = function<T, A>(A, T): A
 
+  type vanilla_singlearg_iter = function<IS, T>(IS, T): T
+  type vanilla_multiarg_iter = function<IS, T>(IS, ...: T): T...
+
   -- FIXME in order to properly support iterators with multiple
   -- types per return,
   --    https://github.com/teal-language/tl/pull/449
   -- needs to be merged
+  type vanilla_complex_iter = function<IS, T>(IS, ...: any): (any...)
+
   record Iterator<T>
     create: function({T}): Iterator<T>
     create: function(Iterator<T>): Iterator<T>
     counter: function(): Iterator<integer>
-    from: function(vanilla_iter<T, nil>): Iterator<T>
-    from: function<S>(vanilla_iter<T, S>, S, T): Iterator<T>
+
+    from: function<IS>(vanilla_singlearg_iter<IS, T>, IS, T): Iterator<T>
+    from: function<IS>(vanilla_complex_iter<IS, T>, IS, T): Iterator<any> -- catch-all clause
+    from_packed: function<IS>(vanilla_multiarg_iter<IS, T>, IS, T): Iterator<{T}>
+
     range: function(integer, integer, integer): Iterator<integer>
     from_coroutine: function(thread): Iterator<any>
     clone: function(Iterator<T>): Iterator<T>
