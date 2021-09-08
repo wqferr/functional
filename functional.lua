@@ -981,7 +981,7 @@ function internal.iter_coroutine_next(iter)
   if iter.completed then
     return nil
   end
-  local yield = {coroutine.resume(iter.co)}
+  local yield = {coroutine.resume(iter.coroutine)}
   local status = yield[1]
   assert(status, yield[2])
 
