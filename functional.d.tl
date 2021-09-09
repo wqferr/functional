@@ -19,8 +19,8 @@ local record module
     create: function(Iterator<T>): Iterator<T>
     counter: function(): Iterator<integer>
 
-    from_iter: function<IS>(vanilla_singlearg_iter<IS, T>, IS, T): Iterator<T>
-    pack_iter: function<IS>(vanilla_multiarg_iter<IS, T>, IS, T): Iterator<{T}>
+    from: function<IS>(vanilla_singlearg_iter<IS, T>, IS, T): Iterator<T>
+    packed_from: function<IS>(vanilla_multiarg_iter<IS, T>, IS, T): Iterator<{T}>
 
     from_coroutine: function(thread): Iterator<any>
     range: function(integer, integer, integer): Iterator<integer>

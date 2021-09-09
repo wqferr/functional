@@ -139,12 +139,12 @@ end
 
 --- Iterate over the function's returned values upon repeated calls.
 -- This can effectively convert a vanilla-Lua iterator into a functional-style
--- one (e.g., Iterator.from_iter(io.lines "my_file.txt") gives you a string iterator).
+-- one (e.g., <code>Iterator.from(io.lines "my_file.txt")</code> gives you a string iterator).
 -- @tparam function func the function to call
 -- @param is invariant state passed to func
 -- @param var initial variable passed to func
 -- @treturn Iterator the new <code>@{Iterator}</code>
-function Iterator.from_iter(func, is, var)
+function Iterator.from(func, is, var)
   internal.assert_not_nil(func, "func")
   local iterator = internal.base_iter(nil, internal.func_call_next, internal.func_try_clone)
 
@@ -156,16 +156,16 @@ function Iterator.from_iter(func, is, var)
 end
 
 --- Iterate over the function's returned values (packed into a table) upon repeated calls.
--- This is similar to @{Iterator.from_iter}, but instead of the created Iterator
+-- This is similar to @{Iterator.from}, but instead of the created Iterator
 -- generating multiple return values per call, it returns them all
 -- packed into an array.
 -- @tparam function func the function to call
 -- @param is invariant state passed to func
 -- @param var initial variable passed to fund
 -- @treturn iterator the new <code>@{Iterator}</code>
-function Iterator.pack_iter(func, is, var)
+function Iterator.packed_from(func, is, var)
   internal.assert_not_nil(func, "func")
-  local iterator = Iterator.from_iter(func, is, var)
+  local iterator = Iterator.from(func, is, var)
   return iterator:map(internal.pack)
 end
 
