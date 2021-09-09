@@ -6,13 +6,24 @@ local record module
   type mapping = function<T, U>(T): U
   type reducer = function<T, A>(A, T): A
 
+  type vanilla_singlearg_iter = function<IS, T>(IS, T): T
+
+  -- FIXME in order to properly support iterators with multiple
+  -- types per return,
+  --    https://github.com/teal-language/tl/pull/449
+  -- needs to be merged
+  type vanilla_multiarg_iter = function<IS, T>(IS, ...: T): T...
+
   record Iterator<T>
     create: function({T}): Iterator<T>
     create: function(Iterator<T>): Iterator<T>
     counter: function(): Iterator<integer>
-    range: function(integer, integer, integer): Iterator<integer>
+
+    from: function<IS>(vanilla_singlearg_iter<IS, T>, IS, T): Iterator<T>
+    packed_from: function<IS>(vanilla_multiarg_iter<IS, T>, IS, T): Iterator<{T}>
+
     from_coroutine: function(thread): Iterator<any>
-    from_iterated_call: function(producer<T>): Iterator<T>
+    range: function(integer, integer, integer): Iterator<integer>
     clone: function(Iterator<T>): Iterator<T>
 
     is_complete: function(Iterator<T>): boolean
@@ -23,7 +34,6 @@ local record module
 
     filter: function(Iterator<T>, predicate<T>): Iterator<T>
     map: function<U>(Iterator<T>, mapping<T, U>): Iterator<U>
-    reduce: function(Iterator<T>, reducer<T, T>): T
     reduce: function<A>(Iterator<T>, reducer<T, A>, A): A
     foreach: function(Iterator<T>, consumer<T>)
 
@@ -72,10 +82,14 @@ local record module
   every: function<T>(Iterator<T>, integer): Iterator<T>
 
   any: function<T>({T}, predicate<T>): boolean
+  any: function<T>(Iterator<T>, predicate<T>): boolean
   all: function<T>({T}, predicate<T>): boolean
+  all: function<T>(Iterator<T>, predicate<T>): boolean
 
-  to_array: function<T>({T}): {T}
+  -- Suggestion to change order of these declarations by
+  -- GitHub user FractalU
   to_array: function<T>(Iterator<T>): {T}
+  to_array: function<T>({T}): {T}
 
   to_coroutine: function<T>({T}): thread
   to_coroutine: function<T>(Iterator<T>): thread

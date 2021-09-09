@@ -30,7 +30,6 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
-<li><a href="#Fields">Fields</a></li>
 <li><a href="#Class_Iterator">Class Iterator </a></li>
 </ul>
 
@@ -80,7 +79,7 @@
     <h3>Info:</h3>
     <ul>
         <li><strong>Copyright</strong>: 2021</li>
-        <li><strong>Release</strong>: 1.2.0</li>
+        <li><strong>Release</strong>: 1.3.0</li>
         <li><strong>License</strong>: MIT</li>
         <li><strong>Author</strong>: William Quelho Ferreira</li>
     </ul>
@@ -93,7 +92,7 @@
 	<td class="summary">Create an <code><a href="index.html#Iterator">Iterator</a></code> for the <code>iterable</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.counter">exports.counter (...)</a></td>
+	<td class="name" nowrap><a href="#exports.counter">exports.counter ()</a></td>
 	<td class="summary">Iterate over the naturals starting at 1.</td>
 	</tr>
 	<tr>
@@ -179,18 +178,19 @@
  functions into global scope.</td>
 	</tr>
 </table>
-<h2><a href="#Fields">Fields</a></h2>
-<table class="function_list">
-	<tr>
-	<td class="name" nowrap><a href="#_VERSION">_VERSION</a></td>
-	<td class="summary">Module version.</td>
-	</tr>
-</table>
 <h2><a href="#Class_Iterator">Class Iterator </a></h2>
 <table class="function_list">
 	<tr>
+	<td class="name" nowrap><a href="#Iterator._VERSION">Iterator._VERSION</a></td>
+	<td class="summary">Module version.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#Iterator.create">Iterator.create (iterable)</a></td>
 	<td class="summary">Iterate over the given <code>iterable</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Iterator:next">Iterator:next ()</a></td>
+	<td class="summary">Retrieve the next element from the iterator.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator.counter">Iterator.counter ()</a></td>
@@ -205,8 +205,12 @@
 	<td class="summary">Iterate over the <code>coroutine</code>'s yielded values.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#Iterator.from_iterated_call">Iterator.from_iterated_call (func)</a></td>
-	<td class="summary">Iterate over the function's returned values upon repeated calls</td>
+	<td class="name" nowrap><a href="#Iterator.from">Iterator.from (func, is, var)</a></td>
+	<td class="summary">Iterate over the function's returned values upon repeated calls.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Iterator.packed_from">Iterator.packed_from (func, is, var)</a></td>
+	<td class="summary">Iterate over the function's returned values (packed into a table) upon repeated calls.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator.clone">Iterator.clone (iterable)</a></td>
@@ -320,18 +324,12 @@
 </dd>
     <dt>
     <a name = "exports.counter"></a>
-    <strong>exports.counter (...)</strong>
+    <strong>exports.counter ()</strong>
     </dt>
     <dd>
     Iterate over the naturals starting at 1.
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">...</span>
-
-        </li>
-    </ul>
 
     <h3>Returns:</h3>
     <ol>
@@ -1060,12 +1058,12 @@
 
 </dd>
 </dl>
-    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+    <h2 class="section-header "><a name="Class_Iterator"></a>Class Iterator </h2>
 
     <dl class="function">
     <dt>
-    <a name = "_VERSION"></a>
-    <strong>_VERSION</strong>
+    <a name = "Iterator._VERSION"></a>
+    <strong>Iterator._VERSION</strong>
     </dt>
     <dd>
     Module version.
@@ -1077,10 +1075,6 @@
 
 
 </dd>
-</dl>
-    <h2 class="section-header "><a name="Class_Iterator"></a>Class Iterator </h2>
-
-    <dl class="function">
     <dt>
     <a name = "Iterator.create"></a>
     <strong>Iterator.create (iterable)</strong>
@@ -1105,6 +1099,25 @@
 
            <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
         the new Iterator
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Iterator:next"></a>
+    <strong>Iterator:next ()</strong>
+    </dt>
+    <dd>
+    Retrieve the next element from the iterator.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the next value in the sequence
     </ol>
 
 
@@ -1206,11 +1219,13 @@
 
 </dd>
     <dt>
-    <a name = "Iterator.from_iterated_call"></a>
-    <strong>Iterator.from_iterated_call (func)</strong>
+    <a name = "Iterator.from"></a>
+    <strong>Iterator.from (func, is, var)</strong>
     </dt>
     <dd>
-    Iterate over the function's returned values upon repeated calls
+    Iterate over the function's returned values upon repeated calls.
+ This can effectively convert a vanilla-Lua iterator into a functional-style
+ one (e.g., <code>Iterator.from(io.lines "my_file.txt")</code> gives you a string iterator).
 
 
     <h3>Parameters:</h3>
@@ -1219,12 +1234,54 @@
             <span class="types"><span class="type">function</span></span>
          the function to call
         </li>
+        <li><span class="parameter">is</span>
+         invariant state passed to func
+        </li>
+        <li><span class="parameter">var</span>
+         initial variable passed to func
+        </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
            <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the new <code><a href="index.html#Iterator">Iterator</a></code>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Iterator.packed_from"></a>
+    <strong>Iterator.packed_from (func, is, var)</strong>
+    </dt>
+    <dd>
+    Iterate over the function's returned values (packed into a table) upon repeated calls.
+ This is similar to <a href="index.html#Iterator.from">Iterator.from</a>, but instead of the created Iterator
+ generating multiple return values per call, it returns them all
+ packed into an array.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+            <span class="types"><span class="type">function</span></span>
+         the function to call
+        </li>
+        <li><span class="parameter">is</span>
+         invariant state passed to func
+        </li>
+        <li><span class="parameter">var</span>
+         initial variable passed to fund
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">iterator</span></span>
         the new <code><a href="index.html#Iterator">Iterator</a></code>
     </ol>
 
@@ -1737,7 +1794,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-09-05 23:41:35 </i>
+<i style="float:right;">Last updated 2021-09-09 18:35:44 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
