@@ -32,7 +32,7 @@
 -- </ul></p>
 -- @module functional
 -- @alias M
--- @release 1.3.0
+-- @release 1.4.0
 -- @author William Quelho Ferreira
 -- @copyright 2021
 -- @license MIT
@@ -49,7 +49,7 @@ local iter_meta = {}
 local unpack = table.unpack or unpack
 
 --- Module version.
-M._VERSION = "1.3.0"
+M._VERSION = "1.4.0"
 
 --- Iterate over the given <code>iterable</code>.
 -- <p>If <code>iterable</code> is an array, create an Iterator instance
