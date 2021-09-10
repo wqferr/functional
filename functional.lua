@@ -32,7 +32,7 @@
 -- </ul></p>
 -- @module functional
 -- @alias M
--- @release 1.3.0
+-- @release 1.4.0
 -- @author William Quelho Ferreira
 -- @copyright 2021
 -- @license MIT
@@ -41,16 +41,15 @@ local M = {}
 local exports = {}
 local internal = {}
 
---- @type Iterator
+--- A lazy-loading Iterator.
+-- @type Iterator
 local Iterator = {}
 local iter_meta = {}
 
 local unpack = table.unpack or unpack
 
 --- Module version.
-M._VERSION = "1.3.0"
-
---- @type Iterator
+M._VERSION = "1.4.0"
 
 --- Iterate over the given <code>iterable</code>.
 -- <p>If <code>iterable</code> is an array, create an Iterator instance
@@ -75,7 +74,8 @@ end
 
 --- Retrieve the next element from the iterator.
 -- @return the next value in the sequence
-function Iterator:next() end
+function Iterator:next()
+end
 
 --- Iterate over the naturals starting at 1.
 -- @treturn Iterator the counter
@@ -390,6 +390,35 @@ function Iterator:count(predicate)
   return c
 end
 
+--- Iterate over two iterables simultaneously.
+-- <p>This results in an Iterator with multiple values per :next() call.</p>
+-- <p>The new Iterator will be considered complete as soon as the one the method
+-- was called on (`self`) is completed, regardless of the status of `other`.</p>
+-- @tparam iterable other the other iterable to zip with this one
+-- @treturn Iterator the resulting zipped Iterator
+function Iterator:zip(other)
+  other = exports.iterate(other)
+  local iterator = internal.base_iter({self, other}, internal.zip_next, internal.zip_clone)
+  return iterator
+end
+
+--- Iterate over two iterables simultaneously, giving their values as a 2-element array.
+-- <p>This results in an Iterator with a single value per :next() call.</p>
+-- @tparam iterable other the other iterable to zip with this one
+-- @treturn Iterator the resulting zipped Iterator
+function Iterator:packed_zip(other)
+  return self:zip(other):map(internal.pack)
+end
+
+--- Append elements from `other` after this iterator has been exhausted.
+-- @tparam iterable other the iterator whose elements will be appended
+-- @treturn Iterator the concatenation
+function Iterator:concat(other)
+  other = exports.iterate(other)
+  local iterator = internal.base_iter({self, other}, internal.concat_next, internal.concat_clone)
+  return iterator
+end
+
 --- Create an array out of the <code>@{Iterator}</code>'s values.
 -- @treturn array the array of values
 function Iterator:to_array()
@@ -577,6 +606,35 @@ end
 -- @function all
 function exports.all(iterable, predicate)
   return exports.iterate(iterable):all(predicate)
+end
+
+--- Iterate over two iterables simultaneously.
+-- @see Iterator:zip
+function exports.zip(iter1, iter2)
+  return exports.iterate(iter1):zip(iter2)
+end
+
+--- Iterate over two iterables simultaneously.
+-- @see Iterator:packed_zip
+function exports.packed_zip(iter1, iter2)
+  return exports.iterate(iter1):packed_zip(iter2)
+end
+
+--- Concatenate two iterables into an Iterator.
+-- @see Iterator:concat
+function exports.concat(iter1, iter2)
+  return exports.iterate(iter1):concat(iter2)
+end
+
+--- Does nothing.
+function exports.nop()
+end
+
+--- Returns its arguments in the same order.
+-- @param ... the values to be returned
+-- @return the given values
+function exports.identity(...)
+  return ...
 end
 
 --- Return an array version of the <code>iterable</code>.
@@ -969,6 +1027,46 @@ end
 
 function internal.every_clone(iter)
   return exports.every(Iterator.clone(iter.values), iter.n)
+end
+
+function internal.zip_next(iter)
+  if iter.completed or iter.values[1].completed then
+    iter.completed = true
+    return nil, nil
+  end
+  local source1_next, source2_next = {iter.values[1]:next()}, {iter.values[2]:next()}
+  if iter.values[1].completed then
+    iter.completed = true
+    return nil, nil
+  end
+  local zipped = source1_next
+  for _, v in ipairs(source2_next) do
+    table.insert(zipped, v)
+  end
+  return unpack(zipped)
+end
+
+function internal.zip_clone(iter)
+  return exports.zip(iter.values[1]:clone(), iter.values[2]:clone())
+end
+
+function internal.concat_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local next_vals = {iter.values[1]:next()}
+  if #next_vals == 0 then
+    next_vals = {iter.values[2]:next()}
+  end
+  if #next_vals == 0 then
+    iter.completed = true
+    return nil
+  end
+  return unpack(next_vals)
+end
+
+function internal.concat_clone(iter)
+  return exports.concat(iter.values[1]:clone(), iter.values[2]:clone())
 end
 
 function internal.wrap_coroutine(co)

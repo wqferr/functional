@@ -51,6 +51,12 @@ local record module
     all: function(Iterator<T>, predicate<T>): boolean
     count: function(Iterator<T>, predicate<T>): integer
 
+    -- zip cannot be properly implemented until variadic type arguments get stable
+    packed_zip: function(Iterator<T>, Iterator<T>): Iterator<{T, T}>
+    packed_zip: function(Iterator<T>, {T}): Iterator<{T, T}>
+    concat: function(Iterator<T>, Iterator<T>): Iterator<T>
+    concat: function(Iterator<T>, {T}): Iterator<T>
+
     metamethod __call: function(Iterator<T>): T
   end
 
@@ -94,6 +100,17 @@ local record module
   to_coroutine: function<T>({T}): thread
   to_coroutine: function<T>(Iterator<T>): thread
 
+  -- zip cannot be properly implemented until variadic type arguments get stable
+  packed_zip: function<T>(Iterator<T>, Iterator<T>): Iterator<{T, T}>
+  packed_zip: function<T>(Iterator<T>, {T}): Iterator<{T, T}>
+  packed_zip: function<T>({T}, Iterator<T>): Iterator<{T, T}>
+  packed_zip: function<T>({T}, {T}): Iterator<{T, T}>
+
+  concat: function<T>(Iterator<T>, Iterator<T>): Iterator<T>
+  concat: function<T>(Iterator<T>, {T}): Iterator<T>
+  concat: function<T>({T}, Iterator<T>): Iterator<T>
+  concat: function<T>({T}, {T}): Iterator<T>
+
   negate: function<T>(predicate<T>): predicate<T>
   compose: function<T, U, V>(mapping<T, U>, mapping<U, V>): mapping<T, V>
 
@@ -106,6 +123,9 @@ local record module
   accessor: function<K, V>({K: V}): mapping<K, V>
   item_getter: function<K>(K): (function<V>({K: V}): V)
   constant: function<T>(T): producer<T>
+
+  nop: function()
+  identity: function<T>(T): T
 end
 
 return module
