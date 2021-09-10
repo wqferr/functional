@@ -1030,12 +1030,12 @@ function internal.every_clone(iter)
 end
 
 function internal.zip_next(iter)
-  if iter.is_completed or iter.values[1].is_completed then
+  if iter.completed or iter.values[1].completed then
     iter.completed = true
     return nil, nil
   end
   local source1_next, source2_next = {iter.values[1]:next()}, {iter.values[2]:next()}
-  if iter.values[1].is_completed then
+  if iter.values[1].completed then
     iter.completed = true
     return nil, nil
   end
