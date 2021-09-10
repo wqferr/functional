@@ -53,6 +53,7 @@ local record module
 
     -- zip cannot be properly implemented until variadic type arguments get stable
     packed_zip: function(Iterator<T>, Iterator<T>): Iterator<{T, T}>
+    concat: function(Iterator<T>, Iterator<T>): Iterator<T>
 
     metamethod __call: function(Iterator<T>): T
   end
@@ -99,6 +100,7 @@ local record module
 
   -- zip cannot be properly implemented until variadic type arguments get stable
   packed_zip: function<T>(Iterator<T>, Iterator<T>): Iterator<{T, T}>
+  concat: function<T>(Iterator<T>, Iterator<T>): Iterator<T>
 
   negate: function<T>(predicate<T>): predicate<T>
   compose: function<T, U, V>(mapping<T, U>, mapping<U, V>): mapping<T, V>
