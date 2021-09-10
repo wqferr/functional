@@ -637,6 +637,32 @@ function exports.identity(...)
   return ...
 end
 
+-- https://www.lua.org/manual/5.4/manual.html#pdf-load
+
+-- TODO docs and PITFALLS!
+function exports.lambda(expr, env)
+  -- Make sure this is running in a version that has _ENV
+  assert(_ENV)
+
+  -- And it has load
+  assert(load)
+
+  expr, env = internal.sanitize_lambda(expr, env)
+  local body = [[
+return function(_1, _2, _3, _4, _5, _6, _7, _8, _9) local _, x, a, y, b, z, c, d, e, f, g, h, i = _1, _1, _1, _2, _2, _3, _3, _4, _5, _6, _7, _8, _9
+  return ]] .. expr .. [[ -- This comment is here to force a newline
+end]]
+
+  -- Get context that created lambda for debug purposes
+  local ctx = debug.getinfo(2)
+  local chunk_name = ("lambda-%s@%s:%s"):format(ctx.name or "mainchunk", ctx.short_src, ctx.currentline)
+  local chunk = load(body, chunk_name, "t", env)
+  if not chunk then
+    error("Load failed for lambda body: " .. expr)
+  end
+  return chunk()
+end
+
 --- Return an array version of the <code>iterable</code>.
 -- <p>If <code>iterable</code> is an array, return itself.</p>
 -- <p>If <code>iterable</code> is an <code>@{Iterator}</code>,
@@ -792,6 +818,7 @@ local function export_funcs()
 
   return M
 end
+-- TODO update list of functions that get exported
 
 -- INTERNAL --
 
@@ -809,6 +836,36 @@ end
 
 function internal.pack(...)
   return {...}
+end
+
+function internal.sanitize_lambda(expr, env)
+  env = env or {}
+  if type(expr) ~= "string" then
+    error("Expected string for expr, got " .. type(expr), 2)
+  end
+  if type(env) ~= "table" then
+    error("Expected table for env, got " .. type(env), 2)
+  end
+
+  -- Trim from PiL2 20.4
+  -- Found here: http://lua-users.org/wiki/StringTrim
+  expr = expr:gsub("^%s*(.-)%s*$", "%1")
+
+  if expr:find "\n" then
+    error("Lambda function bodies cannot contain newlines", 2)
+  elseif expr:find "%f[%w]function%f[%W]" then
+    error("Lambda functions cannot define new functions", 2)
+  elseif expr:find "%f[%w]end%f[%W]" then
+    error("Lambda functions cannot be manually closed (nice try)", 2)
+  elseif expr:find "^return%f[%W]" then
+    error("`return` is implied in lambda expressions, please do not include it yourself", 2)
+  elseif expr:find "%f[%w]_ENV%f[%W]" then
+    error("Please do not mess with _ENV inside lambdas", 2)
+  end
+
+  expr = "(" .. expr .. ")"
+
+  return expr, env
 end
 
 -- ITER FUNCTIONS --

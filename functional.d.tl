@@ -124,6 +124,8 @@ local record module
   item_getter: function<K>(K): (function<V>({K: V}): V)
   constant: function<T>(T): producer<T>
 
+  lambda: function(string, table): function
+
   nop: function()
   identity: function<T>(T): T
 end
