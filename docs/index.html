@@ -92,7 +92,7 @@
 	<td class="summary">Create an <code><a href="index.html#Iterator">Iterator</a></code> for the <code>iterable</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.counter">exports.counter ()</a></td>
+	<td class="name" nowrap><a href="#counter">counter ()</a></td>
 	<td class="summary">Iterate over the naturals starting at 1.</td>
 	</tr>
 	<tr>
@@ -136,24 +136,28 @@
 	<td class="summary">Checks if all values evaluate to <code>true</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.zip">exports.zip (iter1, iter2)</a></td>
+	<td class="name" nowrap><a href="#zip">zip ()</a></td>
 	<td class="summary">Iterate over two iterables simultaneously.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.packed_zip">exports.packed_zip (iter1, iter2)</a></td>
+	<td class="name" nowrap><a href="#packed_zip">packed_zip ()</a></td>
 	<td class="summary">Iterate over two iterables simultaneously.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.concat">exports.concat (iter1, iter2)</a></td>
+	<td class="name" nowrap><a href="#concat">concat ()</a></td>
 	<td class="summary">Concatenate two iterables into an Iterator.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.nop">exports.nop ()</a></td>
+	<td class="name" nowrap><a href="#nop">nop ()</a></td>
 	<td class="summary">Does nothing.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.identity">exports.identity (...)</a></td>
+	<td class="name" nowrap><a href="#identity">identity (...)</a></td>
 	<td class="summary">Returns its arguments in the same order.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#lambda">lambda (expr, env)</a></td>
+	<td class="summary">Create a lambda function from a given expression string.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#to_array">to_array (iterable)</a></td>
@@ -355,8 +359,8 @@
 
 </dd>
     <dt>
-    <a name = "exports.counter"></a>
-    <strong>exports.counter ()</strong>
+    <a name = "counter"></a>
+    <strong>counter ()</strong>
     </dt>
     <dd>
     Iterate over the naturals starting at 1.
@@ -773,22 +777,13 @@
 
 </dd>
     <dt>
-    <a name = "exports.zip"></a>
-    <strong>exports.zip (iter1, iter2)</strong>
+    <a name = "zip"></a>
+    <strong>zip ()</strong>
     </dt>
     <dd>
     Iterate over two iterables simultaneously.
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">iter1</span>
-
-        </li>
-        <li><span class="parameter">iter2</span>
-
-        </li>
-    </ul>
 
 
 
@@ -800,22 +795,13 @@
 
 </dd>
     <dt>
-    <a name = "exports.packed_zip"></a>
-    <strong>exports.packed_zip (iter1, iter2)</strong>
+    <a name = "packed_zip"></a>
+    <strong>packed_zip ()</strong>
     </dt>
     <dd>
     Iterate over two iterables simultaneously.
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">iter1</span>
-
-        </li>
-        <li><span class="parameter">iter2</span>
-
-        </li>
-    </ul>
 
 
 
@@ -827,22 +813,13 @@
 
 </dd>
     <dt>
-    <a name = "exports.concat"></a>
-    <strong>exports.concat (iter1, iter2)</strong>
+    <a name = "concat"></a>
+    <strong>concat ()</strong>
     </dt>
     <dd>
     Concatenate two iterables into an Iterator.
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">iter1</span>
-
-        </li>
-        <li><span class="parameter">iter2</span>
-
-        </li>
-    </ul>
 
 
 
@@ -854,8 +831,8 @@
 
 </dd>
     <dt>
-    <a name = "exports.nop"></a>
-    <strong>exports.nop ()</strong>
+    <a name = "nop"></a>
+    <strong>nop ()</strong>
     </dt>
     <dd>
     Does nothing.
@@ -868,8 +845,8 @@
 
 </dd>
     <dt>
-    <a name = "exports.identity"></a>
-    <strong>exports.identity (...)</strong>
+    <a name = "identity"></a>
+    <strong>identity (...)</strong>
     </dt>
     <dd>
     Returns its arguments in the same order.
@@ -886,6 +863,72 @@
     <ol>
 
         the given values
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "lambda"></a>
+    <strong>lambda (expr, env)</strong>
+    </dt>
+    <dd>
+    Create a lambda function from a given expression string.
+ <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
+ <p>This is meant to facilitate writing inline functions, since
+ the vanilla Lua way is very verbose.</p>
+ <p>The expression must abide by several criteria:</p>
+ <ul>
+ <li>It <em>must</em> be an expression that would make sense if put inside parenthesis in vanilla Lua;
+ <li>It <em>must not</em> start with the word "return";
+ <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
+ <li>It <em>must not</em> contain the words "function", "end", or "_ENV", <em>even inside strings</em>.
+ </ul>
+ <p>If any of the above criteria fail to be met, the function will error.</p>
+ <p>Even with these measures, it is still not safe to create lambdas from untrusted sources.
+ These are attempts to prevent the most basic and naïve attacks, as well as mistakes on the part
+ of the programmer.</p>
+ <p>Inside the expression, the names <code>_1</code>, <code>_2</code>, <code>_3</code>, <code>_4</code>,
+ <code>_5</code>, <code>_6</code>, <code>_7</code>, <code>_8</code>, and <code>_9</code> can be used
+ to refer to the arguments given to the function. Alternatively, the letters <code>a</code> through
+ <code>i</code> can also be used. For the first 3 arguments, an additional alias exists: <code>x</code>,
+ <code>y</code>, and <code>z</code>. And lastly, for the first argument, simply `_` may be used.</p>
+ <p>The lambda function is isolated into a sandboxed environment. That means it cannot read or write
+ to local or global variables. If the function must access variables that are not given as arguments,
+ you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
+ value <code>v</code> will provide the given lambda with a local variable called <code>k</code>
+ with value <code>v</code>.</p>
+ <p>Examples:</p>
+ <ul>
+ <li> <code>add = f.lambda "_1 + _2" -- adds its 2 arguments</code>
+ <li> <code>add = f.lambda "a + b" -- same as above</code>
+ <li> <code>add = f.lambda "x + y" -- same as above</code>
+ <li> <code>inc = f.lambda "_1 + 1" -- adds 1 to its argument</code>
+ <li> <code>inc = f.lambda "a + 1" -- same as above</code>
+ <li> <code>inc = f.lambda "x + 1" -- same as above</code>
+ <li> <code>inc = f.lambda "_ + 1" -- same as above</code>
+ <li> <code>double_plus_one = f.lambda("_ + inc(_)", {inc = inc})</code>
+ </ul>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expr</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         the expression to be made into a function
+        </li>
+        <li><span class="parameter">env</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+         the function environment
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        the generated function
     </ol>
 
 
@@ -2034,7 +2077,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-09-09 23:22:06 </i>
+<i style="float:right;">Last updated 2021-09-10 02:21:23 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

@@ -463,6 +463,7 @@ end
 -- @see Iterator:take
 -- @see Iterator:skip
 -- @see Iterator:every
+-- @function counter
 function exports.counter()
   return Iterator.counter()
 end
@@ -610,38 +611,83 @@ end
 
 --- Iterate over two iterables simultaneously.
 -- @see Iterator:zip
+-- @function zip
 function exports.zip(iter1, iter2)
   return exports.iterate(iter1):zip(iter2)
 end
 
 --- Iterate over two iterables simultaneously.
 -- @see Iterator:packed_zip
+-- @function packed_zip
 function exports.packed_zip(iter1, iter2)
   return exports.iterate(iter1):packed_zip(iter2)
 end
 
 --- Concatenate two iterables into an Iterator.
 -- @see Iterator:concat
+-- @function concat
 function exports.concat(iter1, iter2)
   return exports.iterate(iter1):concat(iter2)
 end
 
 --- Does nothing.
+-- @function nop
 function exports.nop()
 end
 
 --- Returns its arguments in the same order.
 -- @param ... the values to be returned
 -- @return the given values
+-- @function identity
 function exports.identity(...)
   return ...
 end
 
 -- https://www.lua.org/manual/5.4/manual.html#pdf-load
 
--- TODO docs and PITFALLS!
+--- Create a lambda function from a given expression string.
+-- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
+-- <p>This is meant to facilitate writing inline functions, since
+-- the vanilla Lua way is very verbose.</p>
+-- <p>The expression must abide by several criteria:</p>
+-- <ul>
+-- <li>It <em>must</em> be an expression that would make sense if put inside parenthesis in vanilla Lua;
+-- <li>It <em>must not</em> start with the word "return";
+-- <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
+-- <li>It <em>must not</em> contain the words "function", "end", or "_ENV", <em>even inside strings</em>.
+-- </ul>
+-- <p>If any of the above criteria fail to be met, the function will error.</p>
+-- <p>Even with these measures, it is still not safe to create lambdas from untrusted sources.
+-- These are attempts to prevent the most basic and naïve attacks, as well as mistakes on the part
+-- of the programmer.</p>
+-- <p>Inside the expression, the names <code>_1</code>, <code>_2</code>, <code>_3</code>, <code>_4</code>,
+-- <code>_5</code>, <code>_6</code>, <code>_7</code>, <code>_8</code>, and <code>_9</code> can be used
+-- to refer to the arguments given to the function. Alternatively, the letters <code>a</code> through
+-- <code>i</code> can also be used. For the first 3 arguments, an additional alias exists: <code>x</code>,
+-- <code>y</code>, and <code>z</code>. And lastly, for the first argument, simply `_` may be used.</p>
+-- <p>The lambda function is isolated into a sandboxed environment. That means it cannot read or write
+-- to local or global variables. If the function must access variables that are not given as arguments,
+-- you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
+-- value <code>v</code> will provide the given lambda with a local variable called <code>k</code>
+-- with value <code>v</code>.</p>
+-- <p>Examples:</p>
+-- <ul>
+-- <li> <code>add = f.lambda "_1 + _2" -- adds its 2 arguments</code>
+-- <li> <code>add = f.lambda "a + b" -- same as above</code>
+-- <li> <code>add = f.lambda "x + y" -- same as above</code>
+-- <li> <code>inc = f.lambda "_1 + 1" -- adds 1 to its argument</code>
+-- <li> <code>inc = f.lambda "a + 1" -- same as above</code>
+-- <li> <code>inc = f.lambda "x + 1" -- same as above</code>
+-- <li> <code>inc = f.lambda "_ + 1" -- same as above</code>
+-- <li> <code>double_plus_one = f.lambda("_ + inc(_)", {inc = inc})</code>
+-- </ul>
+-- @tparam string expr the expression to be made into a function
+-- @tparam table env the function environment
+-- @treturn function the generated function
+-- @function lambda
 function exports.lambda(expr, env)
   -- Make sure this is running in a version that has _ENV
+  -- TODO check if this is really necessary
   assert(_ENV)
 
   -- And it has load
