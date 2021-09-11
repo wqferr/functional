@@ -643,7 +643,7 @@ function exports.identity(...)
   return ...
 end
 
--- https://www.lua.org/manual/5.4/manual.html#pdf-load
+-- 
 
 --- Create a lambda function from a given expression string.
 -- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
@@ -654,6 +654,7 @@ end
 -- <li>It <em>must</em> be an expression that would make sense if put inside parenthesis in vanilla Lua;
 -- <li>It <em>must not</em> start with the word "return";
 -- <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
+-- <li>It <em>must not</em> contain comments;
 -- <li>It <em>must not</em> contain the words "function", "end", or "_ENV", <em>even inside strings</em>.
 -- </ul>
 -- <p>If any of the above criteria fail to be met, the function will error.</p>
@@ -686,11 +687,7 @@ end
 -- @treturn function the generated function
 -- @function lambda
 function exports.lambda(expr, env)
-  -- Make sure this is running in a version that has _ENV
-  -- TODO check if this is really necessary
-  assert(_ENV)
-
-  -- And it has load
+  -- Make sure this is running in a version that has load
   assert(load)
 
   expr, env = internal.sanitize_lambda(expr, env)
@@ -701,12 +698,27 @@ end]]
 
   -- Get context that created lambda for debug purposes
   local ctx = debug.getinfo(2)
-  local chunk_name = ("lambda-%s@%s:%s"):format(ctx.name or "mainchunk", ctx.short_src, ctx.currentline)
-  local chunk = load(body, chunk_name, "t", env)
+  local chunk_name = ("lambda-%s@%s:%s"):format(
+    ctx.name or "mainchunk", ctx.short_src, ctx.currentline
+  )
+  local chunk
+  if loadstring then
+    -- Lua 5.1 and LuaJIT support
+    chunk = loadstring(body, chunk_name)
+  else
+    chunk = load(body, chunk_name, "t", env)
+  end
+
   if not chunk then
     error("Load failed for lambda body: " .. expr)
   end
-  return chunk()
+
+  local f = chunk()
+  -- Lua 5.1 and LuaJIT support
+  if setfenv then
+    setfenv(f, env)
+  end
+  return f
 end
 
 --- Return an array version of the <code>iterable</code>.
@@ -899,6 +911,8 @@ function internal.sanitize_lambda(expr, env)
 
   if expr:find "\n" then
     error("Lambda function bodies cannot contain newlines", 2)
+  elseif expr:find "--" then
+    error("Lambda function bodies cannot contain comments", 2)
   elseif expr:find "%f[%w]function%f[%W]" then
     error("Lambda functions cannot define new functions", 2)
   elseif expr:find "%f[%w]end%f[%W]" then
@@ -909,9 +923,13 @@ function internal.sanitize_lambda(expr, env)
     error("Please do not mess with _ENV inside lambdas", 2)
   end
 
-  expr = "(" .. expr .. ")"
+  local encased_expr = "(" .. expr .. ")"
+  local s, e = encased_expr:find "%b()"
+  if s ~= 1 or e ~= #expr then
+    error("Expression has unbalanced parenthesis: " .. expr, 2)
+  end
 
-  return expr, env
+  return encased_expr, env
 end
 
 -- ITER FUNCTIONS --
