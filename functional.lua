@@ -643,8 +643,6 @@ function exports.identity(...)
   return ...
 end
 
--- 
-
 --- Create a lambda function from a given expression string.
 -- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
 -- <p>This is meant to facilitate writing inline functions, since
@@ -671,6 +669,11 @@ end
 -- you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
 -- value <code>v</code> will provide the given lambda with a local variable called <code>k</code>
 -- with value <code>v</code>.</p>
+-- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-z</code> and
+-- <code>x-z</code>), it is important that the new value is neither <code>nil</code> nor <code>false</code>.
+-- Due to the internal mechanism used to detect when to set these aliases, having a falsy value counts
+-- as not being defined. In order to minimize debugging and frustration in this niche use case of <code>env</code>,
+-- the lambda will not be created and instead it will error stating which alias would fail to be set.</p>
 -- <p>Examples:</p>
 -- <ul>
 -- <li> <code>add = f.lambda "_1 + _2" -- adds its 2 arguments</code>
@@ -680,19 +683,25 @@ end
 -- <li> <code>inc = f.lambda "a + 1" -- same as above</code>
 -- <li> <code>inc = f.lambda "x + 1" -- same as above</code>
 -- <li> <code>inc = f.lambda "_ + 1" -- same as above</code>
--- <li> <code>double_plus_one = f.lambda("_ + inc(_)", {inc = inc})</code>
+-- <li> <code>double_plus_one = f.lambda("_ + inc(_)", {inc = inc}) -- lets lambda "see" inc exists</code>
+-- <li> <code>valid_env = f.lambda("v + 2*i", {i = complex.i}) -- defines i as complex.i instead of an alias for _9</code>
+-- <li> <code>invalid_env = f.lambda("v and not f", {f = false}) -- ERROR! f cannot be assigned a falsy value because it's an alias for _6</code>
 -- </ul>
 -- @tparam string expr the expression to be made into a function
--- @tparam table env the function environment
+-- @tparam[opt={}] table env the function environment
 -- @treturn function the generated function
 -- @function lambda
 function exports.lambda(expr, env)
-  -- Make sure this is running in a version that has load
-  assert(load)
+  -- Just making sure I didn't forget any major version
+  assert(load or loadstring)
 
   expr, env = internal.sanitize_lambda(expr, env)
   local body = [[
-return function(_1, _2, _3, _4, _5, _6, _7, _8, _9) local _, x, a, y, b, z, c, d, e, f, g, h, i = _1, _1, _1, _2, _2, _3, _3, _4, _5, _6, _7, _8, _9
+return function(_1, _2, _3, _4, _5, _6, _7, _8, _9)
+  local _, x, a, v = _1, x or _1, a or _1, v or _1
+  local y, b = y or _2, b or _2
+  local z, c = z or _3, c or _3
+  local d, e, f, g, h, i = d or _4, e or _5, f or _6, g or _7, h or _8, i or _9
   return ]] .. expr .. [[ -- This comment is here to force a newline
 end]]
 
@@ -719,6 +728,16 @@ end]]
     setfenv(f, env)
   end
   return f
+end
+
+internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
+internal.lambda_param_autoalias = {}
+do
+  local alias_list = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "x", "y", "z"}
+  -- Transform array into set
+  for _, alias in ipairs(alias_list) do
+    internal.lambda_param_autoalias[alias] = true
+  end
 end
 
 --- Return an array version of the <code>iterable</code>.
@@ -905,6 +924,23 @@ function internal.sanitize_lambda(expr, env)
     error("Expected table for env, got " .. type(env), 2)
   end
 
+  local proper_env = {}
+  for k, v in pairs(env) do
+    if type(k) == "string" then
+      if k:match(internal.lambda_invalid_env_var_names_pattern) then
+        error(("Illegal key in lambda environment: \"%s\""):format(k), 2)
+      elseif internal.lambda_param_autoalias[k] and not v then
+        error(
+          ("Lambda environment has special key \"%s\" set to a falsy value; it will get overwritten inside the lambda"):format(
+            k
+          ), 2
+        )
+      end
+
+      proper_env[k] = v
+    end
+  end
+
   -- Trim from PiL2 20.4
   -- Found here: http://lua-users.org/wiki/StringTrim
   expr = expr:gsub("^%s*(.-)%s*$", "%1")
@@ -929,7 +965,7 @@ function internal.sanitize_lambda(expr, env)
     error("Expression has unbalanced parenthesis: " .. expr, 2)
   end
 
-  return encased_expr, env
+  return encased_expr, proper_env
 end
 
 -- ITER FUNCTIONS --
