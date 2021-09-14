@@ -663,14 +663,14 @@ end
 -- <code>_5</code>, <code>_6</code>, <code>_7</code>, <code>_8</code>, and <code>_9</code> can be used
 -- to refer to the arguments given to the function. Alternatively, the letters <code>a</code> through
 -- <code>i</code> can also be used. For the first 3 arguments, an additional alias exists: <code>x</code>,
--- <code>y</code>, and <code>z</code>. And lastly, for the first argument, simply `_` may be used.</p>
+-- <code>y</code>, and <code>z</code>. And lastly, for the first argument, simply <code>_</code> or <code>v</code> may be used.</p>
 -- <p>The lambda function is isolated into a sandboxed environment. That means it cannot read or write
 -- to local or global variables. If the function must access variables that are not given as arguments,
 -- you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
--- value <code>v</code> will provide the given lambda with a local variable called <code>k</code>
+-- value <code>v</code> will provide the given lambda with a variable called <code>k</code>
 -- with value <code>v</code>.</p>
--- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-z</code> and
--- <code>x-z</code>), it is important that the new value is neither <code>nil</code> nor <code>false</code>.
+-- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-z</code>,
+-- <code>x-z</code>, and <code>v</code>), it is important that the new value is neither <code>nil</code> nor <code>false</code>.
 -- Due to the internal mechanism used to detect when to set these aliases, having a falsy value counts
 -- as not being defined. In order to minimize debugging and frustration in this niche use case of <code>env</code>,
 -- the lambda will not be created and instead it will error stating which alias would fail to be set.</p>
