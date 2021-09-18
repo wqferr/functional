@@ -652,7 +652,7 @@ end
 -- <li>It <em>must</em> be an expression that would make sense if put inside parenthesis in vanilla Lua;
 -- <li>It <em>must not</em> start with the word "return";
 -- <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
--- <li>It <em>must not</em> contain comments;
+-- <li>It <em>must not</em> contain comments, or the sequence <code>--</code> inside strings;
 -- <li>It <em>must not</em> contain the words "function", "end", or "_ENV", <em>even inside strings</em>.
 -- </ul>
 -- <p>If any of the above criteria fail to be met, the function will error.</p>

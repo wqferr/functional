@@ -143,11 +143,13 @@ whole loop is a really common pattern: `if predicate(val): keep(val)`. `function
 `:filter` to do just that:
 
 ```lua
-local names_with_b = iterate(names):filter(has_b):to_array()
+local names_with_b = iterate(names)
+  :filter(has_b)
+  :to_array()
 ```
 
-Here, `iterate` just transforms an input array into an iterator, so we can use `:filter` or any other
-operators directly on it.
+Again, with line breaks for readability. Here, `iterate` just transforms an input array into an iterator,
+so we can use `:filter` or any other operators directly on it.
 
 ## Mapping
 
@@ -168,5 +170,92 @@ function to all elements in a stream, we can use the `:map` operator. It transfo
 every element in the stream to the return value of a function.
 
 ```lua
-local names_with_b = iterate(names):filter(has_b):map(string.upper):to_array()
+local names_with_b = iterate(names)
+  :filter(has_b)
+  :map(string.upper)
+  :to_array()
 ```
+
+## Lambdas
+### What are lambdas?
+
+If you've never heard of lambdas, you might be thinking this is some sort of "ligma" joke. It isn't.
+
+Many languages (including Lua!) have a way to declare anonymous functions. That is, a function
+that is declared "on the spot", just to be used as an argument to another function, or to be
+stored in a variable. What most of these languages have that Lua lacks is a shorthand notation
+for creating such functions.
+
+In Lua, there's no getting around `function()` (plus parameters) and `end`. That's 13 characters
+typed minimum for the simplest anonymous functions. As an example, here's the definition of a
+function that doubles its argument:
+
+```lua
+double = function(x) return 2*x end
+```
+
+Compare that to Python:
+
+```python
+double = lambda x: 2*x
+```
+
+That's nearly half the characters, and the Lua example doesn't even declare `double` as a local.
+And JavaScript's is even shorter!
+
+```javascript
+double = (x) => 2*x
+```
+
+### OK, but why does it matter?
+
+It's perfectly fine to use vanilla Lua's notation to declare anonymous functions, and for anything
+more complex than a single operation, you **should** create a proper Lua function instead of using
+this library's lambdas. But for extremely short functions, it's nice to have a shortcut, both for
+coding quick and dirty examples and for readability.
+
+### Defining lambdas
+
+The way you declare a lambda with functional is with a simple function call:
+
+```lua
+double = f.lambda "2*x"
+```
+
+Here, `x` is a predefined name for the first argument a lambda receives. There are a couple other
+such aliases which this document will reference later. If you don't like that and would like
+something more name agnostic, you could instead use:
+
+```lua
+double = f.lambda "2*_1"
+```
+
+Where `_1` is the first argument, `_2` would be the second, and so on.
+
+Note that the `return` keyword is absent. It is implied that lambdas return whatever expression
+is given in the string.
+
+### Security concerns and limitations
+
+Under the hood, `f.lambda` uses `load()` (or `loadstring()` in older versions of Lua).
+
+**That means creating lambdas from unknown strings is a security risk.**
+
+If you're hardcoding all lambdas, it *should* be fine. There are some checks done internally
+before `load()` takes place, to prevent simple errors or naïve attacks. You can check the
+documentation proper for the exact restrictions, but you shouldn't run into any of them with
+simple functions.
+
+### Environments
+
+TODO
+
+### Lambda parameter aliases
+
+The following aliases are defined for use inside any lambda:
+
+- `v`, or `_` for `_1`
+- `x`, `y`, and `z` for `_1`, `_2`, and `_3`
+- `a`, `b`, ..., and `i` for `_1`, `_2`, ..., and `_9`
+
+TODO when can the user overwrite these names with env
