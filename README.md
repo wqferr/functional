@@ -248,7 +248,30 @@ simple functions.
 
 ### Environments
 
-TODO
+By default, a lambda function's environment is set to an empty table. That means it only has
+access to its own parameters, and cannot read or write to globals or variables in the enclosing
+scope of its creation. For example, the following lambda:
+
+```lua
+local constant = 3.14
+local l = f.lambda "3*constant"
+print(l())
+```
+
+Will print out `nil`: pi is an undefined variable from the lambda's point of view, so its value
+is `nil` since it was never assigned.
+
+You can get around this and set the desired environment for a lambda as follows:
+
+```lua
+local constant = 3.14
+local l = f.lambda("3*con", {con=constant})
+print(l())
+```
+
+Of course you could use (almost) any name you wish for the lambda environment variables.
+In this case, we chose to distinguish the names for `con` and `constant` for the sake of clarity
+for what is and isn't in the lambda scope.
 
 ### Lambda parameter aliases
 
@@ -258,4 +281,7 @@ The following aliases are defined for use inside any lambda:
 - `x`, `y`, and `z` for `_1`, `_2`, and `_3`
 - `a`, `b`, ..., and `i` for `_1`, `_2`, ..., and `_9`
 
-TODO when can the user overwrite these names with env
+These aliases can all be overwritten with the environment table, **as long as its value is neither
+false or nil**. Due to how the code checks for an existing `env` overwrite, `nil` and `false` would
+not go through. Therefore, if you try to set `v` to `false`, for example, the lambda constructor
+itself will error to avoid unexpected behavior at runtime.
