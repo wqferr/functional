@@ -88,9 +88,9 @@ Instead, we can just collapse them all, as below:
 ```lua
 local f = require "functional"
 
-local my_array = f.counter()   -- my_counter
-                    :take(10)  -- my_capped_counter
-                    :to_array()
+local my_array = f.counter()     -- my_counter
+                    :take(10)    -- my_capped_counter
+                    :to_array()  -- my_array
 for i, v in ipairs(my_array) do
   print(i, v)
 end
