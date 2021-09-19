@@ -285,3 +285,19 @@ These aliases can all be overwritten with the environment table, **as long as it
 false or nil**. Due to how the code checks for an existing `env` overwrite, `nil` and `false` would
 not go through. Therefore, if you try to set `v` to `false`, for example, the lambda constructor
 itself will error to avoid unexpected behavior at runtime.
+
+### Examples
+
+Say you have a list of numbers, and you want to keep only the even ones. Using lambdas, you could
+write something like:
+
+```lua
+local is_even = f.lambda "v % 2 == 0"
+local even_numbers = f.filter(numbers, is_even):to_array()
+```
+
+Or you could inline the lambda, which is the more common approach:
+
+```lua
+local even_numbers = f.filter(numbers, f.lambda "v % 2 == 0"):to_array()
+```
