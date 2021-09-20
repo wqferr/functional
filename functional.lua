@@ -427,7 +427,7 @@ function Iterator:to_array()
   return array
 end
 
---- Create a <code>coroutine</code> that yields the values
+--- Create a <code>coroutine</code> that yields the values.
 -- of the <code>@{Iterator}</code>.
 -- @treturn thread The new <code>coroutine</code>
 function Iterator:to_coroutine()
@@ -758,7 +758,7 @@ function M.to_array(iterable)
   end
 end
 
---- Create a <code>coroutine</code> that yields the values
+--- Create a <code>coroutine</code> that yields the values.
 -- of the <code>iterable</code>.
 -- <p>Equivalent to <pre>iterate(iterable):to_coroutine()</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
@@ -868,8 +868,7 @@ function M.constant(value)
   end
 end
 
---- Import <code>@{Iterator}</code> and commonly used
--- functions into global scope.
+--- Import <code>@{Iterator}</code>, <code>@{lambda}</code>, and commonly used functions into global scope.
 -- <p>Upon calling this, the following module entries will be
 -- added to the given environment. If <code>env</code> is <code>nil</code>,
 -- <code>_G</code> is assumed.</code></p>
@@ -893,7 +892,7 @@ end
 -- <li> @{lambda} </li>
 -- </ul>
 -- <p>They can still be accessed as usual through the module after the call.</p>
--- @tparam table env the environment to import into
+-- @tparam[opt=_G] table env the environment to import into
 -- @function import
 local function import_module(env)
   if env == nil then

@@ -165,8 +165,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#to_coroutine">to_coroutine (iterable)</a></td>
-	<td class="summary">Create a <code>coroutine</code> that yields the values
- of the <code>iterable</code>.</td>
+	<td class="summary">Create a <code>coroutine</code> that yields the values.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#negate">negate (predicate)</a></td>
@@ -181,12 +180,12 @@
 	<td class="summary">Create a function with bound arguments.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#accessor">accessor (t)</a></td>
+	<td class="name" nowrap><a href="#dict">dict (t)</a></td>
 	<td class="summary">Create a function that accesses <code>t</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#item_getter">item_getter (k)</a></td>
-	<td class="summary">Create a function that accesses the key <code>k</code> for a table.</td>
+	<td class="name" nowrap><a href="#indexer">indexer (k)</a></td>
+	<td class="summary">Create a function that accesses the key <code>k</code> for any table.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#bind_self">bind_self (t, k, ...)</a></td>
@@ -197,9 +196,8 @@
 	<td class="summary">Create a function that always returns the same value.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#import">import ()</a></td>
-	<td class="summary">Import <code><a href="index.html#Iterator">Iterator</a></code> and commonly used
- functions into global scope.</td>
+	<td class="name" nowrap><a href="#import">import ([env=_G])</a></td>
+	<td class="summary">Import <code><a href="index.html#Iterator">Iterator</a></code>, <code><a href="index.html#lambda">lambda</a></code>, and commonly used functions into global scope.</td>
 	</tr>
 </table>
 <h2><a href="#Class_Iterator">Class Iterator </a></h2>
@@ -238,7 +236,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator.clone">Iterator.clone (iterable)</a></td>
-	<td class="summary">Nondestructively return an indepent iterable from the given one.</td>
+	<td class="summary">Nondestructively return an independent iterable from the given one.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:filter">Iterator:filter (predicate)</a></td>
@@ -314,8 +312,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:to_coroutine">Iterator:to_coroutine ()</a></td>
-	<td class="summary">Create a <code>coroutine</code> that yields the values
- of the <code><a href="index.html#Iterator">Iterator</a></code>.</td>
+	<td class="summary">Create a <code>coroutine</code> that yields the values.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:is_complete">Iterator:is_complete ()</a></td>
@@ -984,7 +981,7 @@
     <strong>to_coroutine (iterable)</strong>
     </dt>
     <dd>
-    Create a <code>coroutine</code> that yields the values
+    Create a <code>coroutine</code> that yields the values.
  of the <code>iterable</code>.
  <p>Equivalent to <pre>iterate(iterable):to_coroutine()</pre>.</p>
 
@@ -1111,21 +1108,20 @@
 
 </dd>
     <dt>
-    <a name = "accessor"></a>
-    <strong>accessor (t)</strong>
+    <a name = "dict"></a>
+    <strong>dict (t)</strong>
     </dt>
     <dd>
     Create a function that accesses <code>t</code>.
- <p>The argument passed to the returned function is used as the key
- <code>k</code> to be accessed. The value of <code>t[k]</code>
- is returned.</p>
+ <p>Creates a function that reads from <code>t</code>. The new
+ function's argument is used as the key to index <code>t</code>.</p>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">t</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
-         the table to be accessed
+         the table to be indexed
         </li>
     </ul>
 
@@ -1133,7 +1129,7 @@
     <ol>
 
            <span class="types"><span class="type">function</span></span>
-        the accessor
+        the dictionary function
     </ol>
 
 
@@ -1141,11 +1137,11 @@
 
 </dd>
     <dt>
-    <a name = "item_getter"></a>
-    <strong>item_getter (k)</strong>
+    <a name = "indexer"></a>
+    <strong>indexer (k)</strong>
     </dt>
     <dd>
-    Create a function that accesses the key <code>k</code> for a table.
+    Create a function that accesses the key <code>k</code> for any table.
  <p>The argument passed to the returned function is used as the table
  <code>t</code> to be accessed. The value of <code>t[k]</code>
  is returned.</p>
@@ -1162,7 +1158,7 @@
     <ol>
 
            <span class="types"><span class="type">function</span></span>
-        the item getter
+        the table indexer
     </ol>
 
 
@@ -1232,13 +1228,13 @@
 </dd>
     <dt>
     <a name = "import"></a>
-    <strong>import ()</strong>
+    <strong>import ([env=_G])</strong>
     </dt>
     <dd>
-    Import <code><a href="index.html#Iterator">Iterator</a></code> and commonly used
- functions into global scope.
- <p>Upon calling this, the following values will be
- added to global scope (<code>_G</code>) with the same names:
+    Import <code><a href="index.html#Iterator">Iterator</a></code>, <code><a href="index.html#lambda">lambda</a></code>, and commonly used functions into global scope.
+ <p>Upon calling this, the following module entries will be
+ added to the given environment. If <code>env</code> is <code>nil</code>,
+ <code>_G</code> is assumed.</code></p>
  <ul>
  <li> <a href="index.html#Iterator">Iterator</a> </li>
  <li> <a href="index.html#iterate">iterate</a> </li>
@@ -1251,10 +1247,24 @@
  <li> <a href="index.html#every">every</a> </li>
  <li> <a href="index.html#any">any</a> </li>
  <li> <a href="index.html#all">all</a> </li>
- </ul></p>
- <p>They can still be accessed through the module after the call.</p>
+ <li> <a href="index.html#zip">zip</a> </li>
+ <li> <a href="index.html#packed_zip">packed_zip</a> </li>
+ <li> <a href="index.html#concat">concat</a> </li>
+ <li> <a href="index.html#nop">nop</a> </li>
+ <li> <a href="index.html#identity">identity</a> </li>
+ <li> <a href="index.html#lambda">lambda</a> </li>
+ </ul>
+ <p>They can still be accessed as usual through the module after the call.</p>
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">env</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+         the environment to import into
+         (<em>default</em> _G)
+        </li>
+    </ul>
 
 
 
@@ -1501,8 +1511,8 @@
     <strong>Iterator.clone (iterable)</strong>
     </dt>
     <dd>
-    Nondestructively return an indepent iterable from the given one.
- <p>If <code>iterablet</code> is an Iterator, clone it according
+    Nondestructively return an independent iterable from the given one.
+ <p>If <code>iterable</code> is an Iterator, clone it according
  to its subtype. If <code>iterable</code> is an array, then
  return itself.</p>
  <p>Please note that coroutine and iterated function call iterators
@@ -2038,7 +2048,7 @@
     <strong>Iterator:to_coroutine ()</strong>
     </dt>
     <dd>
-    Create a <code>coroutine</code> that yields the values
+    Create a <code>coroutine</code> that yields the values.
  of the <code><a href="index.html#Iterator">Iterator</a></code>.
 
 
@@ -2086,7 +2096,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-09-18 00:48:17 </i>
+<i style="float:right;">Last updated 2021-09-20 12:44:39 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
