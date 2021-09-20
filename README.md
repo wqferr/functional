@@ -86,11 +86,9 @@ even use most of them except to define the next step.
 Instead, we can just collapse them all, as below:
 
 ```lua
-local f = require "functional"
-
-local my_array = f.counter()   -- my_counter
-                    :take(10)  -- my_capped_counter
-                    :to_array()
+local my_array = f.counter()     -- my_counter
+                    :take(10)    -- my_capped_counter
+                    :to_array()  -- my_array
 for i, v in ipairs(my_array) do
   print(i, v)
 end
@@ -139,15 +137,12 @@ end
 
 Here, `has_b` is called a predicate: a simple function which returns `true` or `false` for any given name.
 Predicates are especially good for filtering. Either you keep something, or you throw it out. In fact, the
-whole loop is a really common pattern: `if predicate(val): keep(val)`. `functional` has the operator
-`:filter` to do just that:
+whole loop is a really common pattern: `if predicate(val): keep(val)`. `functional` has the function
+`filter` and the operator `:filter` to do just that:
 
 ```lua
-local names_with_b = iterate(names):filter(has_b):to_array()
+local names_with_b = f.filter(names, has_b):to_array()
 ```
-
-Here, `iterate` just transforms an input array into an iterator, so we can use `:filter` or any other
-operators directly on it.
 
 ## Mapping
 
@@ -168,5 +163,226 @@ function to all elements in a stream, we can use the `:map` operator. It transfo
 every element in the stream to the return value of a function.
 
 ```lua
-local names_with_b = iterate(names):filter(has_b):map(string.upper):to_array()
+local names_with_b = f.filter(names, has_b)
+  :map(string.upper)
+  :to_array()
+```
+
+Now with line breaks for readability.
+
+## TODO Reducing
+
+## Lambdas
+### What are lambdas?
+
+If you've never heard of lambdas, you might be thinking this is some sort of "ligma" joke. It isn't.
+
+Many languages (including Lua!) have a way to declare anonymous functions. That is, a function
+that is declared "on the spot", just to be used as an argument to another function, or to be
+stored in a variable. What most of these languages have that Lua lacks is a shorthand notation
+for creating such functions.
+
+In Lua, there's no getting around typing `function()` (plus parameters) and `end`. That's 13
+characters typed minimum for the simplest anonymous functions. As an example, here's the definition
+of a function that doubles its argument:
+
+```lua
+triple = function(x) return 3*x end
+```
+
+Compare that to Python:
+
+```python
+triple = lambda x: 3*x
+```
+
+That's nearly half the characters, and the Lua example doesn't even declare `triple` as a local.
+And JavaScript's is even shorter!
+
+```javascript
+triple = (x) => 3*x
+```
+
+### OK, but why does it matter?
+
+It's perfectly fine to use vanilla Lua's notation to declare anonymous functions, and for anything
+more complex than a single operation, you **should** create a proper Lua function instead of using
+this library's lambdas. But for extremely short functions, it's nice to have a shortcut, both for
+coding quick and dirty examples and for readability.
+
+### Defining lambdas
+
+The way you declare a lambda with functional is with a simple function call:
+
+```lua
+triple = f.lambda "3*x"
+```
+
+Here, `x` is a predefined name for the first argument a lambda receives. There are a couple other
+such aliases which this document will reference later. If you don't like that and would like
+something more name agnostic, you could instead use:
+
+```lua
+triple = f.lambda "3*_1"
+```
+
+Where `_1` is the first argument, `_2` would be the second, and so on up to `_9`.
+
+Note that the `return` keyword is absent. It is implied that lambdas return whatever expression
+is in the string.
+
+### Security concerns and limitations
+
+Under the hood, `f.lambda` uses `load()` (or `loadstring()` in older versions of Lua).
+
+**That means creating lambdas from unknown strings is a security risk.**
+
+If you're hardcoding all lambdas, it *should* be fine. There are some checks done internally
+before `load()` takes place, to prevent simple errors or naïve attacks. You can check the
+documentation proper for the exact restrictions, but you shouldn't run into any of them with
+simple functions.
+
+### Environments
+
+By default, a lambda function's environment is set to an empty table. That means it only has
+access to its own parameters, and cannot read or write to globals or variables in the enclosing
+scope of its creation. For example, the following lambda:
+
+```lua
+local constant = 3.14
+local l = f.lambda "3*constant"
+print(l())
+```
+
+Will print out `nil`: `constant` is an undefined variable from the lambda's point of view, so
+its value is `nil` since it was never assigned.
+
+You can get around this and set the desired environment for a lambda as follows:
+
+```lua
+local constant = 3.14
+local l = f.lambda("3*con", {con=constant})
+print(l())
+```
+
+Of course you could use (almost) any name you wish for the lambda environment variables.
+In this case, we chose to distinguish the names for `con` and `constant` for the sake of clarity
+for what is and isn't in the lambda scope.
+
+### Lambda parameter aliases
+
+The following aliases are defined for use inside any lambda:
+
+- `v`, or `_` for `_1`
+- `x`, `y`, and `z` for `_1`, `_2`, and `_3`
+- `a`, `b`, ..., and `i` for `_1`, `_2`, ..., and `_9`
+
+These aliases can all be overwritten with the environment table, **as long as its value is neither
+false or nil**. Due to how the code checks for an existing `env` overwrite, `nil` and `false` would
+not go through. Therefore, if you try to set `v` to `false`, for example, the lambda constructor
+itself will error to avoid unexpected behavior at runtime.
+
+## You don't need `:to_array()` (probably)
+In most cases, unless you specifically need an array, you can use the iterator itself in a for
+loop. For example, if we wanted to print all the names with "b", we could write:
+
+```lua
+local names_with_b = f.filter(names, has_b)  -- note the lack of :to_array()
+for name in names_with_b do
+  print(name)
+end
+```
+
+This is preferred for a couple reasons: (1) it removes the need to allocate a new table which
+would be later discarded; and (2) it postpones processing to when it actually needs to happen.
+
+The second point is due to iterators being lazy, in the technical sense. They don't actually go
+through their input and save whichever values they should return. Instead, whenever they're asked
+for the next value, they process it and return it.
+
+This also means, however, that an iterator can't rewind. If you need to iterate through the same
+values twice, then maybe `:to_array()` is indeed the solution. If the sequence is too large
+to be put into an array, you could instead `:clone()` the iterator. It will make a snapshot
+of the iterator and all its dependencies, and return it as a new, independent iterator.
+
+Yet another alternative is using the `:foreach()` operator: it applies the given function to
+all elements in a sequence. Rewriting the above example using `:foreach()`:
+
+```lua
+local names_with_b = f.filter(names, has_b)
+names_with_b:foreach(print)
+```
+
+Or simply:
+
+```lua
+f.filter(names, has_b):foreach(print)
+```
+
+## Examples
+### Filter
+
+Print all even numbers up to 10:
+```lua
+local is_even = function(v) return v % 2 == 0 end
+f.range(1, 10)      -- run through all the numbers from 1 to 10 (inclusive)
+  :filter(is_even)  -- take only even numbers
+  :foreach(print)   -- run print for every value individually
+```
+
+### Map
+
+Fix capitalization on names:
+```lua
+local names = {"hellen", "oDYSseuS", "aChIlLeS", "PATROCLUS"}
+local function fix_case(name)
+  return name:sub(1, 1):upper() .. name:sub(2):lower()
+end
+
+for name in f.map(names, fix_case) do
+  print("Fixed: ", name)
+end
+```
+
+### Reduce
+
+Sum all numbers in a range:
+```lua
+local add(acc, new)
+  return acc + new
+end
+
+local numbers = f.range(10, 120)
+local sum = numbers:reduce(add, 0)
+print(sum)
+```
+
+### Lambdas
+#### Keep even numbers
+
+```lua
+local numbers = {2, 1, 3, 4, 7, 11, 18, 29}
+local is_even = f.lambda "v % 2 == 0"
+local even_numbers = f.filter(numbers, is_even):to_array()
+```
+
+Or you could inline the lambda, which is the more common approach:
+
+```lua
+local numbers = {2, 1, 3, 4, 7, 11, 18, 29}
+local even_numbers = f.filter(numbers, f.lambda "v % 2 == 0"):to_array()
+```
+
+#### Get first element of each row
+
+```lua
+local matrix = {
+  {1, 2, 3}, -- first element of matrix
+  {4, 5, 6}, -- second element of matrix
+  {7, 8, 9}  -- third element of matrix
+}
+
+-- map will iterate through each row, and the lambda
+-- indexes each to retrieve the first element
+local vals = f.map(matrix, f.lambda "v[1]"):to_array()
 ```

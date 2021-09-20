@@ -169,8 +169,8 @@ function Iterator.packed_from(func, is, var)
   return iterator:map(internal.pack)
 end
 
---- Nondestructively return an indepent iterable from the given one.
--- <p>If <code>iterablet</code> is an Iterator, clone it according
+--- Nondestructively return an independent iterable from the given one.
+-- <p>If <code>iterable</code> is an Iterator, clone it according
 -- to its subtype. If <code>iterable</code> is an array, then
 -- return itself.</p>
 -- <p>Please note that coroutine and iterated function call iterators
@@ -427,7 +427,7 @@ function Iterator:to_array()
   return array
 end
 
---- Create a <code>coroutine</code> that yields the values
+--- Create a <code>coroutine</code> that yields the values.
 -- of the <code>@{Iterator}</code>.
 -- @treturn thread The new <code>coroutine</code>
 function Iterator:to_coroutine()
@@ -463,6 +463,7 @@ end
 -- @see Iterator:take
 -- @see Iterator:skip
 -- @see Iterator:every
+-- @function counter
 function exports.counter()
   return Iterator.counter()
 end
@@ -610,31 +611,133 @@ end
 
 --- Iterate over two iterables simultaneously.
 -- @see Iterator:zip
+-- @function zip
 function exports.zip(iter1, iter2)
   return exports.iterate(iter1):zip(iter2)
 end
 
 --- Iterate over two iterables simultaneously.
 -- @see Iterator:packed_zip
+-- @function packed_zip
 function exports.packed_zip(iter1, iter2)
   return exports.iterate(iter1):packed_zip(iter2)
 end
 
 --- Concatenate two iterables into an Iterator.
 -- @see Iterator:concat
+-- @function concat
 function exports.concat(iter1, iter2)
   return exports.iterate(iter1):concat(iter2)
 end
 
 --- Does nothing.
+-- @function nop
 function exports.nop()
 end
 
 --- Returns its arguments in the same order.
 -- @param ... the values to be returned
 -- @return the given values
+-- @function identity
 function exports.identity(...)
   return ...
+end
+
+--- Create a lambda function from a given expression string.
+-- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
+-- <p>This is meant to facilitate writing inline functions, since
+-- the vanilla Lua way is very verbose.</p>
+-- <p>The expression must abide by several criteria:</p>
+-- <ul>
+-- <li>It <em>must</em> be an expression that would make sense if put inside parenthesis in vanilla Lua;
+-- <li>It <em>must not</em> start with the word "return";
+-- <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
+-- <li>It <em>must not</em> contain comments, or the sequence <code>--</code> inside strings;
+-- <li>It <em>must not</em> contain the words "function", "end", or "_ENV", <em>even inside strings</em>.
+-- </ul>
+-- <p>If any of the above criteria fail to be met, the function will error.</p>
+-- <p>Even with these measures, it is still not safe to create lambdas from untrusted sources.
+-- These are attempts to prevent the most basic and naïve attacks, as well as mistakes on the part
+-- of the programmer.</p>
+-- <p>Inside the expression, the names <code>_1</code>, <code>_2</code>, <code>_3</code>, <code>_4</code>,
+-- <code>_5</code>, <code>_6</code>, <code>_7</code>, <code>_8</code>, and <code>_9</code> can be used
+-- to refer to the arguments given to the function. Alternatively, the letters <code>a</code> through
+-- <code>i</code> can also be used. For the first 3 arguments, an additional alias exists: <code>x</code>,
+-- <code>y</code>, and <code>z</code>. And lastly, for the first argument, simply <code>_</code> or <code>v</code> may be used.</p>
+-- <p>The lambda function is isolated into a sandboxed environment. That means it cannot read or write
+-- to local or global variables. If the function must access variables that are not given as arguments,
+-- you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
+-- value <code>v</code> will provide the given lambda with a variable called <code>k</code>
+-- with value <code>v</code>.</p>
+-- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-z</code>,
+-- <code>x-z</code>, and <code>v</code>), it is important that the new value is neither <code>nil</code> nor <code>false</code>.
+-- Due to the internal mechanism used to detect when to set these aliases, having a falsy value counts
+-- as not being defined. In order to minimize debugging and frustration in this niche use case of <code>env</code>,
+-- the lambda will not be created and instead it will error stating which alias would fail to be set.</p>
+-- <p>Examples:</p>
+-- <ul>
+-- <li> <code>add = f.lambda "_1 + _2" -- adds its 2 arguments</code>
+-- <li> <code>add = f.lambda "a + b" -- same as above</code>
+-- <li> <code>add = f.lambda "x + y" -- same as above</code>
+-- <li> <code>inc = f.lambda "_1 + 1" -- adds 1 to its argument</code>
+-- <li> <code>inc = f.lambda "a + 1" -- same as above</code>
+-- <li> <code>inc = f.lambda "x + 1" -- same as above</code>
+-- <li> <code>inc = f.lambda "_ + 1" -- same as above</code>
+-- <li> <code>double_plus_one = f.lambda("_ + inc(_)", {inc = inc}) -- lets lambda "see" inc exists</code>
+-- <li> <code>valid_env = f.lambda("v + 2*i", {i = complex.i}) -- defines i as complex.i instead of an alias for _9</code>
+-- <li> <code>invalid_env = f.lambda("v and not f", {f = false}) -- ERROR! f cannot be assigned a falsy value because it's an alias for _6</code>
+-- </ul>
+-- @tparam string expr the expression to be made into a function
+-- @tparam[opt={}] table env the function environment
+-- @treturn function the generated function
+-- @function lambda
+function exports.lambda(expr, env)
+  -- Just making sure I didn't forget any major version
+  assert(load or loadstring)
+
+  expr, env = internal.sanitize_lambda(expr, env)
+  local body = [[
+return function(_1, _2, _3, _4, _5, _6, _7, _8, _9)
+  local _, x, a, v = _1, x or _1, a or _1, v or _1
+  local y, b = y or _2, b or _2
+  local z, c = z or _3, c or _3
+  local d, e, f, g, h, i = d or _4, e or _5, f or _6, g or _7, h or _8, i or _9
+  return ]] .. expr .. [[ -- This comment is here to force a newline
+end]]
+
+  -- Get context that created lambda for debug purposes
+  local ctx = debug.getinfo(2)
+  local chunk_name = ("lambda-%s@%s:%s"):format(
+    ctx.name or "mainchunk", ctx.short_src, ctx.currentline
+  )
+  local chunk
+  if loadstring then
+    -- Lua 5.1 and LuaJIT support
+    chunk = loadstring(body, chunk_name)
+  else
+    chunk = load(body, chunk_name, "t", env)
+  end
+
+  if not chunk then
+    error("Load failed for lambda body: " .. expr)
+  end
+
+  local f = chunk()
+  -- Lua 5.1 and LuaJIT support
+  if setfenv then
+    setfenv(f, env)
+  end
+  return f
+end
+
+internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
+internal.lambda_param_autoalias = {}
+do
+  local alias_list = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "x", "y", "z"}
+  -- Transform array into set
+  for _, alias in ipairs(alias_list) do
+    internal.lambda_param_autoalias[alias] = true
+  end
 end
 
 --- Return an array version of the <code>iterable</code>.
@@ -655,7 +758,7 @@ function M.to_array(iterable)
   end
 end
 
---- Create a <code>coroutine</code> that yields the values
+--- Create a <code>coroutine</code> that yields the values.
 -- of the <code>iterable</code>.
 -- <p>Equivalent to <pre>iterate(iterable):to_coroutine()</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
@@ -721,25 +824,24 @@ function M.bind(func, ...)
 end
 
 --- Create a function that accesses <code>t</code>.
--- <p>The argument passed to the returned function is used as the key
--- <code>k</code> to be accessed. The value of <code>t[k]</code>
--- is returned.</p>
--- @tparam table t the table to be accessed
--- @treturn function the accessor
-function M.accessor(t)
+-- <p>Creates a function that reads from <code>t</code>. The new
+-- function's argument is used as the key to index <code>t</code>.</p>
+-- @tparam table t the table to be indexed
+-- @treturn function the dictionary function
+function M.dict(t)
   internal.assert_table(t, "t")
   return function(k)
     return t[k]
   end
 end
 
---- Create a function that accesses the key <code>k</code> for a table.
+--- Create a function that accesses the key <code>k</code> for any table.
 -- <p>The argument passed to the returned function is used as the table
 -- <code>t</code> to be accessed. The value of <code>t[k]</code>
 -- is returned.</p>
 -- @param k the key to access
--- @treturn function the item getter
-function M.item_getter(k)
+-- @treturn function the table indexer
+function M.indexer(k)
   return function(t)
     return t[k]
   end
@@ -766,10 +868,10 @@ function M.constant(value)
   end
 end
 
---- Import <code>@{Iterator}</code> and commonly used
--- functions into global scope.
--- <p>Upon calling this, the following values will be
--- added to global scope (<code>_G</code>) with the same names:
+--- Import <code>@{Iterator}</code>, <code>@{lambda}</code>, and commonly used functions into global scope.
+-- <p>Upon calling this, the following module entries will be
+-- added to the given environment. If <code>env</code> is <code>nil</code>,
+-- <code>_G</code> is assumed.</code></p>
 -- <ul>
 -- <li> @{Iterator} </li>
 -- <li> @{iterate} </li>
@@ -782,12 +884,22 @@ end
 -- <li> @{every} </li>
 -- <li> @{any} </li>
 -- <li> @{all} </li>
--- </ul></p>
--- <p>They can still be accessed through the module after the call.</p>
+-- <li> @{zip} </li>
+-- <li> @{packed_zip} </li>
+-- <li> @{concat} </li>
+-- <li> @{nop} </li>
+-- <li> @{identity} </li>
+-- <li> @{lambda} </li>
+-- </ul>
+-- <p>They can still be accessed as usual through the module after the call.</p>
+-- @tparam[opt=_G] table env the environment to import into
 -- @function import
-local function export_funcs()
+local function import_module(env)
+  if env == nil then
+    env = _G
+  end
   for k, v in pairs(exports) do
-    _G[k] = v
+    env[k] = v
   end
 
   return M
@@ -809,6 +921,59 @@ end
 
 function internal.pack(...)
   return {...}
+end
+
+function internal.sanitize_lambda(expr, env)
+  env = env or {}
+  if type(expr) ~= "string" then
+    error("Expected string for expr, got " .. type(expr), 2)
+  end
+  if type(env) ~= "table" then
+    error("Expected table for env, got " .. type(env), 2)
+  end
+
+  local proper_env = {}
+  for k, v in pairs(env) do
+    if type(k) == "string" then
+      if k:match(internal.lambda_invalid_env_var_names_pattern) then
+        error(("Illegal key in lambda environment: \"%s\""):format(k), 2)
+      elseif internal.lambda_param_autoalias[k] and not v then
+        error(
+          ("Lambda environment has special key \"%s\" set to a falsy value; it will get overwritten inside the lambda"):format(
+            k
+          ), 2
+        )
+      end
+
+      proper_env[k] = v
+    end
+  end
+
+  -- Trim from PiL2 20.4
+  -- Found here: http://lua-users.org/wiki/StringTrim
+  expr = expr:gsub("^%s*(.-)%s*$", "%1")
+
+  if expr:find "\n" then
+    error("Lambda function bodies cannot contain newlines", 2)
+  elseif expr:find "--" then
+    error("Lambda function bodies cannot contain comments", 2)
+  elseif expr:find "%f[%w]function%f[%W]" then
+    error("Lambda functions cannot define new functions", 2)
+  elseif expr:find "%f[%w]end%f[%W]" then
+    error("Lambda functions cannot be manually closed (nice try)", 2)
+  elseif expr:find "^return%f[%W]" then
+    error("`return` is implied in lambda expressions, please do not include it yourself", 2)
+  elseif expr:find "%f[%w]_ENV%f[%W]" then
+    error("Please do not mess with _ENV inside lambdas", 2)
+  end
+
+  local encased_expr = "(" .. expr .. ")"
+  local s, e = encased_expr:find "%b()"
+  if s ~= 1 or e ~= #expr then
+    error("Expression has unbalanced parenthesis: " .. expr, 2)
+  end
+
+  return encased_expr, proper_env
 end
 
 -- ITER FUNCTIONS --
@@ -1162,7 +1327,7 @@ end
 
 exports.Iterator = Iterator
 
-M.import = export_funcs
+M.import = import_module
 
 for name, exported_func in pairs(exports) do
   M[name] = exported_func

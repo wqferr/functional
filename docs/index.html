@@ -92,7 +92,7 @@
 	<td class="summary">Create an <code><a href="index.html#Iterator">Iterator</a></code> for the <code>iterable</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.counter">exports.counter ()</a></td>
+	<td class="name" nowrap><a href="#counter">counter ()</a></td>
 	<td class="summary">Iterate over the naturals starting at 1.</td>
 	</tr>
 	<tr>
@@ -136,24 +136,28 @@
 	<td class="summary">Checks if all values evaluate to <code>true</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.zip">exports.zip (iter1, iter2)</a></td>
+	<td class="name" nowrap><a href="#zip">zip ()</a></td>
 	<td class="summary">Iterate over two iterables simultaneously.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.packed_zip">exports.packed_zip (iter1, iter2)</a></td>
+	<td class="name" nowrap><a href="#packed_zip">packed_zip ()</a></td>
 	<td class="summary">Iterate over two iterables simultaneously.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.concat">exports.concat (iter1, iter2)</a></td>
+	<td class="name" nowrap><a href="#concat">concat ()</a></td>
 	<td class="summary">Concatenate two iterables into an Iterator.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.nop">exports.nop ()</a></td>
+	<td class="name" nowrap><a href="#nop">nop ()</a></td>
 	<td class="summary">Does nothing.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#exports.identity">exports.identity (...)</a></td>
+	<td class="name" nowrap><a href="#identity">identity (...)</a></td>
 	<td class="summary">Returns its arguments in the same order.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#lambda">lambda (expr[, env={}])</a></td>
+	<td class="summary">Create a lambda function from a given expression string.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#to_array">to_array (iterable)</a></td>
@@ -161,8 +165,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#to_coroutine">to_coroutine (iterable)</a></td>
-	<td class="summary">Create a <code>coroutine</code> that yields the values
- of the <code>iterable</code>.</td>
+	<td class="summary">Create a <code>coroutine</code> that yields the values.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#negate">negate (predicate)</a></td>
@@ -177,12 +180,12 @@
 	<td class="summary">Create a function with bound arguments.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#accessor">accessor (t)</a></td>
+	<td class="name" nowrap><a href="#dict">dict (t)</a></td>
 	<td class="summary">Create a function that accesses <code>t</code>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#item_getter">item_getter (k)</a></td>
-	<td class="summary">Create a function that accesses the key <code>k</code> for a table.</td>
+	<td class="name" nowrap><a href="#indexer">indexer (k)</a></td>
+	<td class="summary">Create a function that accesses the key <code>k</code> for any table.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#bind_self">bind_self (t, k, ...)</a></td>
@@ -193,9 +196,8 @@
 	<td class="summary">Create a function that always returns the same value.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#import">import ()</a></td>
-	<td class="summary">Import <code><a href="index.html#Iterator">Iterator</a></code> and commonly used
- functions into global scope.</td>
+	<td class="name" nowrap><a href="#import">import ([env=_G])</a></td>
+	<td class="summary">Import <code><a href="index.html#Iterator">Iterator</a></code>, <code><a href="index.html#lambda">lambda</a></code>, and commonly used functions into global scope.</td>
 	</tr>
 </table>
 <h2><a href="#Class_Iterator">Class Iterator </a></h2>
@@ -234,7 +236,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator.clone">Iterator.clone (iterable)</a></td>
-	<td class="summary">Nondestructively return an indepent iterable from the given one.</td>
+	<td class="summary">Nondestructively return an independent iterable from the given one.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:filter">Iterator:filter (predicate)</a></td>
@@ -310,8 +312,7 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:to_coroutine">Iterator:to_coroutine ()</a></td>
-	<td class="summary">Create a <code>coroutine</code> that yields the values
- of the <code><a href="index.html#Iterator">Iterator</a></code>.</td>
+	<td class="summary">Create a <code>coroutine</code> that yields the values.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:is_complete">Iterator:is_complete ()</a></td>
@@ -355,8 +356,8 @@
 
 </dd>
     <dt>
-    <a name = "exports.counter"></a>
-    <strong>exports.counter ()</strong>
+    <a name = "counter"></a>
+    <strong>counter ()</strong>
     </dt>
     <dd>
     Iterate over the naturals starting at 1.
@@ -773,22 +774,13 @@
 
 </dd>
     <dt>
-    <a name = "exports.zip"></a>
-    <strong>exports.zip (iter1, iter2)</strong>
+    <a name = "zip"></a>
+    <strong>zip ()</strong>
     </dt>
     <dd>
     Iterate over two iterables simultaneously.
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">iter1</span>
-
-        </li>
-        <li><span class="parameter">iter2</span>
-
-        </li>
-    </ul>
 
 
 
@@ -800,22 +792,13 @@
 
 </dd>
     <dt>
-    <a name = "exports.packed_zip"></a>
-    <strong>exports.packed_zip (iter1, iter2)</strong>
+    <a name = "packed_zip"></a>
+    <strong>packed_zip ()</strong>
     </dt>
     <dd>
     Iterate over two iterables simultaneously.
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">iter1</span>
-
-        </li>
-        <li><span class="parameter">iter2</span>
-
-        </li>
-    </ul>
 
 
 
@@ -827,22 +810,13 @@
 
 </dd>
     <dt>
-    <a name = "exports.concat"></a>
-    <strong>exports.concat (iter1, iter2)</strong>
+    <a name = "concat"></a>
+    <strong>concat ()</strong>
     </dt>
     <dd>
     Concatenate two iterables into an Iterator.
 
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">iter1</span>
-
-        </li>
-        <li><span class="parameter">iter2</span>
-
-        </li>
-    </ul>
 
 
 
@@ -854,8 +828,8 @@
 
 </dd>
     <dt>
-    <a name = "exports.nop"></a>
-    <strong>exports.nop ()</strong>
+    <a name = "nop"></a>
+    <strong>nop ()</strong>
     </dt>
     <dd>
     Does nothing.
@@ -868,8 +842,8 @@
 
 </dd>
     <dt>
-    <a name = "exports.identity"></a>
-    <strong>exports.identity (...)</strong>
+    <a name = "identity"></a>
+    <strong>identity (...)</strong>
     </dt>
     <dd>
     Returns its arguments in the same order.
@@ -886,6 +860,81 @@
     <ol>
 
         the given values
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "lambda"></a>
+    <strong>lambda (expr[, env={}])</strong>
+    </dt>
+    <dd>
+    Create a lambda function from a given expression string.
+ <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
+ <p>This is meant to facilitate writing inline functions, since
+ the vanilla Lua way is very verbose.</p>
+ <p>The expression must abide by several criteria:</p>
+ <ul>
+ <li>It <em>must</em> be an expression that would make sense if put inside parenthesis in vanilla Lua;
+ <li>It <em>must not</em> start with the word "return";
+ <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
+ <li>It <em>must not</em> contain comments, or the sequence <code>--</code> inside strings;
+ <li>It <em>must not</em> contain the words "function", "end", or "_ENV", <em>even inside strings</em>.
+ </ul>
+ <p>If any of the above criteria fail to be met, the function will error.</p>
+ <p>Even with these measures, it is still not safe to create lambdas from untrusted sources.
+ These are attempts to prevent the most basic and naïve attacks, as well as mistakes on the part
+ of the programmer.</p>
+ <p>Inside the expression, the names <code>_1</code>, <code>_2</code>, <code>_3</code>, <code>_4</code>,
+ <code>_5</code>, <code>_6</code>, <code>_7</code>, <code>_8</code>, and <code>_9</code> can be used
+ to refer to the arguments given to the function. Alternatively, the letters <code>a</code> through
+ <code>i</code> can also be used. For the first 3 arguments, an additional alias exists: <code>x</code>,
+ <code>y</code>, and <code>z</code>. And lastly, for the first argument, simply <code>_</code> or <code>v</code> may be used.</p>
+ <p>The lambda function is isolated into a sandboxed environment. That means it cannot read or write
+ to local or global variables. If the function must access variables that are not given as arguments,
+ you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
+ value <code>v</code> will provide the given lambda with a variable called <code>k</code>
+ with value <code>v</code>.</p>
+ <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-z</code>,
+ <code>x-z</code>, and <code>v</code>), it is important that the new value is neither <code>nil</code> nor <code>false</code>.
+ Due to the internal mechanism used to detect when to set these aliases, having a falsy value counts
+ as not being defined. In order to minimize debugging and frustration in this niche use case of <code>env</code>,
+ the lambda will not be created and instead it will error stating which alias would fail to be set.</p>
+ <p>Examples:</p>
+ <ul>
+ <li> <code>add = f.lambda "_1 + _2" -- adds its 2 arguments</code>
+ <li> <code>add = f.lambda "a + b" -- same as above</code>
+ <li> <code>add = f.lambda "x + y" -- same as above</code>
+ <li> <code>inc = f.lambda "_1 + 1" -- adds 1 to its argument</code>
+ <li> <code>inc = f.lambda "a + 1" -- same as above</code>
+ <li> <code>inc = f.lambda "x + 1" -- same as above</code>
+ <li> <code>inc = f.lambda "_ + 1" -- same as above</code>
+ <li> <code>double_plus_one = f.lambda("_ + inc(_)", {inc = inc}) -- lets lambda "see" inc exists</code>
+ <li> <code>valid_env = f.lambda("v + 2*i", {i = complex.i}) -- defines i as complex.i instead of an alias for _9</code>
+ <li> <code>invalid_env = f.lambda("v and not f", {f = false}) -- ERROR! f cannot be assigned a falsy value because it's an alias for _6</code>
+ </ul>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">expr</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         the expression to be made into a function
+        </li>
+        <li><span class="parameter">env</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+         the function environment
+         (<em>default</em> {})
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        the generated function
     </ol>
 
 
@@ -932,7 +981,7 @@
     <strong>to_coroutine (iterable)</strong>
     </dt>
     <dd>
-    Create a <code>coroutine</code> that yields the values
+    Create a <code>coroutine</code> that yields the values.
  of the <code>iterable</code>.
  <p>Equivalent to <pre>iterate(iterable):to_coroutine()</pre>.</p>
 
@@ -1059,21 +1108,20 @@
 
 </dd>
     <dt>
-    <a name = "accessor"></a>
-    <strong>accessor (t)</strong>
+    <a name = "dict"></a>
+    <strong>dict (t)</strong>
     </dt>
     <dd>
     Create a function that accesses <code>t</code>.
- <p>The argument passed to the returned function is used as the key
- <code>k</code> to be accessed. The value of <code>t[k]</code>
- is returned.</p>
+ <p>Creates a function that reads from <code>t</code>. The new
+ function's argument is used as the key to index <code>t</code>.</p>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">t</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
-         the table to be accessed
+         the table to be indexed
         </li>
     </ul>
 
@@ -1081,7 +1129,7 @@
     <ol>
 
            <span class="types"><span class="type">function</span></span>
-        the accessor
+        the dictionary function
     </ol>
 
 
@@ -1089,11 +1137,11 @@
 
 </dd>
     <dt>
-    <a name = "item_getter"></a>
-    <strong>item_getter (k)</strong>
+    <a name = "indexer"></a>
+    <strong>indexer (k)</strong>
     </dt>
     <dd>
-    Create a function that accesses the key <code>k</code> for a table.
+    Create a function that accesses the key <code>k</code> for any table.
  <p>The argument passed to the returned function is used as the table
  <code>t</code> to be accessed. The value of <code>t[k]</code>
  is returned.</p>
@@ -1110,7 +1158,7 @@
     <ol>
 
            <span class="types"><span class="type">function</span></span>
-        the item getter
+        the table indexer
     </ol>
 
 
@@ -1180,13 +1228,13 @@
 </dd>
     <dt>
     <a name = "import"></a>
-    <strong>import ()</strong>
+    <strong>import ([env=_G])</strong>
     </dt>
     <dd>
-    Import <code><a href="index.html#Iterator">Iterator</a></code> and commonly used
- functions into global scope.
- <p>Upon calling this, the following values will be
- added to global scope (<code>_G</code>) with the same names:
+    Import <code><a href="index.html#Iterator">Iterator</a></code>, <code><a href="index.html#lambda">lambda</a></code>, and commonly used functions into global scope.
+ <p>Upon calling this, the following module entries will be
+ added to the given environment. If <code>env</code> is <code>nil</code>,
+ <code>_G</code> is assumed.</code></p>
  <ul>
  <li> <a href="index.html#Iterator">Iterator</a> </li>
  <li> <a href="index.html#iterate">iterate</a> </li>
@@ -1199,10 +1247,24 @@
  <li> <a href="index.html#every">every</a> </li>
  <li> <a href="index.html#any">any</a> </li>
  <li> <a href="index.html#all">all</a> </li>
- </ul></p>
- <p>They can still be accessed through the module after the call.</p>
+ <li> <a href="index.html#zip">zip</a> </li>
+ <li> <a href="index.html#packed_zip">packed_zip</a> </li>
+ <li> <a href="index.html#concat">concat</a> </li>
+ <li> <a href="index.html#nop">nop</a> </li>
+ <li> <a href="index.html#identity">identity</a> </li>
+ <li> <a href="index.html#lambda">lambda</a> </li>
+ </ul>
+ <p>They can still be accessed as usual through the module after the call.</p>
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">env</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+         the environment to import into
+         (<em>default</em> _G)
+        </li>
+    </ul>
 
 
 
@@ -1449,8 +1511,8 @@
     <strong>Iterator.clone (iterable)</strong>
     </dt>
     <dd>
-    Nondestructively return an indepent iterable from the given one.
- <p>If <code>iterablet</code> is an Iterator, clone it according
+    Nondestructively return an independent iterable from the given one.
+ <p>If <code>iterable</code> is an Iterator, clone it according
  to its subtype. If <code>iterable</code> is an array, then
  return itself.</p>
  <p>Please note that coroutine and iterated function call iterators
@@ -1986,7 +2048,7 @@
     <strong>Iterator:to_coroutine ()</strong>
     </dt>
     <dd>
-    Create a <code>coroutine</code> that yields the values
+    Create a <code>coroutine</code> that yields the values.
  of the <code><a href="index.html#Iterator">Iterator</a></code>.
 
 
@@ -2034,7 +2096,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-09-09 23:22:06 </i>
+<i style="float:right;">Last updated 2021-09-20 12:44:39 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
