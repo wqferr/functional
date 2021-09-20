@@ -824,25 +824,24 @@ function M.bind(func, ...)
 end
 
 --- Create a function that accesses <code>t</code>.
--- <p>The argument passed to the returned function is used as the key
--- <code>k</code> to be accessed. The value of <code>t[k]</code>
--- is returned.</p>
--- @tparam table t the table to be accessed
--- @treturn function the accessor
-function M.accessor(t)
+-- <p>Creates a function that reads from <code>t</code>. The new
+-- function's argument is used as the key to index <code>t</code>.</p>
+-- @tparam table t the table to be indexed
+-- @treturn function the dictionary function
+function M.dict(t)
   internal.assert_table(t, "t")
   return function(k)
     return t[k]
   end
 end
 
---- Create a function that accesses the key <code>k</code> for a table.
+--- Create a function that accesses the key <code>k</code> for any table.
 -- <p>The argument passed to the returned function is used as the table
 -- <code>t</code> to be accessed. The value of <code>t[k]</code>
 -- is returned.</p>
 -- @param k the key to access
--- @treturn function the item getter
-function M.item_getter(k)
+-- @treturn function the table indexer
+function M.indexer(k)
   return function(t)
     return t[k]
   end

@@ -120,8 +120,8 @@ local record module
   bind: function<T, U>((function(...: T): U), ...: T): (function(...: T): U)
   bind_self: function<K, T, U>(table, K, ...: T): (function(...: T): U)
 
-  accessor: function<K, V>({K: V}): mapping<K, V>
-  item_getter: function<K>(K): (function<V>({K: V}): V)
+  dict: function<K, V>({K: V}): mapping<K, V>
+  indexer: function<K>(K): (function<V>({K: V}): V)
   constant: function<T>(T): producer<T>
 
   lambda: function(string, table): function
