@@ -169,8 +169,8 @@ function Iterator.packed_from(func, is, var)
   return iterator:map(internal.pack)
 end
 
---- Nondestructively return an indepent iterable from the given one.
--- <p>If <code>iterablet</code> is an Iterator, clone it according
+--- Nondestructively return an independent iterable from the given one.
+-- <p>If <code>iterable</code> is an Iterator, clone it according
 -- to its subtype. If <code>iterable</code> is an array, then
 -- return itself.</p>
 -- <p>Please note that coroutine and iterated function call iterators
