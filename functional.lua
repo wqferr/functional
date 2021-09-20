@@ -870,8 +870,9 @@ end
 
 --- Import <code>@{Iterator}</code> and commonly used
 -- functions into global scope.
--- <p>Upon calling this, the following values will be
--- added to global scope (<code>_G</code>) with the same names:
+-- <p>Upon calling this, the following module entries will be
+-- added to the given environment. If <code>env</code> is <code>nil</code>,
+-- <code>_G</code> is assumed.</code></p>
 -- <ul>
 -- <li> @{Iterator} </li>
 -- <li> @{iterate} </li>
@@ -884,17 +885,26 @@ end
 -- <li> @{every} </li>
 -- <li> @{any} </li>
 -- <li> @{all} </li>
--- </ul></p>
--- <p>They can still be accessed through the module after the call.</p>
+-- <li> @{zip} </li>
+-- <li> @{packed_zip} </li>
+-- <li> @{concat} </li>
+-- <li> @{nop} </li>
+-- <li> @{identity} </li>
+-- <li> @{lambda} </li>
+-- </ul>
+-- <p>They can still be accessed as usual through the module after the call.</p>
+-- @tparam table env the environment to import into
 -- @function import
-local function export_funcs()
+local function import_module(env)
+  if env == nil then
+    env = _G
+  end
   for k, v in pairs(exports) do
-    _G[k] = v
+    env[k] = v
   end
 
   return M
 end
--- TODO update list of functions that get exported
 
 -- INTERNAL --
 
@@ -1318,7 +1328,7 @@ end
 
 exports.Iterator = Iterator
 
-M.import = export_funcs
+M.import = import_module
 
 for name, exported_func in pairs(exports) do
   M[name] = exported_func
