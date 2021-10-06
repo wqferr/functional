@@ -955,7 +955,7 @@ function internal.sanitize_lambda(expr, env)
 
   if expr:find "\n" then
     error("Lambda function bodies cannot contain newlines", 2)
-  elseif expr:find "--" then
+  elseif expr:find "%-%-" then
     error("Lambda function bodies cannot contain comments", 2)
   elseif expr:find "%f[%w]function%f[%W]" then
     error("Lambda functions cannot define new functions", 2)
@@ -969,7 +969,7 @@ function internal.sanitize_lambda(expr, env)
 
   local encased_expr = "(" .. expr .. ")"
   local s, e = encased_expr:find "%b()"
-  if s ~= 1 or e ~= #expr then
+  if s ~= 1 or e ~= #encased_expr then
     error("Expression has unbalanced parenthesis: " .. expr, 2)
   end
 
