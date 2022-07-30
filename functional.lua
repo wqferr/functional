@@ -296,7 +296,7 @@ end
 -- @tparam integer n the number of elements to capture
 -- @treturn Iterator the new <code>@{Iterator}</code> which will produce said values
 function Iterator:take_last(n)
-  internal.assert_not_nil(n, "n")
+  internal.assert_integer(n, "n")
 
   local iterator = internal.base_iter(self, internal.take_last_next, internal.take_last_clone)
 
