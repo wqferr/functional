@@ -253,6 +253,18 @@ function Iterator:foreach(func)
   end
 end
 
+--- Consume the iterator and retrieve the last value it produces.
+-- @return the last value produced by the iterator.
+function Iterator:last()
+  local last
+  local buffer
+  repeat
+    last = buffer
+    buffer = self:next()
+  until buffer == nil
+  return last
+end
+
 --- Iterate over the <code>n</code> first values and stop.
 -- @tparam integer n amount of values to take
 -- @treturn Iterator the new <code>@{Iterator}</code>
@@ -543,6 +555,21 @@ function exports.foreach(iterable, func)
   return exports.iterate(iterable):foreach(func)
 end
 
+--- Return the last value of the given iterable.
+-- <p>If <code>iterable</code> is an iterator, this call is equivalent to <code>iterable:last()</code>.
+-- Otherwise, this call accesses the last element in the array.</p>
+-- @tparam iterable iterable the sequence whose last element is to be accessed
+-- @return the last element in the sequence
+-- @see Iterator:last
+-- @function last
+function exports.last(iterable)
+  if internal.is_iterator(iterable) then
+    return iterable:last()
+  else
+    return iterable[#iterable]
+  end
+end
+
 --- Iterate over the <code>n</code> first values and stop.
 -- <p>Equivalent to <pre>iterate(iterable):take(n)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
@@ -653,9 +680,9 @@ end
 -- <li>It <em>must not</em> start with the word "return";
 -- <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
 -- <li>It <em>must not</em> contain comments, or the sequence <code>--</code> inside strings;
--- <li>It <em>must not</em> contain the words "function", "end", or "_ENV", <em>even inside strings</em>.
+-- <li>It <em>must not</em> contain the words "end" or "_ENV", <em>even inside strings</em>.
 -- </ul>
--- <p>If any of the above criteria fail to be met, the function will error.</p>
+-- <p>If any of the above criteria fail to be met, the lambda creator will error.</p>
 -- <p>Even with these measures, it is still not safe to create lambdas from untrusted sources.
 -- These are attempts to prevent the most basic and naïve attacks, as well as mistakes on the part
 -- of the programmer.</p>
@@ -669,7 +696,7 @@ end
 -- you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
 -- value <code>v</code> will provide the given lambda with a variable called <code>k</code>
 -- with value <code>v</code>.</p>
--- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-z</code>,
+-- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-i</code>,
 -- <code>x-z</code>, and <code>v</code>), it is important that the new value is neither <code>nil</code> nor <code>false</code>.
 -- Due to the internal mechanism used to detect when to set these aliases, having a falsy value counts
 -- as not being defined. In order to minimize debugging and frustration in this niche use case of <code>env</code>,
@@ -706,7 +733,7 @@ return function(_1, _2, _3, _4, _5, _6, _7, _8, _9)
 end]]
 
   -- Get context that created lambda for debug purposes
-  local ctx = debug.getinfo(2)
+  local ctx = debug.getinfo(2, "nSl")
   local chunk_name = ("lambda-%s@%s:%s"):format(
     ctx.name or "mainchunk", ctx.short_src, ctx.currentline
   )
@@ -719,7 +746,7 @@ end]]
   end
 
   if not chunk then
-    error("Load failed for lambda body: " .. expr)
+    error("Load failed for lambda body: " .. expr, 2)
   end
 
   local f = chunk()
@@ -731,14 +758,23 @@ end]]
 end
 
 internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
-internal.lambda_param_autoalias = {}
-do
-  local alias_list = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "x", "y", "z"}
-  -- Transform array into set
-  for _, alias in ipairs(alias_list) do
-    internal.lambda_param_autoalias[alias] = true
-  end
-end
+internal.lambda_param_autoalias = {
+  a = true,
+  b = true,
+  c = true,
+  d = true,
+  e = true,
+  f = true,
+  g = true,
+  h = true,
+  i = true,
+
+  v = true,
+
+  x = true,
+  y = true,
+  z = true,
+}
 
 --- Return an array version of the <code>iterable</code>.
 -- <p>If <code>iterable</code> is an array, return itself.</p>
@@ -936,12 +972,12 @@ function internal.sanitize_lambda(expr, env)
   for k, v in pairs(env) do
     if type(k) == "string" then
       if k:match(internal.lambda_invalid_env_var_names_pattern) then
-        error(("Illegal key in lambda environment: \"%s\""):format(k), 2)
+        error(("Illegal key in lambda environment: \"%s\""):format(k), 3)
       elseif internal.lambda_param_autoalias[k] and not v then
         error(
           ("Lambda environment has special key \"%s\" set to a falsy value; it will get overwritten inside the lambda"):format(
             k
-          ), 2
+          ), 3
         )
       end
 
@@ -957,8 +993,6 @@ function internal.sanitize_lambda(expr, env)
     error("Lambda function bodies cannot contain newlines", 2)
   elseif expr:find "%-%-" then
     error("Lambda function bodies cannot contain comments", 2)
-  elseif expr:find "%f[%w]function%f[%W]" then
-    error("Lambda functions cannot define new functions", 2)
   elseif expr:find "%f[%w]end%f[%W]" then
     error("Lambda functions cannot be manually closed (nice try)", 2)
   elseif expr:find "^return%f[%W]" then
