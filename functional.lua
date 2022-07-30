@@ -72,8 +72,8 @@ function Iterator.create(iterable)
   end
 end
 
---- Retrieve the next element from the iterator.
--- @return the next value in the sequence
+--- Retrieve the next element from the iterator, if any.
+-- @return the next value in the sequence, or <code>nil</code> if there is none
 function Iterator:next()
 end
 
@@ -254,7 +254,7 @@ function Iterator:foreach(func)
 end
 
 --- Consume the iterator and retrieve the last value it produces.
--- @return the last value produced by the iterator.
+-- @return the last value produced by the iterator, or <code>nil</code> if there was none.
 function Iterator:last()
   local last
   local buffer
@@ -288,6 +288,22 @@ function Iterator:take_while(predicate)
 
   iterator.predicate = predicate
   iterator.done_taking = false
+
+  return iterator
+end
+
+--- Consume the iterator and produce its <code>n</code> last values in order.
+-- @tparam integer n the number of elements to capture
+-- @treturn Iterator the new <code>@{Iterator}</code> which will produce said values
+function Iterator:take_last(n)
+  internal.assert_not_nil(n, "n")
+
+  local iterator = internal.base_iter(self, internal.take_last_next, internal.take_last_clone)
+
+  iterator.buffer = {}
+  iterator.n = n
+  iterator.index = 1
+  iterator.consumed_source = false
 
   return iterator
 end
@@ -1070,7 +1086,7 @@ function internal.filter_next(iter)
     return nil
   end
   local next_input = {iter.values:next()}
-  while #next_input > 0 do
+  while next_input[1] ~= nil do
     if iter.predicate(unpack(next_input)) then
       return unpack(next_input)
     end
@@ -1090,7 +1106,7 @@ function internal.map_next(iter)
     return nil
   end
   local next_input = {iter.values:next()}
-  if #next_input == 0 then
+  if next_input[1] == nil then
     iter.completed = true
     return nil
   end
@@ -1107,7 +1123,7 @@ function internal.take_next(iter)
     return nil
   end
   local next_input = {iter.values:next()}
-  if #next_input == 0 then
+  if next_input[1] == nil then
     iter.completed = true
     return nil
   end
@@ -1134,7 +1150,7 @@ function internal.take_while_next(iter)
     return nil
   end
   local next_input = {iter.values:next()}
-  if #next_input == 0 then
+  if next_input[1] == nil then
     iter.completed = true
     return nil
   end
@@ -1151,6 +1167,50 @@ function internal.take_while_clone(iter)
   return exports.take_while(Iterator.clone(iter.values), iter.predicate)
 end
 
+local function take_last_consume_source(iter)
+  -- consume source stream and fill buffer with relevant window
+  if iter.consumed_source then
+    return
+  end
+
+  while true do
+    -- peek input stream
+    local next = iter.values:next()
+    if next == nil then
+      -- we're done, break the loop and save the current buffer
+      break
+    end
+    table.insert(iter.buffer, next)
+
+    -- shift everything and erase oldest element
+    if #iter.buffer > iter.n then
+      for i = 1, iter.n+1 do
+        iter.buffer[i] = iter.buffer[i+1]
+      end
+    end
+  end
+  iter.consumed_source = true
+end
+
+function internal.take_last_next(iter)
+  if iter.completed then
+    return nil
+  end
+  take_last_consume_source(iter)
+  if iter.index > iter.n then
+    iter.completed = true
+    return nil
+  end
+  local value = iter.buffer[iter.index]
+  iter.index = iter.index + 1
+  return value
+end
+
+function internal.take_last_clone(iter)
+  take_last_consume_source(iter)
+  return exports.iterate(iter.buffer)
+end
+
 function internal.skip_while_next(iter)
   if iter.completed then
     return nil
@@ -1158,7 +1218,7 @@ function internal.skip_while_next(iter)
   local next_input
   repeat
     next_input = {iter.values:next()}
-    if #next_input == 0 then
+    if next_input[1] == nil then
       iter.completed = true
       iter.done_skipping = true
       return nil
@@ -1189,7 +1249,7 @@ function internal.skip_next(iter)
   end
 
   local next_input = {iter.values:next()}
-  if #next_input == 0 then
+  if next_input[1] == nil then
     iter.completed = true
     return nil
   end
@@ -1216,7 +1276,7 @@ function internal.every_next(iter)
   end
 
   next_input = {iter.values:next()}
-  if #next_input == 0 then
+  if next_input[1] == nil then
     iter.completed = true
     return nil
   end
@@ -1254,10 +1314,10 @@ function internal.concat_next(iter)
     return nil
   end
   local next_vals = {iter.values[1]:next()}
-  if #next_vals == 0 then
+  if next_vals[1] == nil then
     next_vals = {iter.values[2]:next()}
   end
-  if #next_vals == 0 then
+  if next_vals[1] == nil then
     iter.completed = true
     return nil
   end
@@ -1283,7 +1343,7 @@ function internal.iter_coroutine_next(iter)
   assert(status, yield[2])
 
   local next_value = {select(2, unpack(yield))}
-  if #next_value == 0 then
+  if next_value[1] == nil then
     iter.completed = true
     return nil
   end
@@ -1306,7 +1366,7 @@ function internal.func_call_next(iter)
     return nil
   end
   local result = {iter.func(iter.is, iter.var)}
-  if #result == 0 then
+  if result[1] == nil then
     iter.completed = true
     return nil
   end

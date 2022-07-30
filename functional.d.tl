@@ -43,6 +43,7 @@ local record module
     take: function(Iterator<T>, integer): Iterator<T>
     take_while: function(Iterator<T>, predicate<T>): Iterator<T>
     take_until: function(Iterator<T>, predicate<T>): Iterator<T>
+    take_last: function(Iterator<T>, integer): Iterator<T>
 
     skip: function(Iterator<T>, integer): Iterator<T>
     skip_while: function(Iterator<T>, predicate<T>): Iterator<T>
