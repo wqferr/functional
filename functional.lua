@@ -578,7 +578,7 @@ end
 -- @return the last element in the sequence
 -- @see Iterator:last
 -- @function last
-function exports.last(iterable)
+function M.last(iterable)
   if internal.is_iterator(iterable) then
     return iterable:last()
   else
@@ -923,7 +923,7 @@ end
 --- Import <code>@{Iterator}</code>, <code>@{lambda}</code>, and commonly used functions into global scope.
 -- <p>Upon calling this, the following module entries will be
 -- added to the given environment. If <code>env</code> is <code>nil</code>,
--- <code>_G</code> is assumed.</code></p>
+-- <code>_G</code> (global scope) is assumed.</code></p>
 -- <ul>
 -- <li> @{Iterator} </li>
 -- <li> @{iterate} </li>
