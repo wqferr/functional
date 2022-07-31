@@ -72,8 +72,8 @@ function Iterator.create(iterable)
   end
 end
 
---- Retrieve the next element from the iterator.
--- @return the next value in the sequence
+--- Retrieve the next element from the iterator, if any.
+-- @return the next value in the sequence, or <code>nil</code> if there is none
 function Iterator:next()
 end
 
@@ -253,6 +253,18 @@ function Iterator:foreach(func)
   end
 end
 
+--- Consume the iterator and retrieve the last value it produces.
+-- @return the last value produced by the iterator, or <code>nil</code> if there was none.
+function Iterator:last()
+  local last
+  local buffer
+  repeat
+    last = buffer
+    buffer = self:next()
+  until buffer == nil
+  return last
+end
+
 --- Iterate over the <code>n</code> first values and stop.
 -- @tparam integer n amount of values to take
 -- @treturn Iterator the new <code>@{Iterator}</code>
@@ -276,6 +288,22 @@ function Iterator:take_while(predicate)
 
   iterator.predicate = predicate
   iterator.done_taking = false
+
+  return iterator
+end
+
+--- Consume the iterator and produce its <code>n</code> last values in order.
+-- @tparam integer n the number of elements to capture
+-- @treturn Iterator the new <code>@{Iterator}</code> which will produce said values
+function Iterator:take_last(n)
+  internal.assert_integer(n, "n")
+
+  local iterator = internal.base_iter(self, internal.take_last_next, internal.take_last_clone)
+
+  iterator.buffer = {}
+  iterator.n = n
+  iterator.index = 1
+  iterator.consumed_source = false
 
   return iterator
 end
@@ -543,6 +571,21 @@ function exports.foreach(iterable, func)
   return exports.iterate(iterable):foreach(func)
 end
 
+--- Return the last value of the given iterable.
+-- <p>If <code>iterable</code> is an iterator, this call is equivalent to <code>iterable:last()</code>.
+-- Otherwise, this call accesses the last element in the array.</p>
+-- @tparam iterable iterable the sequence whose last element is to be accessed
+-- @return the last element in the sequence
+-- @see Iterator:last
+-- @function last
+function exports.last(iterable)
+  if internal.is_iterator(iterable) then
+    return iterable:last()
+  else
+    return iterable[#iterable]
+  end
+end
+
 --- Iterate over the <code>n</code> first values and stop.
 -- <p>Equivalent to <pre>iterate(iterable):take(n)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
@@ -653,9 +696,9 @@ end
 -- <li>It <em>must not</em> start with the word "return";
 -- <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
 -- <li>It <em>must not</em> contain comments, or the sequence <code>--</code> inside strings;
--- <li>It <em>must not</em> contain the words "function", "end", or "_ENV", <em>even inside strings</em>.
+-- <li>It <em>must not</em> contain the words "end" or "_ENV", <em>even inside strings</em>.
 -- </ul>
--- <p>If any of the above criteria fail to be met, the function will error.</p>
+-- <p>If any of the above criteria fail to be met, the lambda creator will error.</p>
 -- <p>Even with these measures, it is still not safe to create lambdas from untrusted sources.
 -- These are attempts to prevent the most basic and naïve attacks, as well as mistakes on the part
 -- of the programmer.</p>
@@ -669,7 +712,7 @@ end
 -- you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
 -- value <code>v</code> will provide the given lambda with a variable called <code>k</code>
 -- with value <code>v</code>.</p>
--- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-z</code>,
+-- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-i</code>,
 -- <code>x-z</code>, and <code>v</code>), it is important that the new value is neither <code>nil</code> nor <code>false</code>.
 -- Due to the internal mechanism used to detect when to set these aliases, having a falsy value counts
 -- as not being defined. In order to minimize debugging and frustration in this niche use case of <code>env</code>,
@@ -706,7 +749,7 @@ return function(_1, _2, _3, _4, _5, _6, _7, _8, _9)
 end]]
 
   -- Get context that created lambda for debug purposes
-  local ctx = debug.getinfo(2)
+  local ctx = debug.getinfo(2, "nSl")
   local chunk_name = ("lambda-%s@%s:%s"):format(
     ctx.name or "mainchunk", ctx.short_src, ctx.currentline
   )
@@ -719,7 +762,7 @@ end]]
   end
 
   if not chunk then
-    error("Load failed for lambda body: " .. expr)
+    error("Load failed for lambda body: " .. expr, 2)
   end
 
   local f = chunk()
@@ -731,14 +774,23 @@ end]]
 end
 
 internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
-internal.lambda_param_autoalias = {}
-do
-  local alias_list = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "x", "y", "z"}
-  -- Transform array into set
-  for _, alias in ipairs(alias_list) do
-    internal.lambda_param_autoalias[alias] = true
-  end
-end
+internal.lambda_param_autoalias = {
+  a = true,
+  b = true,
+  c = true,
+  d = true,
+  e = true,
+  f = true,
+  g = true,
+  h = true,
+  i = true,
+
+  v = true,
+
+  x = true,
+  y = true,
+  z = true,
+}
 
 --- Return an array version of the <code>iterable</code>.
 -- <p>If <code>iterable</code> is an array, return itself.</p>
@@ -936,12 +988,12 @@ function internal.sanitize_lambda(expr, env)
   for k, v in pairs(env) do
     if type(k) == "string" then
       if k:match(internal.lambda_invalid_env_var_names_pattern) then
-        error(("Illegal key in lambda environment: \"%s\""):format(k), 2)
+        error(("Illegal key in lambda environment: \"%s\""):format(k), 3)
       elseif internal.lambda_param_autoalias[k] and not v then
         error(
           ("Lambda environment has special key \"%s\" set to a falsy value; it will get overwritten inside the lambda"):format(
             k
-          ), 2
+          ), 3
         )
       end
 
@@ -957,8 +1009,6 @@ function internal.sanitize_lambda(expr, env)
     error("Lambda function bodies cannot contain newlines", 2)
   elseif expr:find "%-%-" then
     error("Lambda function bodies cannot contain comments", 2)
-  elseif expr:find "%f[%w]function%f[%W]" then
-    error("Lambda functions cannot define new functions", 2)
   elseif expr:find "%f[%w]end%f[%W]" then
     error("Lambda functions cannot be manually closed (nice try)", 2)
   elseif expr:find "^return%f[%W]" then
@@ -1036,7 +1086,7 @@ function internal.filter_next(iter)
     return nil
   end
   local next_input = {iter.values:next()}
-  while #next_input > 0 do
+  while next_input[1] ~= nil do
     if iter.predicate(unpack(next_input)) then
       return unpack(next_input)
     end
@@ -1115,6 +1165,50 @@ end
 
 function internal.take_while_clone(iter)
   return exports.take_while(Iterator.clone(iter.values), iter.predicate)
+end
+
+local function take_last_consume_source(iter)
+  -- consume source stream and fill buffer with relevant window
+  if iter.consumed_source then
+    return
+  end
+
+  while true do
+    -- peek input stream
+    local next = iter.values:next()
+    if next == nil then
+      -- we're done, break the loop and save the current buffer
+      break
+    end
+    table.insert(iter.buffer, next)
+
+    -- shift everything and erase oldest element
+    if #iter.buffer > iter.n then
+      for i = 1, iter.n+1 do
+        iter.buffer[i] = iter.buffer[i+1]
+      end
+    end
+  end
+  iter.consumed_source = true
+end
+
+function internal.take_last_next(iter)
+  if iter.completed then
+    return nil
+  end
+  take_last_consume_source(iter)
+  if iter.index > iter.n then
+    iter.completed = true
+    return nil
+  end
+  local value = iter.buffer[iter.index]
+  iter.index = iter.index + 1
+  return value
+end
+
+function internal.take_last_clone(iter)
+  take_last_consume_source(iter)
+  return exports.iterate(iter.buffer)
 end
 
 function internal.skip_while_next(iter)

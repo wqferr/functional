@@ -6,6 +6,7 @@ local record module
   type mapping = function<T, U>(T): U
   type reducer = function<T, A>(A, T): A
 
+  -- IS stands for "invariant state", as seen in Programming in Lua chapter 7
   type vanilla_singlearg_iter = function<IS, T>(IS, T): T
 
   -- FIXME in order to properly support iterators with multiple
@@ -37,9 +38,12 @@ local record module
     reduce: function<A>(Iterator<T>, reducer<T, A>, A): A
     foreach: function(Iterator<T>, consumer<T>)
 
+    last: function(Iterator<T>): T
+
     take: function(Iterator<T>, integer): Iterator<T>
     take_while: function(Iterator<T>, predicate<T>): Iterator<T>
     take_until: function(Iterator<T>, predicate<T>): Iterator<T>
+    take_last: function(Iterator<T>, integer): Iterator<T>
 
     skip: function(Iterator<T>, integer): Iterator<T>
     skip_while: function(Iterator<T>, predicate<T>): Iterator<T>
@@ -80,6 +84,9 @@ local record module
   foreach: function<T>({T}, consumer<T>)
   foreach: function<T>(Iterator<T>, consumer<T>)
 
+  last: function<T>({T}): T
+  last: function<T>(Iterator<T>): T
+
   take: function<T>({T}, integer): Iterator<T>
   take: function<T>(Iterator<T>, integer): Iterator<T>
   skip: function<T>({T}, integer): Iterator<T>
@@ -114,9 +121,7 @@ local record module
   negate: function<T>(predicate<T>): predicate<T>
   compose: function<T, U, V>(mapping<T, U>, mapping<U, V>): mapping<T, V>
 
-  -- FIXME these will get proper support once
-  --    https://github.com/teal-language/tl/pull/449
-  -- gets merged
+  -- FIXME these will get proper support once variadic type arguments are supported
   bind: function<T, U>((function(...: T): U), ...: T): (function(...: T): U)
   bind_self: function<K, T, U>(table, K, ...: T): (function(...: T): U)
 
