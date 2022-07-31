@@ -59,7 +59,7 @@ local unpack = table.unpack or unpack
 -- iterator, return itself.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new Iterator
-function Iterator.create(iterable)
+function Iterator.over(iterable)
   internal.assert_table(iterable, "iterable")
 
   if internal.is_iterator(iterable) then
@@ -432,7 +432,7 @@ function Iterator:zip(other)
   return iterator
 end
 
---- Iterate over two iterables simultaneously, giving their values as a 2-element array.
+--- Iterate over two iterables simultaneously, giving their values as an array.
 -- <p>This results in an Iterator with a single value per :next() call.</p>
 -- @tparam iterable other the other iterable to zip with this one
 -- @treturn Iterator the resulting zipped Iterator
@@ -480,12 +480,12 @@ end
 -- RAW FUNCTIONS --
 
 --- Create an <code>@{Iterator}</code> for the <code>iterable</code>.
--- <p>Equivalent to <pre>Iterator.create(iterable)</pre>.</p>
+-- <p>Equivalent to <pre>Iterator.over(iterable)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @function iterate
 function exports.iterate(iterable)
-  return Iterator.create(iterable)
+  return Iterator.over(iterable)
 end
 
 --- Iterate over the naturals starting at 1.
@@ -1094,11 +1094,11 @@ end
 
 -- ITER FUNCTIONS --
 
-function internal.base_iter(values, next_f, clone)
+function internal.base_iter(source, next_f, clone)
   local iterator = {}
   setmetatable(iterator, iter_meta)
 
-  iterator.values = values
+  iterator.source = source
   iterator.completed = false
   iterator.next = next_f
   iterator.clone = clone
@@ -1110,13 +1110,13 @@ function internal.iter_next(iter)
     return nil
   end
   iter.index = iter.index + 1
-  local next_input = iter.values[iter.index]
+  local next_input = iter.source[iter.index]
   iter.completed = next_input == nil
   return next_input
 end
 
 function internal.iter_clone(iter)
-  local new_iter = exports.iterate(Iterator.clone(iter.values))
+  local new_iter = exports.iterate(Iterator.clone(iter.source))
   new_iter.index = iter.index
   new_iter.completed = iter.completed
   return new_iter
@@ -1151,12 +1151,12 @@ function internal.filter_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   while next_input[1] ~= nil do
     if iter.predicate(unpack(next_input)) then
       return unpack(next_input)
     end
-    next_input = {iter.values:next()}
+    next_input = {iter.source:next()}
   end
 
   iter.completed = true
@@ -1164,14 +1164,14 @@ function internal.filter_next(iter)
 end
 
 function internal.filter_clone(iter)
-  return exports.filter(Iterator.clone(iter.values), iter.predicate)
+  return exports.filter(Iterator.clone(iter.source), iter.predicate)
 end
 
 function internal.map_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1181,14 +1181,14 @@ function internal.map_next(iter)
 end
 
 function internal.map_clone(iter)
-  return exports.map(Iterator.clone(iter.values), iter.mapping)
+  return exports.map(Iterator.clone(iter.source), iter.mapping)
 end
 
 function internal.take_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1204,7 +1204,7 @@ function internal.take_next(iter)
 end
 
 function internal.take_clone(iter)
-  return exports.take(Iterator.clone(iter.values), iter.n_remaining)
+  return exports.take(Iterator.clone(iter.source), iter.n_remaining)
 end
 
 function internal.take_while_next(iter)
@@ -1215,7 +1215,7 @@ function internal.take_while_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1230,7 +1230,7 @@ function internal.take_while_next(iter)
 end
 
 function internal.take_while_clone(iter)
-  return exports.take_while(Iterator.clone(iter.values), iter.predicate)
+  return exports.take_while(Iterator.clone(iter.source), iter.predicate)
 end
 
 local function take_last_consume_source(iter)
@@ -1241,7 +1241,7 @@ local function take_last_consume_source(iter)
 
   while true do
     -- peek input stream
-    local next = iter.values:next()
+    local next = iter.source:next()
     if next == nil then
       -- we're done, break the loop and save the current buffer
       break
@@ -1283,7 +1283,7 @@ function internal.skip_while_next(iter)
   end
   local next_input
   repeat
-    next_input = {iter.values:next()}
+    next_input = {iter.source:next()}
     if #next_input == 0 then
       iter.completed = true
       iter.done_skipping = true
@@ -1310,11 +1310,11 @@ function internal.skip_next(iter)
   end
 
   while iter.n_remaining > 0 do
-    iter.values:next()
+    iter.source:next()
     iter.n_remaining = iter.n_remaining - 1
   end
 
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1324,7 +1324,7 @@ function internal.skip_next(iter)
 end
 
 function internal.skip_clone(iter)
-  return exports.skip(Iterator.clone(iter.values), iter.n_remaining)
+  return exports.skip(Iterator.clone(iter.source), iter.n_remaining)
 end
 
 function internal.every_next(iter)
@@ -1337,11 +1337,11 @@ function internal.every_next(iter)
     iter.first_call = nil
   else
     for _ = 1, iter.n - 1 do
-      iter.values:next()
+      iter.source:next()
     end
   end
 
-  next_input = {iter.values:next()}
+  next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1351,16 +1351,16 @@ function internal.every_next(iter)
 end
 
 function internal.every_clone(iter)
-  return exports.every(Iterator.clone(iter.values), iter.n)
+  return exports.every(Iterator.clone(iter.source), iter.n)
 end
 
 function internal.zip_next(iter)
-  if iter.completed or iter.values[1].completed then
+  if iter.completed or iter.source[1].completed then
     iter.completed = true
     return nil, nil
   end
-  local source1_next, source2_next = {iter.values[1]:next()}, {iter.values[2]:next()}
-  if iter.values[1].completed then
+  local source1_next, source2_next = {iter.source[1]:next()}, {iter.source[2]:next()}
+  if iter.source[1].completed then
     iter.completed = true
     return nil, nil
   end
@@ -1372,16 +1372,16 @@ function internal.zip_next(iter)
 end
 
 function internal.zip_clone(iter)
-  return exports.zip(iter.values[1]:clone(), iter.values[2]:clone())
+  return exports.zip(iter.source[1]:clone(), iter.source[2]:clone())
 end
 
 function internal.concat_next(iter)
   if iter.completed then
     return nil
   end
-  local next_vals = {iter.values[1]:next()}
+  local next_vals = {iter.source[1]:next()}
   if #next_vals == 0 then
-    next_vals = {iter.values[2]:next()}
+    next_vals = {iter.source[2]:next()}
   end
   if #next_vals == 0 then
     iter.completed = true
@@ -1391,7 +1391,7 @@ function internal.concat_next(iter)
 end
 
 function internal.concat_clone(iter)
-  return exports.concat(iter.values[1]:clone(), iter.values[2]:clone())
+  return exports.concat(iter.source[1]:clone(), iter.source[2]:clone())
 end
 
 function internal.wrap_coroutine(co)

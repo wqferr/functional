@@ -6,6 +6,5 @@ for i in f.range(9) do
 end
 
 -- global x
-x = 5
-print(f.lambda "x"())
-print(f.lambda "_G.x"())
+X = 5
+print(f.lambda "X"())
