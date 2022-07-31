@@ -38,6 +38,9 @@
 -- @license MIT
 ---
 local M = {}
+
+--- Module version.
+M._VERSION = "1.5.1"
 local exports = {}
 local internal = {}
 
@@ -46,10 +49,9 @@ local internal = {}
 local Iterator = {}
 local iter_meta = {}
 
-local unpack = table.unpack or unpack
+local curried_function_meta = {}
 
---- Module version.
-M._VERSION = "1.5.1"
+local unpack = table.unpack or unpack
 
 --- Iterate over the given <code>iterable</code>.
 -- <p>If <code>iterable</code> is an array, create an Iterator instance
@@ -875,6 +877,65 @@ function M.bind(func, ...)
   end
 end
 
+--- Curries a function by the given amount of arguments.
+-- <p>Currying is, in simple terms, transforming a function <code>f</code> which is used as:</p>
+-- <pre>res = f(x, y, z)</pre>
+-- <p>Into a function <code>g</code> which is used as:</p>
+-- <pre>h = g(x); i = h(y); res = i(z)</pre>
+-- <p>Or, chaining all the calls into a single statement:</p>
+-- <pre>res = g(x)(y)(z)</pre>
+-- <p>You can read more about currying in the <a href="https://en.wikipedia.org/wiki/Currying">Wikipedia
+-- page on currying</a></p>
+-- <p>In all levels except the deepest, any arguments past the first are ignored. In the deepest
+-- level, though, they are passed along to the function as normal.</p>
+-- @tparam function func the function to be curried
+-- @tparam integer levels the number of arguments to curry
+-- @treturn function the curried function
+function M.curry(func, levels)
+  internal.assert_not_nil(func, "func")
+  internal.assert_integer(levels, "levels")
+  if levels < 1 then
+    error(internal.ERR_POSITIVE_INTEGER_EXPECTED:format("levels", tostring(levels)), 2)
+  end
+
+  local cf = {}
+  cf.func = func
+  cf.levels = levels
+  cf.args = {}
+  setmetatable(cf, curried_function_meta)
+  return cf
+end
+
+function internal.curried_function_call(cf, newarg, ...)
+  if cf.levels == 1 then
+    -- append last arg to fixed ones
+    local args = {unpack(cf.args)}
+    table.insert(args, newarg)
+    for _, a in ipairs {...} do
+      table.insert(args, a)
+    end
+
+    -- do the actual function call at the end of all this madness
+    return cf.func(unpack(args))
+  else
+    -- we must create a new curried function one level deeper
+    local successor = {}
+
+    -- same function
+    successor.func = cf.func
+
+    -- one fewer levels
+    successor.levels = cf.levels - 1
+
+    -- same args as the current one, plus the one just given
+    successor.args = {unpack(cf.args)}
+    table.insert(successor.args, newarg)
+
+    setmetatable(successor, curried_function_meta)
+    return successor
+  end
+end
+
 --- Create a function that accesses <code>t</code>.
 -- <p>Creates a function that reads from <code>t</code>. The new
 -- function's argument is used as the key to index <code>t</code>.</p>
@@ -920,7 +981,7 @@ function M.constant(value)
   end
 end
 
---- Import <code>@{Iterator}</code>, <code>@{lambda}</code>, and commonly used functions into global scope.
+--- Import <code>@{Iterator}</code>, <code>@{lambda}</code>, and commonly used functions into a given scope.
 -- <p>Upon calling this, the following module entries will be
 -- added to the given environment. If <code>env</code> is <code>nil</code>,
 -- <code>_G</code> (global scope) is assumed.</code></p>
@@ -945,8 +1006,7 @@ end
 -- </ul>
 -- <p>They can still be accessed as usual through the module after the call.</p>
 -- @tparam[opt=_G] table env the environment to import into
--- @function import
-local function import_module(env)
+function M.import(env)
   if env == nil then
     env = _G
   end
@@ -1383,25 +1443,25 @@ end
 
 function internal.assert_table(value, param_name)
   if type(value) ~= "table" then
-    error(internal.ERR_TABLE_EXPECTED:format(param_name, tostring(value)))
+    error(internal.ERR_TABLE_EXPECTED:format(param_name, tostring(value)), 3)
   end
 end
 
 function internal.assert_integer(value, param_name)
   if type(value) ~= "number" or value % 1 ~= 0 then
-    error(internal.ERR_INTEGER_EXPECTED:format(param_name, tostring(value)))
+    error(internal.ERR_INTEGER_EXPECTED:format(param_name, tostring(value)), 3)
   end
 end
 
 function internal.assert_coroutine(value, param_name)
   if type(value) ~= "thread" then
-    error(internal.ERR_COROUTINE_EXPECTED:format(param_name, tostring(value)))
+    error(internal.ERR_COROUTINE_EXPECTED:format(param_name, tostring(value)), 3)
   end
 end
 
 function internal.assert_not_nil(value, param_name)
   if value == nil then
-    error(internal.ERR_NIL_VALUE:format(param_name))
+    error(internal.ERR_NIL_VALUE:format(param_name), 3)
   end
 end
 
@@ -1410,6 +1470,7 @@ internal.ERR_FUNCTION_CLONE =
   "cannot clone iterated function call; try to_array and iterate over it"
 
 internal.ERR_INTEGER_EXPECTED = "param %s expected integer, got: %s"
+internal.ERR_POSITIVE_INTEGER_EXPECTED = "param %s expected a positive integer, got: %s"
 internal.ERR_TABLE_EXPECTED = "param %s expected table, got: %s"
 internal.ERR_COROUTINE_EXPECTED = "param %s expected coroutine, got: %s"
 internal.ERR_NIL_VALUE = "param %s is nil"
@@ -1419,9 +1480,9 @@ iter_meta.__call = function(iter)
   return iter:next()
 end
 
-exports.Iterator = Iterator
+curried_function_meta.__call = internal.curried_function_call
 
-M.import = import_module
+exports.Iterator = Iterator
 
 for name, exported_func in pairs(exports) do
   M[name] = exported_func
