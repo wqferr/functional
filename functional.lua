@@ -1106,7 +1106,7 @@ function internal.map_next(iter)
     return nil
   end
   local next_input = {iter.values:next()}
-  if next_input[1] == nil then
+  if #next_input == 0 then
     iter.completed = true
     return nil
   end
@@ -1123,7 +1123,7 @@ function internal.take_next(iter)
     return nil
   end
   local next_input = {iter.values:next()}
-  if next_input[1] == nil then
+  if #next_input == 0 then
     iter.completed = true
     return nil
   end
@@ -1150,7 +1150,7 @@ function internal.take_while_next(iter)
     return nil
   end
   local next_input = {iter.values:next()}
-  if next_input[1] == nil then
+  if #next_input == 0 then
     iter.completed = true
     return nil
   end
@@ -1218,7 +1218,7 @@ function internal.skip_while_next(iter)
   local next_input
   repeat
     next_input = {iter.values:next()}
-    if next_input[1] == nil then
+    if #next_input == 0 then
       iter.completed = true
       iter.done_skipping = true
       return nil
@@ -1249,7 +1249,7 @@ function internal.skip_next(iter)
   end
 
   local next_input = {iter.values:next()}
-  if next_input[1] == nil then
+  if #next_input == 0 then
     iter.completed = true
     return nil
   end
@@ -1276,7 +1276,7 @@ function internal.every_next(iter)
   end
 
   next_input = {iter.values:next()}
-  if next_input[1] == nil then
+  if #next_input == 0 then
     iter.completed = true
     return nil
   end
@@ -1314,10 +1314,10 @@ function internal.concat_next(iter)
     return nil
   end
   local next_vals = {iter.values[1]:next()}
-  if next_vals[1] == nil then
+  if #next_vals == 0 then
     next_vals = {iter.values[2]:next()}
   end
-  if next_vals[1] == nil then
+  if #next_vals == 0 then
     iter.completed = true
     return nil
   end
@@ -1343,7 +1343,7 @@ function internal.iter_coroutine_next(iter)
   assert(status, yield[2])
 
   local next_value = {select(2, unpack(yield))}
-  if next_value[1] == nil then
+  if #next_value == 0 then
     iter.completed = true
     return nil
   end
@@ -1366,7 +1366,7 @@ function internal.func_call_next(iter)
     return nil
   end
   local result = {iter.func(iter.is, iter.var)}
-  if result[1] == nil then
+  if #result == 0 then
     iter.completed = true
     return nil
   end
