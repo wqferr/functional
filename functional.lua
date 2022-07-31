@@ -887,9 +887,15 @@ end
 -- <p>You can read more about currying in the <a href="https://en.wikipedia.org/wiki/Currying">Wikipedia
 -- page on currying</a></p>
 -- <p>In all levels except the deepest, any arguments past the first are ignored. In the deepest
--- level, though, they are passed along to the function as normal.</p>
+-- level, though, they are passed along to the function as normal. For example:</p>
+-- <pre>
+--local function func(a, b, c, d) return a * b * c * d end
+--local cfunc = f.curry(func, 3) -- 3 levels deep curry
+--local c1 = cfunc(1) -- binds a = 1; 2 levels left after the call
+--local c2 = c1(2, 3) -- binds b = 2, drops the 3; 1 level left after the call
+--local res = c2(4, 5) -- calls w/ c = 4 & d = 5; this was the last level</pre>
 -- @tparam function func the function to be curried
--- @tparam integer levels the number of arguments to curry
+-- @tparam integer levels the number of levels to curry for
 -- @treturn function the curried function
 function M.curry(func, levels)
   internal.assert_not_nil(func, "func")
