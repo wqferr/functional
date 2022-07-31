@@ -131,17 +131,13 @@ function Iterator.range(start, stop, step)
   return iterator
 end
 
---- Iterate over the <code>coroutine</code>'s yielded values.
--- @tparam thread co the <code>coroutine</code> to iterate
--- @treturn Iterator the new <code>@{Iterator}</code>
-function Iterator.from_coroutine(co)
-  internal.assert_coroutine(co, "co")
-  return internal.wrap_coroutine(co)
-end
-
 --- Iterate over the function's returned values upon repeated calls.
--- This can effectively convert a vanilla-Lua iterator into a functional-style
--- one (e.g., <code>Iterator.from(io.lines "my_file.txt")</code> gives you a string iterator).
+-- <p>This can effectively convert a vanilla-Lua iterator into a capital I @{Iterator}.
+-- For example, <code>Iterator.from(io.lines "my_file.txt")</code> gives you a
+-- string iterator over the lines in a file.</p>
+-- <p>In general, any expression you can use in a for loop, you can wrap into an <code>Iterator.from</code>
+-- to get the same sequence of values in an @{Iterator} form. For more information on iterators,
+-- read <a href="http://www.lua.org/pil/7.1.html">chapter 7 of Programming in Lua</a>.</p>
 -- @tparam function func the function to call
 -- @param is invariant state passed to func
 -- @param var initial variable passed to func
@@ -169,6 +165,14 @@ function Iterator.packed_from(func, is, var)
   internal.assert_not_nil(func, "func")
   local iterator = Iterator.from(func, is, var)
   return iterator:map(internal.pack)
+end
+
+--- Iterate over the <code>coroutine</code>'s yielded values.
+-- @tparam thread co the <code>coroutine</code> to iterate
+-- @treturn Iterator the new <code>@{Iterator}</code>
+function Iterator.from_coroutine(co)
+  internal.assert_coroutine(co, "co")
+  return internal.wrap_coroutine(co)
 end
 
 --- Nondestructively return an independent iterable from the given one.
