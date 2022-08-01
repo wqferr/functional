@@ -7,4 +7,6 @@ end
 
 -- global x
 X = 5
-print(f.lambda "X"())
+local l = f.lambda "X*2"
+print(l)
+l() -- should error with a readable message

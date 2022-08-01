@@ -769,8 +769,9 @@ end]]
 
   -- Get context that created lambda for debug purposes
   local ctx = debug.getinfo(2, "nSl")
-  local chunk_name = ("lambda-%s@%s:%s"):format(
-    ctx.name or "mainchunk", ctx.short_src, ctx.currentline
+  local chunk_name = ("lambda(%s:%s)"):format(
+    ctx.source, -- file name
+    ctx.currentline
   )
   local chunk
   if loadstring then
@@ -1493,9 +1494,9 @@ function internal.assert_not_nil(value, param_name)
   end
 end
 
-internal.ERR_COROUTINE_CLONE = "cannot clone coroutine iterator; try to_array and iterate over it"
+internal.ERR_COROUTINE_CLONE = "cannot clone coroutine iterator; try :to_array() and iterate over it"
 internal.ERR_FUNCTION_CLONE =
-  "cannot clone iterated function call; try to_array and iterate over it"
+  "cannot clone vanilla Lua iterator; try :to_array() and iterate over it"
 
 internal.ERR_INTEGER_EXPECTED = "param %s expected integer, got: %s"
 internal.ERR_POSITIVE_INTEGER_EXPECTED = "param %s expected a positive integer, got: %s"
