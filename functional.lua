@@ -47,9 +47,10 @@ local internal = {}
 --- A lazy-loading Iterator.
 -- @type Iterator
 local Iterator = {}
-local iter_meta = {}
+local iter__meta = {}
 
-local curried_function_meta = {}
+local lambda_function__meta = {}
+local curried_function__meta = {}
 
 local unpack = table.unpack or unpack
 
@@ -138,10 +139,21 @@ end
 -- <p>In general, any expression you can use in a for loop, you can wrap into an <code>Iterator.from</code>
 -- to get the same sequence of values in an @{Iterator} form. For more information on iterators,
 -- read <a href="http://www.lua.org/pil/7.1.html">chapter 7 of Programming in Lua</a>.</p>
+-- <p>Since any repeated function call without arguments can be used as a vanilla Lua iterator,
+-- they can also be used with <code>Iterator.from</code>. For an example, see Usage.</p>
+-- @usage
+-- local i = 0
+-- local function my_counter()
+--   i = i + 1
+--   if i > 10 then return nil end
+--   return i
+-- end
+-- f.from(my_counter):foreach(print) -- prints 1 through 10 and stops
 -- @tparam function func the function to call
--- @param is invariant state passed to func
--- @param var initial variable passed to func
+-- @param is invariant state passed to <code>func</code>
+-- @param var initial variable passed to <code>func</code>
 -- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see Iterator.packed_from
 function Iterator.from(func, is, var)
   internal.assert_not_nil(func, "func")
   local iterator = internal.base_iter(nil, internal.func_call_next, internal.func_try_clone)
@@ -158,9 +170,10 @@ end
 -- generating multiple return values per call, it returns them all
 -- packed into an array.
 -- @tparam function func the function to call
--- @param is invariant state passed to func
--- @param var initial variable passed to fund
--- @treturn iterator the new <code>@{Iterator}</code>
+-- @param is invariant state passed to <code>func</code>
+-- @param var initial variable passed to <code>func</code>
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see Iterator.from
 function Iterator.packed_from(func, is, var)
   internal.assert_not_nil(func, "func")
   local iterator = Iterator.from(func, is, var)
@@ -776,7 +789,12 @@ end]]
   if setfenv then
     setfenv(f, env)
   end
-  return f
+
+  local lbd = {}
+  lbd.func = f
+  lbd.expr = expr
+  setmetatable(lbd, lambda_function__meta)
+  return lbd
 end
 
 internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
@@ -891,13 +909,13 @@ end
 -- <p>You can read more about currying in the <a href="https://en.wikipedia.org/wiki/Currying">Wikipedia
 -- page on currying</a></p>
 -- <p>In all levels except the deepest, any arguments past the first are ignored. In the deepest
--- level, though, they are passed along to the function as normal. For example:</p>
--- <pre>
---local function func(a, b, c, d) return a * b * c * d end
---local cfunc = f.curry(func, 3) -- 3 levels deep curry
---local c1 = cfunc(1) -- binds a = 1; 2 levels left after the call
---local c2 = c1(2, 3) -- binds b = 2, drops the 3; 1 level left after the call
---local res = c2(4, 5) -- calls w/ c = 4 & d = 5; this was the last level</pre>
+-- level, though, they are passed along to the function as normal. For an example, see Usage.</p>
+-- @usage
+-- local function func(a, b, c, d) return a * b * c * d end
+-- local cfunc = f.curry(func, 3) -- 3 levels deep curry
+-- local c1 = cfunc(1) -- binds a = 1; 2 levels left after the call
+-- local c2 = c1(2, 3) -- binds b = 2, drops the 3; 1 level left after the call
+-- local res = c2(4, 5) -- calls w/ c = 4 & d = 5; this was the last level</pre>
 -- @tparam function func the function to be curried
 -- @tparam integer levels the number of levels to curry for
 -- @treturn function the curried function
@@ -912,7 +930,7 @@ function M.curry(func, levels)
   cf.func = func
   cf.levels = levels
   cf.args = {}
-  setmetatable(cf, curried_function_meta)
+  setmetatable(cf, curried_function__meta)
   return cf
 end
 
@@ -941,7 +959,7 @@ function internal.curried_function_call(cf, newarg, ...)
     successor.args = {unpack(cf.args)}
     table.insert(successor.args, newarg)
 
-    setmetatable(successor, curried_function_meta)
+    setmetatable(successor, curried_function__meta)
     return successor
   end
 end
@@ -1093,14 +1111,14 @@ function internal.sanitize_lambda(expr, env)
     error("Expression has unbalanced parenthesis: " .. expr, 2)
   end
 
-  return encased_expr, proper_env
+  return expr, proper_env
 end
 
 -- ITER FUNCTIONS --
 
 function internal.base_iter(source, next_f, clone)
   local iterator = {}
-  setmetatable(iterator, iter_meta)
+  setmetatable(iterator, iter__meta)
 
   iterator.source = source
   iterator.completed = false
@@ -1485,12 +1503,20 @@ internal.ERR_TABLE_EXPECTED = "param %s expected table, got: %s"
 internal.ERR_COROUTINE_EXPECTED = "param %s expected coroutine, got: %s"
 internal.ERR_NIL_VALUE = "param %s is nil"
 
-iter_meta.__index = Iterator
-iter_meta.__call = function(iter)
+iter__meta.__index = Iterator
+iter__meta.__call = function(iter)
   return iter:next()
 end
 
-curried_function_meta.__call = internal.curried_function_call
+lambda_function__meta.__call = function(lbd, ...)
+  return lbd.func(...)
+end
+
+lambda_function__meta.__tostring = function(lbd)
+  return ("lambda[[%s]]"):format(lbd.expr)
+end
+
+curried_function__meta.__call = internal.curried_function_call
 
 exports.Iterator = Iterator
 
