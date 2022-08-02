@@ -181,8 +181,23 @@ function Iterator.packed_from(func, is, var)
 end
 
 --- Iterate over the <code>coroutine</code>'s yielded values.
+-- <p>For example, assume you have a coroutine that produces messages from
+-- clients. One easy way to consume them in a for loop would be as in Usage.</p>
 -- @tparam thread co the <code>coroutine</code> to iterate
 -- @treturn Iterator the new <code>@{Iterator}</code>
+-- @usage
+-- local function my_totally_real_message_queue()
+--   coroutine.yield("this is a message")
+--   coroutine.yield("hello!")
+--   coroutine.yield("almost done")
+--   coroutine.yield("bye bye")
+-- end
+--
+-- local co = coroutine.create(my_totally_real_message_queue)
+-- for count, message in f.Iterator.from_coroutine(co):enumerate() do
+--   io.write(count, ": ", message, "\n")
+-- end
+-- io.write("end")
 function Iterator.from_coroutine(co)
   internal.assert_coroutine(co, "co")
   return internal.wrap_coroutine(co)
@@ -457,6 +472,23 @@ function Iterator:packed_zip(other)
   return self:zip(other):map(internal.pack)
 end
 
+--- Include an index while iterating.
+-- <p>The index is given as a single value to the left of all return values. Otherwise,
+-- the iterator is unchanged. This is similar to how <code>ipairs</code> iterates over
+-- an array, except it can be used with any iterator.</p>
+-- @treturn Iterator the resulting indexed Iterator
+-- @see enumerate
+-- @usage
+-- letters = f.every({"a", "b", "c", "d", "e"}, 2)
+-- for idx, letter in letters:enumerate() do
+--   print(idx, letter)
+-- end
+function Iterator:enumerate()
+  local iterator = internal.base_iter(self, internal.enumerate_next, internal.enumerate_clone)
+  iterator.index = 0
+  return iterator
+end
+
 --- Append elements from `other` after this iterator has been exhausted.
 -- @tparam iterable other the iterator whose elements will be appended
 -- @treturn Iterator the concatenation
@@ -683,6 +715,13 @@ end
 -- @function packed_zip
 function exports.packed_zip(iter1, iter2)
   return exports.iterate(iter1):packed_zip(iter2)
+end
+
+--- Iterate with an added index.
+-- @see Iterator:enumerate
+-- @function enumerate
+function exports.enumerate(iter)
+  return exports.iterate(iter):enumerate()
 end
 
 --- Concatenate two iterables into an Iterator.
@@ -1028,6 +1067,7 @@ end
 -- <li> @{all} </li>
 -- <li> @{zip} </li>
 -- <li> @{packed_zip} </li>
+-- <li> @{enumerate} </li>
 -- <li> @{concat} </li>
 -- <li> @{nop} </li>
 -- <li> @{identity} </li>
@@ -1396,6 +1436,26 @@ end
 
 function internal.zip_clone(iter)
   return exports.zip(iter.source[1]:clone(), iter.source[2]:clone())
+end
+
+function internal.enumerate_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local next_vals = {iter.source:next()}
+  if #next_vals == 0 then
+    iter.completed = true
+    return nil
+  else
+    iter.index = iter.index + 1
+    return iter.index, unpack(next_vals)
+  end
+end
+
+function internal.enumerate_clone(iter)
+  local new = iter.source:clone():enumerate()
+  new.index = iter.index
+  return new
 end
 
 function internal.concat_next(iter)
