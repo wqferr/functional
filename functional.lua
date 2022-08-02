@@ -455,7 +455,7 @@ end
 --- Iterate over two iterables simultaneously.
 -- <p>This results in an Iterator with multiple values per :next() call.</p>
 -- <p>The new Iterator will be considered complete as soon as the one the method
--- was called on (`self`) is completed, regardless of the status of `other`.</p>
+-- was called on (<code>self</code>) is completed, regardless of the status of <code>other</code>.</p>
 -- @tparam iterable other the other iterable to zip with this one
 -- @treturn Iterator the resulting zipped Iterator
 function Iterator:zip(other)
@@ -489,7 +489,7 @@ function Iterator:enumerate()
   return iterator
 end
 
---- Append elements from `other` after this iterator has been exhausted.
+--- Append elements from <code>other</code> after this iterator has been exhausted.
 -- @tparam iterable other the iterator whose elements will be appended
 -- @treturn Iterator the concatenation
 function Iterator:concat(other)
