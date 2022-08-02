@@ -9,4 +9,5 @@ end
 X = 5
 local l = f.lambda "X*2"
 print(l)
-l() -- should error with a readable message
+print(pcall(l)) -- should error with a readable message
+f.lambda"end"

@@ -1135,15 +1135,15 @@ function internal.sanitize_lambda(expr, env)
   expr = expr:gsub("^%s*(.-)%s*$", "%1")
 
   if expr:find "\n" then
-    error("Lambda function bodies cannot contain newlines", 2)
+    error("Lambda function bodies cannot contain newlines", 3)
   elseif expr:find "%-%-" then
-    error("Lambda function bodies cannot contain comments", 2)
+    error("Lambda function bodies cannot contain comments", 3)
   elseif expr:find "%f[%w]end%f[%W]" then
-    error("Lambda functions cannot be manually closed (nice try)", 2)
+    error("Lambda functions cannot include the word `end`", 3)
   elseif expr:find "^return%f[%W]" then
-    error("`return` is implied in lambda expressions, please do not include it yourself", 2)
+    error("`return` is implied in lambda expressions, please do not include it yourself", 3)
   elseif expr:find "%f[%w]_ENV%f[%W]" then
-    error("Please do not mess with _ENV inside lambdas", 2)
+    error("Please do not mess with _ENV inside lambdas", 3)
   end
 
   local encased_expr = "(" .. expr .. ")"
