@@ -815,6 +815,7 @@ end
 -- @tparam string expr the expression to be made into a function
 -- @tparam[opt={}] table env the function environment
 -- @treturn function the generated function
+-- @see clambda
 -- @function lambda
 function exports.lambda(expr, env)
   -- Just making sure I didn't forget any major version
@@ -859,6 +860,63 @@ end]]
   lbd.expr = expr
   setmetatable(lbd, lambda_function__meta)
   return lbd
+end
+
+-- level 1 = caller's frame
+-- level 0 = get_locals itself
+local function get_locals(level)
+  level = level + 1
+  local vars = {}
+  local i = 1
+  while true do
+    local name, value = debug.getlocal(level, i)
+    if not name then
+      break
+    end
+    vars[name] = value
+    i = i + 1
+  end
+  return vars
+end
+
+local function safe_add_to_env(env, name, value)
+  if value then
+    env[name] = value
+  end
+end
+
+--- Create a context-aware lambda function.
+-- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
+-- <p>This works similarly to @{lambda}, except it automatically adds
+-- any non-<code>false</code> and non-<code>nil</code> locals and globals
+-- into its environment. As a flip-side, its environment is now read-only.</p>
+-- <p>See @{lambda} for more information on restrictions and usage.</p>
+-- @usage
+-- local angle = math.pi / 3
+-- local offset_sin = f.clambda "math.sin(x + angle)"
+-- print(offset_sin(math.pi))
+-- print(offset_sin(2 * math.pi / 3))
+-- @tparam string expr the expression to be made into a function
+-- @tparam table extra_env additional values to insert into the environment
+-- @see lambda
+-- @function clambda
+function exports.clambda(expr, extra_env)
+  local env = {}
+
+  for k, v in pairs(_G) do
+    safe_add_to_env(env, k, v)
+  end
+
+  for k, v in pairs(get_locals(2)) do
+    safe_add_to_env(env, k, v)
+  end
+
+  for k, v in pairs(extra_env or {}) do
+    -- purposefully unsafe add
+    env[k] = v
+  end
+
+  return exports.lambda(expr, env)
 end
 
 internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
@@ -1096,6 +1154,7 @@ end
 -- <li> @{nop} </li>
 -- <li> @{identity} </li>
 -- <li> @{lambda} </li>
+-- <li> @{clambda} </li>
 -- </ul>
 -- <p>They can still be accessed as usual through the module after the call.</p>
 -- @tparam[opt=_G] table env the environment to import into
