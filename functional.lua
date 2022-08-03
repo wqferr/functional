@@ -54,7 +54,7 @@ THE SOFTWARE.
 -- </ul></p>
 -- @module functional
 -- @alias M
--- @release 1.5.1
+-- @release 1.6.0
 -- @author William Quelho Ferreira
 -- @copyright 2021
 -- @license MIT
@@ -64,7 +64,7 @@ local M = {}
 
 
 --- Module version.
-M._VERSION = "1.5.1"
+M._VERSION = "1.6.0"
 local exports = {}
 local internal = {}
 
