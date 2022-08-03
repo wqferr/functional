@@ -799,6 +799,9 @@ end
 -- Due to the internal mechanism used to detect when to set these aliases, having a falsy value counts
 -- as not being defined. In order to minimize debugging and frustration in this niche use case of <code>env</code>,
 -- the lambda will not be created and instead it will error stating which alias would fail to be set.</p>
+-- <p>For convenience, it is also allowed to call <code>lambda</code> with a single table as an argument. This table
+-- must contain the lambda expression in index <code>1</code>, and all other keys are interpreted as part of its
+-- environment.</p>
 -- <p>Examples:</p>
 -- <ul>
 -- <li> <code>add = f.lambda "_1 + _2" -- adds its 2 arguments</code>
@@ -809,7 +812,9 @@ end
 -- <li> <code>inc = f.lambda "x + 1" -- same as above</code>
 -- <li> <code>inc = f.lambda "_ + 1" -- same as above</code>
 -- <li> <code>double_plus_one = f.lambda("_ + inc(_)", {inc = inc}) -- lets lambda "see" inc exists</code>
+-- <li> <code>double_plus_one = f.lambda{"_ + inc(_)", inc = inc} -- this is also a valid way to call it</code>
 -- <li> <code>valid_env = f.lambda("v + 2*i", {i = complex.i}) -- defines i as complex.i instead of an alias for _9</code>
+-- <li> <code>valid_env = f.lambda{"v + 2*i", i = complex.i} -- also valid</code>
 -- <li> <code>invalid_env = f.lambda("v and not f", {f = false}) -- ERROR! f cannot be assigned a falsy value because it's an alias for _6</code>
 -- </ul>
 -- @tparam string expr the expression to be made into a function
@@ -820,6 +825,11 @@ end
 function exports.lambda(expr, env)
   -- Just making sure I didn't forget any major version
   assert(load or loadstring)
+
+  if type(expr) == "table" then
+    expr, env = expr[1], expr
+    env[1] = nil
+  end
 
   expr, env = internal.sanitize_lambda(expr, env)
   local body = [[
@@ -901,6 +911,10 @@ end
 -- @see lambda
 -- @function clambda
 function exports.clambda(expr, extra_env)
+  if type(expr) == "table" then
+    expr, extra_env = expr[1], expr
+    extra_env[1] = nil
+  end
   local env = {}
 
   for k, v in pairs(_G) do

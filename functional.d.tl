@@ -129,7 +129,11 @@ local record module
   indexer: function<K>(K): (function<V>({K: V}): V)
   constant: function<T>(T): producer<T>
 
-  lambda: function(string, table): function
+  lambda: function(string, {string: any}): function
+  lambda: function({string: any}): function
+
+  clambda: function(string, {string: any}): function
+  clambda: function({string: any}): function
 
   nop: function()
   identity: function<T>(T): T

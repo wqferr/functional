@@ -17,6 +17,7 @@ end
 
 print()
 
+-- assert it doesnt autoimport false values
 local x = false
 local l = f.clambda "x"
 assert(l(1) == 1)
