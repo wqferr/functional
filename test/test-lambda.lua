@@ -6,6 +6,8 @@ for i in f.range(9) do
 end
 
 -- global x
-x = 5
-print(f.lambda "x"())
-print(f.lambda "_G.x"())
+X = 5
+local l = f.lambda "X*2"
+print(l)
+print(pcall(l)) -- should error with a readable message
+f.lambda"end"

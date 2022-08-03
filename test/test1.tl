@@ -47,7 +47,7 @@ end
 
 do
   -- reads from file from last test
-  local read_iter = f.Iterator.from_iter(io.lines "seq.txt"):map(tonumber as f.mapping<string, integer>)
+  local read_iter = f.Iterator.from(io.lines "seq.txt"):map(tonumber as f.mapping<string, integer>)
   expect(read_iter, f.range(10):to_array())
 end
 

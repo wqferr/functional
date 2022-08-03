@@ -1,3 +1,25 @@
+--[[
+Copyright © 2022 William Quelho Ferreira
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+]]
+
 ---
 -- <h2>A module for functional programming utils.</h2>
 -- <h3>About the module</h3>
@@ -39,6 +61,8 @@
 ---
 local M = {}
 
+
+
 --- Module version.
 M._VERSION = "1.5.1"
 local exports = {}
@@ -47,9 +71,10 @@ local internal = {}
 --- A lazy-loading Iterator.
 -- @type Iterator
 local Iterator = {}
-local iter_meta = {}
+local iter__meta = {}
 
-local curried_function_meta = {}
+local lambda_function__meta = {}
+local curried_function__meta = {}
 
 local unpack = table.unpack or unpack
 
@@ -59,7 +84,7 @@ local unpack = table.unpack or unpack
 -- iterator, return itself.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new Iterator
-function Iterator.create(iterable)
+function Iterator.over(iterable)
   internal.assert_table(iterable, "iterable")
 
   if internal.is_iterator(iterable) then
@@ -131,21 +156,28 @@ function Iterator.range(start, stop, step)
   return iterator
 end
 
---- Iterate over the <code>coroutine</code>'s yielded values.
--- @tparam thread co the <code>coroutine</code> to iterate
--- @treturn Iterator the new <code>@{Iterator}</code>
-function Iterator.from_coroutine(co)
-  internal.assert_coroutine(co, "co")
-  return internal.wrap_coroutine(co)
-end
-
 --- Iterate over the function's returned values upon repeated calls.
--- This can effectively convert a vanilla-Lua iterator into a functional-style
--- one (e.g., <code>Iterator.from(io.lines "my_file.txt")</code> gives you a string iterator).
+-- <p>This can effectively convert a vanilla-Lua iterator into a capital I @{Iterator}.
+-- For example, <code>Iterator.from(io.lines "my_file.txt")</code> gives you a
+-- string iterator over the lines in a file.</p>
+-- <p>In general, any expression you can use in a for loop, you can wrap into an <code>Iterator.from</code>
+-- to get the same sequence of values in an @{Iterator} form. For more information on iterators,
+-- read <a href="http://www.lua.org/pil/7.1.html">chapter 7 of Programming in Lua</a>.</p>
+-- <p>Since any repeated function call without arguments can be used as a vanilla Lua iterator,
+-- they can also be used with <code>Iterator.from</code>. For an example, see Usage.</p>
+-- @usage
+-- local i = 0
+-- local function my_counter()
+--   i = i + 1
+--   if i > 10 then return nil end
+--   return i
+-- end
+-- f.from(my_counter):foreach(print) -- prints 1 through 10 and stops
 -- @tparam function func the function to call
--- @param is invariant state passed to func
--- @param var initial variable passed to func
+-- @param is invariant state passed to <code>func</code>
+-- @param var initial variable passed to <code>func</code>
 -- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see Iterator.packed_from
 function Iterator.from(func, is, var)
   internal.assert_not_nil(func, "func")
   local iterator = internal.base_iter(nil, internal.func_call_next, internal.func_try_clone)
@@ -162,13 +194,37 @@ end
 -- generating multiple return values per call, it returns them all
 -- packed into an array.
 -- @tparam function func the function to call
--- @param is invariant state passed to func
--- @param var initial variable passed to fund
--- @treturn iterator the new <code>@{Iterator}</code>
+-- @param is invariant state passed to <code>func</code>
+-- @param var initial variable passed to <code>func</code>
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @see Iterator.from
 function Iterator.packed_from(func, is, var)
   internal.assert_not_nil(func, "func")
   local iterator = Iterator.from(func, is, var)
   return iterator:map(internal.pack)
+end
+
+--- Iterate over the <code>coroutine</code>'s yielded values.
+-- <p>For example, assume you have a coroutine that produces messages from
+-- clients. One easy way to consume them in a for loop would be as in Usage.</p>
+-- @tparam thread co the <code>coroutine</code> to iterate
+-- @treturn Iterator the new <code>@{Iterator}</code>
+-- @usage
+-- local function my_totally_real_message_queue()
+--   coroutine.yield("this is a message")
+--   coroutine.yield("hello!")
+--   coroutine.yield("almost done")
+--   coroutine.yield("bye bye")
+-- end
+--
+-- local co = coroutine.create(my_totally_real_message_queue)
+-- for count, message in f.Iterator.from_coroutine(co):enumerate() do
+--   io.write(count, ": ", message, "\n")
+-- end
+-- io.write("end")
+function Iterator.from_coroutine(co)
+  internal.assert_coroutine(co, "co")
+  return internal.wrap_coroutine(co)
 end
 
 --- Nondestructively return an independent iterable from the given one.
@@ -423,7 +479,7 @@ end
 --- Iterate over two iterables simultaneously.
 -- <p>This results in an Iterator with multiple values per :next() call.</p>
 -- <p>The new Iterator will be considered complete as soon as the one the method
--- was called on (`self`) is completed, regardless of the status of `other`.</p>
+-- was called on (<code>self</code>) is completed, regardless of the status of <code>other</code>.</p>
 -- @tparam iterable other the other iterable to zip with this one
 -- @treturn Iterator the resulting zipped Iterator
 function Iterator:zip(other)
@@ -432,7 +488,7 @@ function Iterator:zip(other)
   return iterator
 end
 
---- Iterate over two iterables simultaneously, giving their values as a 2-element array.
+--- Iterate over two iterables simultaneously, giving their values as an array.
 -- <p>This results in an Iterator with a single value per :next() call.</p>
 -- @tparam iterable other the other iterable to zip with this one
 -- @treturn Iterator the resulting zipped Iterator
@@ -440,7 +496,24 @@ function Iterator:packed_zip(other)
   return self:zip(other):map(internal.pack)
 end
 
---- Append elements from `other` after this iterator has been exhausted.
+--- Include an index while iterating.
+-- <p>The index is given as a single value to the left of all return values. Otherwise,
+-- the iterator is unchanged. This is similar to how <code>ipairs</code> iterates over
+-- an array, except it can be used with any iterator.</p>
+-- @treturn Iterator the resulting indexed Iterator
+-- @see enumerate
+-- @usage
+-- letters = f.every({"a", "b", "c", "d", "e"}, 2)
+-- for idx, letter in letters:enumerate() do
+--   print(idx, letter)
+-- end
+function Iterator:enumerate()
+  local iterator = internal.base_iter(self, internal.enumerate_next, internal.enumerate_clone)
+  iterator.index = 0
+  return iterator
+end
+
+--- Append elements from <code>other</code> after this iterator has been exhausted.
 -- @tparam iterable other the iterator whose elements will be appended
 -- @treturn Iterator the concatenation
 function Iterator:concat(other)
@@ -480,12 +553,12 @@ end
 -- RAW FUNCTIONS --
 
 --- Create an <code>@{Iterator}</code> for the <code>iterable</code>.
--- <p>Equivalent to <pre>Iterator.create(iterable)</pre>.</p>
+-- <p>Equivalent to <pre>Iterator.over(iterable)</pre>.</p>
 -- @tparam iterable iterable the values to be iterated over
 -- @treturn Iterator the new <code>@{Iterator}</code>
 -- @function iterate
 function exports.iterate(iterable)
-  return Iterator.create(iterable)
+  return Iterator.over(iterable)
 end
 
 --- Iterate over the naturals starting at 1.
@@ -668,6 +741,13 @@ function exports.packed_zip(iter1, iter2)
   return exports.iterate(iter1):packed_zip(iter2)
 end
 
+--- Iterate with an added index.
+-- @see Iterator:enumerate
+-- @function enumerate
+function exports.enumerate(iter)
+  return exports.iterate(iter):enumerate()
+end
+
 --- Concatenate two iterables into an Iterator.
 -- @see Iterator:concat
 -- @function concat
@@ -752,8 +832,9 @@ end]]
 
   -- Get context that created lambda for debug purposes
   local ctx = debug.getinfo(2, "nSl")
-  local chunk_name = ("lambda-%s@%s:%s"):format(
-    ctx.name or "mainchunk", ctx.short_src, ctx.currentline
+  local chunk_name = ("lambda(%s:%s)"):format(
+    ctx.source, -- file name
+    ctx.currentline
   )
   local chunk
   if loadstring then
@@ -772,7 +853,12 @@ end]]
   if setfenv then
     setfenv(f, env)
   end
-  return f
+
+  local lbd = {}
+  lbd.func = f
+  lbd.expr = expr
+  setmetatable(lbd, lambda_function__meta)
+  return lbd
 end
 
 internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
@@ -887,9 +973,15 @@ end
 -- <p>You can read more about currying in the <a href="https://en.wikipedia.org/wiki/Currying">Wikipedia
 -- page on currying</a></p>
 -- <p>In all levels except the deepest, any arguments past the first are ignored. In the deepest
--- level, though, they are passed along to the function as normal.</p>
+-- level, though, they are passed along to the function as normal. For an example, see Usage.</p>
+-- @usage
+-- local function func(a, b, c, d) return a * b * c * d end
+-- local cfunc = f.curry(func, 3) -- 3 levels deep curry
+-- local c1 = cfunc(1) -- binds a = 1; 2 levels left after the call
+-- local c2 = c1(2, 3) -- binds b = 2, drops the 3; 1 level left after the call
+-- local res = c2(4, 5) -- calls w/ c = 4 & d = 5; this was the last level</pre>
 -- @tparam function func the function to be curried
--- @tparam integer levels the number of arguments to curry
+-- @tparam integer levels the number of levels to curry for
 -- @treturn function the curried function
 function M.curry(func, levels)
   internal.assert_not_nil(func, "func")
@@ -902,7 +994,7 @@ function M.curry(func, levels)
   cf.func = func
   cf.levels = levels
   cf.args = {}
-  setmetatable(cf, curried_function_meta)
+  setmetatable(cf, curried_function__meta)
   return cf
 end
 
@@ -931,7 +1023,7 @@ function internal.curried_function_call(cf, newarg, ...)
     successor.args = {unpack(cf.args)}
     table.insert(successor.args, newarg)
 
-    setmetatable(successor, curried_function_meta)
+    setmetatable(successor, curried_function__meta)
     return successor
   end
 end
@@ -999,6 +1091,7 @@ end
 -- <li> @{all} </li>
 -- <li> @{zip} </li>
 -- <li> @{packed_zip} </li>
+-- <li> @{enumerate} </li>
 -- <li> @{concat} </li>
 -- <li> @{nop} </li>
 -- <li> @{identity} </li>
@@ -1066,15 +1159,15 @@ function internal.sanitize_lambda(expr, env)
   expr = expr:gsub("^%s*(.-)%s*$", "%1")
 
   if expr:find "\n" then
-    error("Lambda function bodies cannot contain newlines", 2)
+    error("Lambda function bodies cannot contain newlines", 3)
   elseif expr:find "%-%-" then
-    error("Lambda function bodies cannot contain comments", 2)
+    error("Lambda function bodies cannot contain comments", 3)
   elseif expr:find "%f[%w]end%f[%W]" then
-    error("Lambda functions cannot be manually closed (nice try)", 2)
+    error("Lambda functions cannot include the word `end`", 3)
   elseif expr:find "^return%f[%W]" then
-    error("`return` is implied in lambda expressions, please do not include it yourself", 2)
+    error("`return` is implied in lambda expressions, please do not include it yourself", 3)
   elseif expr:find "%f[%w]_ENV%f[%W]" then
-    error("Please do not mess with _ENV inside lambdas", 2)
+    error("Please do not mess with _ENV inside lambdas", 3)
   end
 
   local encased_expr = "(" .. expr .. ")"
@@ -1083,16 +1176,16 @@ function internal.sanitize_lambda(expr, env)
     error("Expression has unbalanced parenthesis: " .. expr, 2)
   end
 
-  return encased_expr, proper_env
+  return expr, proper_env
 end
 
 -- ITER FUNCTIONS --
 
-function internal.base_iter(values, next_f, clone)
+function internal.base_iter(source, next_f, clone)
   local iterator = {}
-  setmetatable(iterator, iter_meta)
+  setmetatable(iterator, iter__meta)
 
-  iterator.values = values
+  iterator.source = source
   iterator.completed = false
   iterator.next = next_f
   iterator.clone = clone
@@ -1104,13 +1197,13 @@ function internal.iter_next(iter)
     return nil
   end
   iter.index = iter.index + 1
-  local next_input = iter.values[iter.index]
+  local next_input = iter.source[iter.index]
   iter.completed = next_input == nil
   return next_input
 end
 
 function internal.iter_clone(iter)
-  local new_iter = exports.iterate(Iterator.clone(iter.values))
+  local new_iter = exports.iterate(Iterator.clone(iter.source))
   new_iter.index = iter.index
   new_iter.completed = iter.completed
   return new_iter
@@ -1145,12 +1238,12 @@ function internal.filter_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   while next_input[1] ~= nil do
     if iter.predicate(unpack(next_input)) then
       return unpack(next_input)
     end
-    next_input = {iter.values:next()}
+    next_input = {iter.source:next()}
   end
 
   iter.completed = true
@@ -1158,14 +1251,14 @@ function internal.filter_next(iter)
 end
 
 function internal.filter_clone(iter)
-  return exports.filter(Iterator.clone(iter.values), iter.predicate)
+  return exports.filter(Iterator.clone(iter.source), iter.predicate)
 end
 
 function internal.map_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1175,14 +1268,14 @@ function internal.map_next(iter)
 end
 
 function internal.map_clone(iter)
-  return exports.map(Iterator.clone(iter.values), iter.mapping)
+  return exports.map(Iterator.clone(iter.source), iter.mapping)
 end
 
 function internal.take_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1198,7 +1291,7 @@ function internal.take_next(iter)
 end
 
 function internal.take_clone(iter)
-  return exports.take(Iterator.clone(iter.values), iter.n_remaining)
+  return exports.take(Iterator.clone(iter.source), iter.n_remaining)
 end
 
 function internal.take_while_next(iter)
@@ -1209,7 +1302,7 @@ function internal.take_while_next(iter)
   if iter.completed then
     return nil
   end
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1224,7 +1317,7 @@ function internal.take_while_next(iter)
 end
 
 function internal.take_while_clone(iter)
-  return exports.take_while(Iterator.clone(iter.values), iter.predicate)
+  return exports.take_while(Iterator.clone(iter.source), iter.predicate)
 end
 
 local function take_last_consume_source(iter)
@@ -1235,7 +1328,7 @@ local function take_last_consume_source(iter)
 
   while true do
     -- peek input stream
-    local next = iter.values:next()
+    local next = iter.source:next()
     if next == nil then
       -- we're done, break the loop and save the current buffer
       break
@@ -1277,7 +1370,7 @@ function internal.skip_while_next(iter)
   end
   local next_input
   repeat
-    next_input = {iter.values:next()}
+    next_input = {iter.source:next()}
     if #next_input == 0 then
       iter.completed = true
       iter.done_skipping = true
@@ -1304,11 +1397,11 @@ function internal.skip_next(iter)
   end
 
   while iter.n_remaining > 0 do
-    iter.values:next()
+    iter.source:next()
     iter.n_remaining = iter.n_remaining - 1
   end
 
-  local next_input = {iter.values:next()}
+  local next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1318,7 +1411,7 @@ function internal.skip_next(iter)
 end
 
 function internal.skip_clone(iter)
-  return exports.skip(Iterator.clone(iter.values), iter.n_remaining)
+  return exports.skip(Iterator.clone(iter.source), iter.n_remaining)
 end
 
 function internal.every_next(iter)
@@ -1331,11 +1424,11 @@ function internal.every_next(iter)
     iter.first_call = nil
   else
     for _ = 1, iter.n - 1 do
-      iter.values:next()
+      iter.source:next()
     end
   end
 
-  next_input = {iter.values:next()}
+  next_input = {iter.source:next()}
   if #next_input == 0 then
     iter.completed = true
     return nil
@@ -1345,16 +1438,16 @@ function internal.every_next(iter)
 end
 
 function internal.every_clone(iter)
-  return exports.every(Iterator.clone(iter.values), iter.n)
+  return exports.every(Iterator.clone(iter.source), iter.n)
 end
 
 function internal.zip_next(iter)
-  if iter.completed or iter.values[1].completed then
+  if iter.completed or iter.source[1].completed then
     iter.completed = true
     return nil, nil
   end
-  local source1_next, source2_next = {iter.values[1]:next()}, {iter.values[2]:next()}
-  if iter.values[1].completed then
+  local source1_next, source2_next = {iter.source[1]:next()}, {iter.source[2]:next()}
+  if iter.source[1].completed then
     iter.completed = true
     return nil, nil
   end
@@ -1366,16 +1459,36 @@ function internal.zip_next(iter)
 end
 
 function internal.zip_clone(iter)
-  return exports.zip(iter.values[1]:clone(), iter.values[2]:clone())
+  return exports.zip(iter.source[1]:clone(), iter.source[2]:clone())
+end
+
+function internal.enumerate_next(iter)
+  if iter.completed then
+    return nil
+  end
+  local next_vals = {iter.source:next()}
+  if #next_vals == 0 then
+    iter.completed = true
+    return nil
+  else
+    iter.index = iter.index + 1
+    return iter.index, unpack(next_vals)
+  end
+end
+
+function internal.enumerate_clone(iter)
+  local new = iter.source:clone():enumerate()
+  new.index = iter.index
+  return new
 end
 
 function internal.concat_next(iter)
   if iter.completed then
     return nil
   end
-  local next_vals = {iter.values[1]:next()}
+  local next_vals = {iter.source[1]:next()}
   if #next_vals == 0 then
-    next_vals = {iter.values[2]:next()}
+    next_vals = {iter.source[2]:next()}
   end
   if #next_vals == 0 then
     iter.completed = true
@@ -1385,7 +1498,7 @@ function internal.concat_next(iter)
 end
 
 function internal.concat_clone(iter)
-  return exports.concat(iter.values[1]:clone(), iter.values[2]:clone())
+  return exports.concat(iter.source[1]:clone(), iter.source[2]:clone())
 end
 
 function internal.wrap_coroutine(co)
@@ -1465,9 +1578,9 @@ function internal.assert_not_nil(value, param_name)
   end
 end
 
-internal.ERR_COROUTINE_CLONE = "cannot clone coroutine iterator; try to_array and iterate over it"
+internal.ERR_COROUTINE_CLONE = "cannot clone coroutine iterator; try :to_array() and iterate over it"
 internal.ERR_FUNCTION_CLONE =
-  "cannot clone iterated function call; try to_array and iterate over it"
+  "cannot clone vanilla Lua iterator; try :to_array() and iterate over it"
 
 internal.ERR_INTEGER_EXPECTED = "param %s expected integer, got: %s"
 internal.ERR_POSITIVE_INTEGER_EXPECTED = "param %s expected a positive integer, got: %s"
@@ -1475,12 +1588,20 @@ internal.ERR_TABLE_EXPECTED = "param %s expected table, got: %s"
 internal.ERR_COROUTINE_EXPECTED = "param %s expected coroutine, got: %s"
 internal.ERR_NIL_VALUE = "param %s is nil"
 
-iter_meta.__index = Iterator
-iter_meta.__call = function(iter)
+iter__meta.__index = Iterator
+iter__meta.__call = function(iter)
   return iter:next()
 end
 
-curried_function_meta.__call = internal.curried_function_call
+lambda_function__meta.__call = function(lbd, ...)
+  return lbd.func(...)
+end
+
+lambda_function__meta.__tostring = function(lbd)
+  return ("lambda[[%s]]"):format(lbd.expr)
+end
+
+curried_function__meta.__call = internal.curried_function_call
 
 exports.Iterator = Iterator
 

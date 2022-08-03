@@ -37,7 +37,8 @@ This project also includes `functional.d.tl`, which allows it to be used with
 included is a workaround so LuaRocks actually installs the `.d.tl` file as well.
 
 Teal support is not complete, however, since some functions require features not
-yet stable on the Teal compiler side.
+yet stable on the Teal compiler side. For more information on how to use this
+library with Teal, see "Usage with Teal" below.
 
 # Learning the Ropes
 
@@ -385,4 +386,50 @@ local matrix = {
 -- map will iterate through each row, and the lambda
 -- indexes each to retrieve the first element
 local vals = f.map(matrix, f.lambda "v[1]"):to_array()
+```
+
+# Usage with Teal
+**It is recommended that you read the Learning the Ropes section first so
+you're not completely lost here.**
+
+Due to the nature of Lua, Teal's types can be a bit too strict at times.
+That's why Teal has casts. However, when you're dealing with functions,
+casts can be quite verbose, and this is something the library is meant
+to remedy!
+
+For that, there are 3 aliases for common function types:
+- `consumer<T>: function(T)`
+- `producer<T>: function(): T`
+- `mapping<U, V>: function(U): V`
+
+Short story long: consumers take in a value and return nothing; producers
+take in nothing and produce a value; and mappings take a value and transform
+it into another.
+
+## A practical example
+
+Let's say you want to print every third number up to 20, except if it's prime.
+
+```lua
+local is_prime = function(n: integer): boolean ... end
+local my_numbers = f.range(20)
+  :every(3)
+  :filter(f.negate(is_prime))
+```
+
+So far, so good! `is_prime` is a `mapping` from integer to boolean, so negate
+properly propagates the types and filter accepts it, since `range` produces
+integers.
+
+However, when we try to print the numbers:
+
+```lua
+my_numbers:foreach(print)
+```
+
+A type error! `print` is a consumer of `any`, but `foreach` expected a consumer
+of integers! A simple cast will suffice though:
+
+```lua
+my_numbers:foreach(print as f.consumer<integer>)
 ```

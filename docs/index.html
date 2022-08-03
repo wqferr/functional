@@ -149,6 +149,10 @@
 	<td class="summary">Iterate over two iterables simultaneously.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#enumerate">enumerate ()</a></td>
+	<td class="summary">Iterate with an added index.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#concat">concat ()</a></td>
 	<td class="summary">Concatenate two iterables into an Iterator.</td>
 	</tr>
@@ -219,7 +223,7 @@
 <h2><a href="#Class_Iterator">Class Iterator </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#Iterator.create">Iterator.create (iterable)</a></td>
+	<td class="name" nowrap><a href="#Iterator.over">Iterator.over (iterable)</a></td>
 	<td class="summary">Iterate over the given <code>iterable</code>.</td>
 	</tr>
 	<tr>
@@ -235,16 +239,16 @@
 	<td class="summary">Create an integer iterator that goes from <code>start</code> to <code>stop</code>, <code>step</code>-wise.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#Iterator.from_coroutine">Iterator.from_coroutine (co)</a></td>
-	<td class="summary">Iterate over the <code>coroutine</code>'s yielded values.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#Iterator.from">Iterator.from (func, is, var)</a></td>
 	<td class="summary">Iterate over the function's returned values upon repeated calls.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator.packed_from">Iterator.packed_from (func, is, var)</a></td>
 	<td class="summary">Iterate over the function's returned values (packed into a table) upon repeated calls.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Iterator.from_coroutine">Iterator.from_coroutine (co)</a></td>
+	<td class="summary">Iterate over the <code>coroutine</code>'s yielded values.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator.clone">Iterator.clone (iterable)</a></td>
@@ -320,11 +324,15 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:packed_zip">Iterator:packed_zip (other)</a></td>
-	<td class="summary">Iterate over two iterables simultaneously, giving their values as a 2-element array.</td>
+	<td class="summary">Iterate over two iterables simultaneously, giving their values as an array.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Iterator:enumerate">Iterator:enumerate ()</a></td>
+	<td class="summary">Include an index while iterating.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:concat">Iterator:concat (other)</a></td>
-	<td class="summary">Append elements from `other` after this iterator has been exhausted.</td>
+	<td class="summary">Append elements from <code>other</code> after this iterator has been exhausted.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#Iterator:to_array">Iterator:to_array ()</a></td>
@@ -353,7 +361,7 @@
     </dt>
     <dd>
     Create an <code><a href="index.html#Iterator">Iterator</a></code> for the <code>iterable</code>.
- <p>Equivalent to <pre>Iterator.create(iterable)</pre>.</p>
+ <p>Equivalent to <pre>Iterator.over(iterable)</pre>.</p>
 
 
     <h3>Parameters:</h3>
@@ -862,6 +870,24 @@
 
 </dd>
     <dt>
+    <a name = "enumerate"></a>
+    <strong>enumerate ()</strong>
+    </dt>
+    <dd>
+    Iterate with an added index.
+
+
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#Iterator:enumerate">Iterator:enumerate</a>
+    </ul>
+
+
+</dd>
+    <dt>
     <a name = "concat"></a>
     <strong>concat ()</strong>
     </dt>
@@ -1165,16 +1191,16 @@
     </dt>
     <dd>
     Curries a function by the given amount of arguments.
- <p>Currying is, in simple terms, transforming a function <code>f</code> which is called as:</p>
+ <p>Currying is, in simple terms, transforming a function <code>f</code> which is used as:</p>
  <pre>res = f(x, y, z)</pre>
- <p>Into a function <code>g</code> which is called as:</p>
+ <p>Into a function <code>g</code> which is used as:</p>
  <pre>h = g(x); i = h(y); res = i(z)</pre>
  <p>Or, chaining all the calls into a single statement:</p>
  <pre>res = g(x)(y)(z)</pre>
  <p>You can read more about currying in the <a href="https://en.wikipedia.org/wiki/Currying">Wikipedia
  page on currying</a></p>
  <p>In all levels except the deepest, any arguments past the first are ignored. In the deepest
- level, though, they are passed along to the function as normal.</p>
+ level, though, they are passed along to the function as normal. For an example, see Usage.</p>
 
 
     <h3>Parameters:</h3>
@@ -1185,7 +1211,7 @@
         </li>
         <li><span class="parameter">levels</span>
             <span class="types"><span class="type">integer</span></span>
-         the number of arguments to curry
+         the number of levels to curry for
         </li>
     </ul>
 
@@ -1198,6 +1224,14 @@
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> <span class="keyword">function</span> func(a, b, c, d) <span class="keyword">return</span> a * b * c * d <span class="keyword">end</span>
+<span class="keyword">local</span> cfunc = f.curry(func, <span class="number">3</span>) <span class="comment">-- 3 levels deep curry
+</span><span class="keyword">local</span> c1 = cfunc(<span class="number">1</span>) <span class="comment">-- binds a = 1; 2 levels left after the call
+</span><span class="keyword">local</span> c2 = c1(<span class="number">2</span>, <span class="number">3</span>) <span class="comment">-- binds b = 2, drops the 3; 1 level left after the call
+</span><span class="keyword">local</span> res = c2(<span class="number">4</span>, <span class="number">5</span>) <span class="comment">-- calls w/ c = 4 &amp; d = 5; this was the last level&lt;/pre&gt;</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -1342,6 +1376,7 @@
  <li> <a href="index.html#all">all</a> </li>
  <li> <a href="index.html#zip">zip</a> </li>
  <li> <a href="index.html#packed_zip">packed_zip</a> </li>
+ <li> <a href="index.html#enumerate">enumerate</a> </li>
  <li> <a href="index.html#concat">concat</a> </li>
  <li> <a href="index.html#nop">nop</a> </li>
  <li> <a href="index.html#identity">identity</a> </li>
@@ -1390,8 +1425,8 @@
           </div>
     <dl class="function">
     <dt>
-    <a name = "Iterator.create"></a>
-    <strong>Iterator.create (iterable)</strong>
+    <a name = "Iterator.over"></a>
+    <strong>Iterator.over (iterable)</strong>
     </dt>
     <dd>
     Iterate over the given <code>iterable</code>.
@@ -1506,40 +1541,19 @@
 
 </dd>
     <dt>
-    <a name = "Iterator.from_coroutine"></a>
-    <strong>Iterator.from_coroutine (co)</strong>
-    </dt>
-    <dd>
-    Iterate over the <code>coroutine</code>'s yielded values.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">co</span>
-            <span class="types"><span class="type">thread</span></span>
-         the <code>coroutine</code> to iterate
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
-        the new <code><a href="index.html#Iterator">Iterator</a></code>
-    </ol>
-
-
-
-
-</dd>
-    <dt>
     <a name = "Iterator.from"></a>
     <strong>Iterator.from (func, is, var)</strong>
     </dt>
     <dd>
     Iterate over the function's returned values upon repeated calls.
- This can effectively convert a vanilla-Lua iterator into a functional-style
- one (e.g., <code>Iterator.from(io.lines "my_file.txt")</code> gives you a string iterator).
+ <p>This can effectively convert a vanilla-Lua iterator into a capital I <a href="index.html#Iterator">Iterator</a>.
+ For example, <code>Iterator.from(io.lines "my_file.txt")</code> gives you a
+ string iterator over the lines in a file.</p>
+ <p>In general, any expression you can use in a for loop, you can wrap into an <code>Iterator.from</code>
+ to get the same sequence of values in an <a href="index.html#Iterator">Iterator</a> form. For more information on iterators,
+ read <a href="http://www.lua.org/pil/7.1.html">chapter 7 of Programming in Lua</a>.</p>
+ <p>Since any repeated function call without arguments can be used as a vanilla Lua iterator,
+ they can also be used with <code>Iterator.from</code>. For an example, see Usage.</p>
 
 
     <h3>Parameters:</h3>
@@ -1549,10 +1563,10 @@
          the function to call
         </li>
         <li><span class="parameter">is</span>
-         invariant state passed to func
+         invariant state passed to <code>func</code>
         </li>
         <li><span class="parameter">var</span>
-         initial variable passed to func
+         initial variable passed to <code>func</code>
         </li>
     </ul>
 
@@ -1564,7 +1578,21 @@
     </ol>
 
 
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#Iterator.packed_from">Iterator.packed_from</a>
+    </ul>
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> i = <span class="number">0</span>
+<span class="keyword">local</span> <span class="keyword">function</span> my_counter()
+  i = i + <span class="number">1</span>
+  <span class="keyword">if</span> i &gt; <span class="number">10</span> <span class="keyword">then</span> <span class="keyword">return</span> <span class="keyword">nil</span> <span class="keyword">end</span>
+  <span class="keyword">return</span> i
+<span class="keyword">end</span>
+f.from(my_counter):foreach(<span class="global">print</span>) <span class="comment">-- prints 1 through 10 and stops</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -1585,22 +1613,70 @@
          the function to call
         </li>
         <li><span class="parameter">is</span>
-         invariant state passed to func
+         invariant state passed to <code>func</code>
         </li>
         <li><span class="parameter">var</span>
-         initial variable passed to fund
+         initial variable passed to <code>func</code>
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-           <span class="types"><span class="type">iterator</span></span>
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the new <code><a href="index.html#Iterator">Iterator</a></code>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#Iterator.from">Iterator.from</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Iterator.from_coroutine"></a>
+    <strong>Iterator.from_coroutine (co)</strong>
+    </dt>
+    <dd>
+    Iterate over the <code>coroutine</code>'s yielded values.
+ <p>For example, assume you have a coroutine that produces messages from
+ clients. One easy way to consume them in a for loop would be as in Usage.</p>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">co</span>
+            <span class="types"><span class="type">thread</span></span>
+         the <code>coroutine</code> to iterate
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
         the new <code><a href="index.html#Iterator">Iterator</a></code>
     </ol>
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> <span class="keyword">function</span> my_totally_real_message_queue()
+  <span class="global">coroutine</span>.yield(<span class="string">"this is a message"</span>)
+  <span class="global">coroutine</span>.yield(<span class="string">"hello!"</span>)
+  <span class="global">coroutine</span>.yield(<span class="string">"almost done"</span>)
+  <span class="global">coroutine</span>.yield(<span class="string">"bye bye"</span>)
+<span class="keyword">end</span>
+
+<span class="keyword">local</span> co = <span class="global">coroutine</span>.create(my_totally_real_message_queue)
+<span class="keyword">for</span> count, message <span class="keyword">in</span> f.Iterator.from_coroutine(co):enumerate() <span class="keyword">do</span>
+  <span class="global">io</span>.write(count, <span class="string">": "</span>, message, <span class="string">"\n"</span>)
+<span class="keyword">end</span>
+<span class="global">io</span>.write(<span class="string">"end"</span>)</pre>
+    </ul>
 
 </dd>
     <dt>
@@ -2089,7 +2165,7 @@
     Iterate over two iterables simultaneously.
  <p>This results in an Iterator with multiple values per :next() call.</p>
  <p>The new Iterator will be considered complete as soon as the one the method
- was called on (`self`) is completed, regardless of the status of `other`.</p>
+ was called on (<code>self</code>) is completed, regardless of the status of <code>other</code>.</p>
 
 
     <h3>Parameters:</h3>
@@ -2116,7 +2192,7 @@
     <strong>Iterator:packed_zip (other)</strong>
     </dt>
     <dd>
-    Iterate over two iterables simultaneously, giving their values as a 2-element array.
+    Iterate over two iterables simultaneously, giving their values as an array.
  <p>This results in an Iterator with a single value per :next() call.</p>
 
 
@@ -2140,11 +2216,45 @@
 
 </dd>
     <dt>
+    <a name = "Iterator:enumerate"></a>
+    <strong>Iterator:enumerate ()</strong>
+    </dt>
+    <dd>
+    Include an index while iterating.
+ <p>The index is given as a single value to the left of all return values. Otherwise,
+ the iterator is unchanged. This is similar to how <code>ipairs</code> iterates over
+ an array, except it can be used with any iterator.</p>
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="index.html#Iterator">Iterator</a></span>
+        the resulting indexed Iterator
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#enumerate">enumerate</a>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">letters = f.every({<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>, <span class="string">"d"</span>, <span class="string">"e"</span>}, <span class="number">2</span>)
+<span class="keyword">for</span> idx, letter <span class="keyword">in</span> letters:enumerate() <span class="keyword">do</span>
+  <span class="global">print</span>(idx, letter)
+<span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+    <dt>
     <a name = "Iterator:concat"></a>
     <strong>Iterator:concat (other)</strong>
     </dt>
     <dd>
-    Append elements from `other` after this iterator has been exhausted.
+    Append elements from <code>other</code> after this iterator has been exhausted.
 
 
     <h3>Parameters:</h3>
@@ -2239,7 +2349,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-07-31 00:20:24 </i>
+<i style="float:right;">Last updated 2022-08-02 23:30:35 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
