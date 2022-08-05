@@ -896,7 +896,7 @@ function exports.lambda2(lambda_def, env, calling_from_clambda)
   end
 
   if not chunk then
-    error("Load failed for lambda: " .. lambda_def, err_level)
+    error("Load failed for lambda:\n" .. lambda_body, err_level)
   end
 
   local f = chunk()
@@ -916,15 +916,19 @@ function internal.indent_str(levels)
 end
 
 -- syntax: (optional arguments) => <anything>
-function internal.lambda_split_params(def, level)
-  local arrow_start, arrow_end = def:find("%s*=>%s*")
+function internal.lambda_split_params(def)
+  local arrow_after_parens = def:find "^%s*%(.-%)%s*=>%s*"
+  if not arrow_after_parens then
+    return nil, def
+  end
+  local arrow_start, arrow_end = def:find "%s*=>%s*"
   if arrow_start == nil then
     -- just the body definition part
     return nil, def
   end
   local before_arrow = def:sub(1, arrow_start-1)
   local body = def:sub(arrow_end+1)
-  local _, param_list_start = before_arrow:find("^%s*%(")
+  local _, param_list_start = before_arrow:find "^%s*%("
   local param_list = before_arrow:match("%(([%w%s,]*)%)", param_list_start)
   return param_list, body
 end
@@ -937,7 +941,7 @@ function internal.expand_lambda(def, level)
     error() -- TODO error message
   end
   def = internal.trim(def)
-  local param_list, body = internal.lambda_split_params(def, level)
+  local param_list, body = internal.lambda_split_params(def)
   local indent = internal.indent_str(level)
   if param_list then
     body = internal.expand_lambda(body, level + 1)
@@ -1011,6 +1015,28 @@ function exports.clambda(expr, extra_env)
   end
 
   return exports.lambda(expr, env)
+end
+
+function internal.merge_env(env, new)
+  for k, v in pairs(new) do
+    if type(k) == "string" then
+      env[k] = v
+    end
+  end
+end
+
+function exports.clambda2(expr, extra_env)
+  if type(expr) == "table" then
+    expr, extra_env = expr[1], expr
+    extra_env[1] = nil
+  end
+  local env = {}
+
+  internal.merge_env(env, _G)
+  internal.merge_env(env, get_locals(2))
+  internal.merge_env(env, extra_env or {})
+
+  return exports.lambda2(expr, env, true)
 end
 
 internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
@@ -1337,12 +1363,13 @@ function internal.sanitize_lambda(expr, env)
 end
 
 function internal.sanitize_lambda2(expr, env)
+  local err_level = 3
   env = env or {}
   if type(expr) ~= "string" then
-    error("Expected string for expr, got " .. type(expr), 2)
+    error("Expected string for expr, got " .. type(expr), err_level)
   end
   if type(env) ~= "table" then
-    error("Expected table for env, got " .. type(env), 2)
+    error("Expected table for env, got " .. type(env), err_level)
   end
 
   local proper_env = {}
@@ -1355,21 +1382,23 @@ function internal.sanitize_lambda2(expr, env)
   expr = internal.trim(expr)
 
   if expr:find "\n" then
-    error("Lambda function bodies cannot contain newlines", 3)
+    error("Lambda function definitions cannot contain line breaks", err_level)
+  elseif not expr:find "^%s*%(.-%)%s*=>" then
+    error("Lambda function definitions must start with '(arguments) =>'", err_level)
   elseif expr:find "%-%-" then
-    error("Lambda function bodies cannot contain comments", 3)
+    error("Lambda function definitions cannot contain comments", err_level)
   elseif expr:find "%f[%w]end%f[%W]" then
-    error("Lambda functions cannot include the word `end`", 3)
+    error("Lambda function definitions cannot include the word `end`", err_level)
   elseif expr:find "^return%f[%W]" then
-    error("`return` is implied in lambda expressions, please do not include it yourself", 3)
+    error("`return` is implied in lambda bodies, please do not include it yourself", err_level)
   elseif expr:find "%f[%w]_ENV%f[%W]" then
-    error("Please do not mess with _ENV inside lambdas", 3)
+    error("Please do not mess with _ENV inside lambdas", err_level)
   end
 
   local encased_expr = "(" .. expr .. ")"
   local s, e = encased_expr:find "%b()"
   if s ~= 1 or e ~= #encased_expr then
-    error("Expression has unbalanced parenthesis: " .. expr, 2)
+    error("Expression has unbalanced parenthesis: " .. expr, err_level)
   end
 
   return expr, proper_env
