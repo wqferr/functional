@@ -872,6 +872,86 @@ end]]
   return lbd
 end
 
+function exports.lambda2(lambda_def, env, calling_from_clambda)
+  local err_level = calling_from_clambda and 3 or 2
+  assert(load or loadstring) -- sanity check
+  if type(lambda_def) == "table" then
+    lambda_def, env = lambda_def[1], lambda_def
+    env[1] = nil
+  end
+
+  lambda_def, env = internal.sanitize_lambda2(lambda_def, env)
+
+  local lambda_lines = internal.expand_lambda(lambda_def, 1)
+  local lambda_body = table.concat(lambda_lines, "\n")
+
+  local ctx = debug.getinfo(err_level, "nSl")
+  local chunk_name = ("lambda(%s:%s)"):format(ctx.source, ctx.currentline)
+  local chunk
+  if loadstring then
+    -- Lua 5.1 and LuaJIT support
+    chunk = loadstring(lambda_body, chunk_name)
+  else
+    chunk = load(lambda_body, chunk_name, "t", env)
+  end
+
+  if not chunk then
+    error("Load failed for lambda: " .. lambda_def, err_level)
+  end
+
+  local f = chunk()
+
+  if setfenv then
+    setfenv(f, env)
+  end
+  local lbd = {}
+  lbd.func = f
+  lbd.expr = lambda_def
+  setmetatable(lbd, lambda_function__meta)
+  return lbd
+end
+
+function internal.indent_str(levels)
+  return ("  "):rep(levels)
+end
+
+-- syntax: (optional arguments) => <anything>
+function internal.lambda_split_params(def, level)
+  local arrow_start, arrow_end = def:find("%s*=>%s*")
+  if arrow_start == nil then
+    -- just the body definition part
+    return nil, def
+  end
+  local before_arrow = def:sub(1, arrow_start-1)
+  local body = def:sub(arrow_end+1)
+  local _, param_list_start = before_arrow:find("^%s*%(")
+  local param_list = before_arrow:match("%(([%w%s,]*)%)", param_list_start)
+  return param_list, body
+end
+
+-- for use with lambda2 only
+-- returns list of lines
+function internal.expand_lambda(def, level)
+  -- this is a DoS attack, stop now
+  if level > 10 then
+    error() -- TODO error message
+  end
+  def = internal.trim(def)
+  local param_list, body = internal.lambda_split_params(def, level)
+  local indent = internal.indent_str(level)
+  if param_list then
+    body = internal.expand_lambda(body, level + 1)
+    local lambda_start = indent .. ("return function(%s)"):format(param_list)
+    local lambda_end = indent .. "end"
+    table.insert(body, 1, lambda_start)
+    table.insert(body, lambda_end)
+    return body
+  else
+    -- body of last level of lambda
+    return {indent .."return " .. body}
+  end
+end
+
 -- level 1 = caller's frame
 -- level 0 = get_locals itself
 local function get_locals(level)
@@ -1201,6 +1281,10 @@ function internal.pack(...)
   return {...}
 end
 
+function internal.trim(s)
+  return s:gsub("^%s*(.-)%s*$", "%1")
+end
+
 function internal.sanitize_lambda(expr, env)
   env = env or {}
   if type(expr) ~= "string" then
@@ -1229,7 +1313,46 @@ function internal.sanitize_lambda(expr, env)
 
   -- Trim from PiL2 20.4
   -- Found here: http://lua-users.org/wiki/StringTrim
-  expr = expr:gsub("^%s*(.-)%s*$", "%1")
+  expr = internal.trim(expr)
+
+  if expr:find "\n" then
+    error("Lambda function bodies cannot contain newlines", 3)
+  elseif expr:find "%-%-" then
+    error("Lambda function bodies cannot contain comments", 3)
+  elseif expr:find "%f[%w]end%f[%W]" then
+    error("Lambda functions cannot include the word `end`", 3)
+  elseif expr:find "^return%f[%W]" then
+    error("`return` is implied in lambda expressions, please do not include it yourself", 3)
+  elseif expr:find "%f[%w]_ENV%f[%W]" then
+    error("Please do not mess with _ENV inside lambdas", 3)
+  end
+
+  local encased_expr = "(" .. expr .. ")"
+  local s, e = encased_expr:find "%b()"
+  if s ~= 1 or e ~= #encased_expr then
+    error("Expression has unbalanced parenthesis: " .. expr, 2)
+  end
+
+  return expr, proper_env
+end
+
+function internal.sanitize_lambda2(expr, env)
+  env = env or {}
+  if type(expr) ~= "string" then
+    error("Expected string for expr, got " .. type(expr), 2)
+  end
+  if type(env) ~= "table" then
+    error("Expected table for env, got " .. type(env), 2)
+  end
+
+  local proper_env = {}
+  for k, v in pairs(env) do
+    if type(k) == "string" then
+      proper_env[k] = v
+    end
+  end
+
+  expr = internal.trim(expr)
 
   if expr:find "\n" then
     error("Lambda function bodies cannot contain newlines", 3)
