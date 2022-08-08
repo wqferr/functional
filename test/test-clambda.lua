@@ -24,6 +24,6 @@ print()
 -- assert(l() == nil)
 
 -- assert clambda doesnt leak its own local variables
-local k = f.clambda2 "() => expr"
+local k = f.clambda2 "() => lambda_def"
 assert(k() == nil)
 print("all good on asserts")

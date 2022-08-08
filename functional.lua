@@ -880,9 +880,9 @@ function exports.lambda2(lambda_def, env, calling_from_clambda)
     env[1] = nil
   end
 
-  lambda_def, env = internal.sanitize_lambda2(lambda_def, env)
+  lambda_def, env = internal.sanitize_lambda2(lambda_def, env, err_level)
 
-  local lambda_lines = internal.expand_lambda(lambda_def, 1)
+  local lambda_lines = internal.expand_lambda(lambda_def, 1, "")
   local lambda_body = table.concat(lambda_lines, "\n")
 
   local ctx = debug.getinfo(err_level, "nSl")
@@ -907,6 +907,7 @@ function exports.lambda2(lambda_def, env, calling_from_clambda)
   local lbd = {}
   lbd.func = f
   lbd.expr = lambda_def
+  lbd.body = lambda_body:match "^return%s*(.*)$"
   setmetatable(lbd, lambda_function__meta)
   return lbd
 end
@@ -917,15 +918,12 @@ end
 
 -- syntax: (optional arguments) => <anything>
 function internal.lambda_split_params(def)
-  local arrow_after_parens = def:find "^%s*%(.-%)%s*=>%s*"
+  local arrow_after_parens = def:find "^%s*%([^%)]*%)%s*=>%s*"
   if not arrow_after_parens then
+    -- just the lambda body
     return nil, def
   end
   local arrow_start, arrow_end = def:find "%s*=>%s*"
-  if arrow_start == nil then
-    -- just the body definition part
-    return nil, def
-  end
   local before_arrow = def:sub(1, arrow_start-1)
   local body = def:sub(arrow_end+1)
   local _, param_list_start = before_arrow:find "^%s*%("
@@ -935,16 +933,16 @@ end
 
 -- for use with lambda2 only
 -- returns list of lines
-function internal.expand_lambda(def, level)
+function internal.expand_lambda(def, level, indent)
   -- this is a DoS attack, stop now
   if level > 10 then
-    error() -- TODO error message
+    -- possible DoS attack
+    error("Lambda function tried to nest too deep", level + 2)
   end
   def = internal.trim(def)
   local param_list, body = internal.lambda_split_params(def)
-  local indent = internal.indent_str(level)
   if param_list then
-    body = internal.expand_lambda(body, level + 1)
+    body = internal.expand_lambda(body, level + 1, indent .. "  ")
     local lambda_start = indent .. ("return function(%s)"):format(param_list)
     local lambda_end = indent .. "end"
     table.insert(body, 1, lambda_start)
@@ -1362,46 +1360,50 @@ function internal.sanitize_lambda(expr, env)
   return expr, proper_env
 end
 
-function internal.sanitize_lambda2(expr, env)
-  local err_level = 3
+function internal.sanitize_lambda2(def, env, parent_err_level)
+  local err_level = parent_err_level + 1
   env = env or {}
-  if type(expr) ~= "string" then
-    error("Expected string for expr, got " .. type(expr), err_level)
-  end
-  if type(env) ~= "table" then
+  if type(def) ~= "string" then
+    error("Expected string for lambda definition, got " .. type(def), err_level)
+  elseif type(env) ~= "table" then
     error("Expected table for env, got " .. type(env), err_level)
+  elseif #def > 100 then -- Possible DoS attack
+    error("Lambda definition is too long", err_level)
   end
 
   local proper_env = {}
+  local num_env_variables = 0
   for k, v in pairs(env) do
     if type(k) == "string" then
       proper_env[k] = v
+      num_env_variables = num_env_variables + 1
+      if num_env_variables > 50 then -- Possible DoS attack
+        error("Lambda environment has too many variables", err_level)
+      end
     end
   end
 
-  expr = internal.trim(expr)
+  def = internal.trim(def)
 
-  if expr:find "\n" then
+  if def:find "\n" then
     error("Lambda function definitions cannot contain line breaks", err_level)
-  elseif not expr:find "^%s*%(.-%)%s*=>" then
+  elseif not def:find "^%s*%(.-%)%s*=>" then
     error("Lambda function definitions must start with '(arguments) =>'", err_level)
-  elseif expr:find "%-%-" then
+  elseif def:find "%-%-" then
     error("Lambda function definitions cannot contain comments", err_level)
-  elseif expr:find "%f[%w]end%f[%W]" then
+  elseif def:find "%f[%w]end%f[%W]" then
     error("Lambda function definitions cannot include the word `end`", err_level)
-  elseif expr:find "^return%f[%W]" then
+  elseif def:find "^return%f[%W]" then
     error("`return` is implied in lambda bodies, please do not include it yourself", err_level)
-  elseif expr:find "%f[%w]_ENV%f[%W]" then
-    error("Please do not mess with _ENV inside lambdas", err_level)
   end
 
-  local encased_expr = "(" .. expr .. ")"
-  local s, e = encased_expr:find "%b()"
-  if s ~= 1 or e ~= #encased_expr then
-    error("Expression has unbalanced parenthesis: " .. expr, err_level)
+  local encased_def = "(" .. def .. ")"
+  local s, e = encased_def:find "%b()"
+  if s ~= 1 or e ~= #encased_def then
+    error("Definition has unbalanced parenthesis: " .. def, err_level)
   end
 
-  return expr, proper_env
+  return def, proper_env
 end
 
 -- ITER FUNCTIONS --
