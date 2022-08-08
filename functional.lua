@@ -934,9 +934,8 @@ end
 -- for use with lambda2 only
 -- returns list of lines
 function internal.expand_lambda(def, level, indent)
-  -- this is a DoS attack, stop now
+  -- this is an attack, stop now
   if level > 10 then
-    -- possible DoS attack
     error("Lambda function tried to nest too deep", level + 2)
   end
   def = internal.trim(def)
@@ -1367,7 +1366,7 @@ function internal.sanitize_lambda2(def, env, parent_err_level)
     error("Expected string for lambda definition, got " .. type(def), err_level)
   elseif type(env) ~= "table" then
     error("Expected table for env, got " .. type(env), err_level)
-  elseif #def > 100 then -- Possible DoS attack
+  elseif #def > 100 then -- Possible attack
     error("Lambda definition is too long", err_level)
   end
 
@@ -1377,7 +1376,7 @@ function internal.sanitize_lambda2(def, env, parent_err_level)
     if type(k) == "string" then
       proper_env[k] = v
       num_env_variables = num_env_variables + 1
-      if num_env_variables > 50 then -- Possible DoS attack
+      if num_env_variables > 50 then -- Possible attack
         error("Lambda environment has too many variables", err_level)
       end
     end
