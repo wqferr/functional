@@ -1376,7 +1376,7 @@ function internal.sanitize_lambda2(def, env, parent_err_level)
     if type(k) == "string" then
       proper_env[k] = v
       num_env_variables = num_env_variables + 1
-      if num_env_variables > 50 then -- Possible attack
+      if num_env_variables > 150 then -- Possible attack
         error("Lambda environment has too many variables", err_level)
       end
     end
