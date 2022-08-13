@@ -848,8 +848,7 @@ end
 --- Create a context-aware lambda function.
 -- <p><em>DO NOT USE THIS WITH UNTRUSTED AND/OR UNKNOWN STRINGS!</em></p>
 -- <p>This works similarly to @{lambda}, except it automatically adds
--- any non-<code>false</code> and non-<code>nil</code> locals and globals
--- into its environment. As a flip-side, its environment is now read-only.</p>
+-- any globals and locals visible to the calling context into its environment.</p>
 -- <p>See @{lambda} for more information on restrictions and usage.</p>
 -- @usage
 -- local angle = math.pi / 3
