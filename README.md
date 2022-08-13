@@ -216,21 +216,18 @@ coding quick and dirty examples and for readability.
 The way you declare a lambda with functional is with a simple function call:
 
 ```lua
-triple = f.lambda "3*x"
+triple = f.lambda "(x) => 3*x"
 ```
 
-Here, `x` is a predefined name for the first argument a lambda receives. There are a couple other
-such aliases which this document will reference later. If you don't like that and would like
-something more name agnostic, you could instead use:
+This syntax is quite similar to the Javascript one, where the parameter names are given between
+parenthesis and there is an arrow separating the parameters from the body. The syntax also allows
+for higher order lambdas easily by chaining `()=>` sections:
 
 ```lua
-triple = f.lambda "3*_1"
+linear_combinator = f.lambda "(m) => (x, y) => m*x + y"
+comb2 = linear_combinator(2)
+print(comb2(3, 4)) --> 10
 ```
-
-Where `_1` is the first argument, `_2` would be the second, and so on up to `_9`.
-
-Note that the `return` keyword is absent. It is implied that lambdas return whatever expression
-is in the string.
 
 ### Security concerns and limitations
 
@@ -251,8 +248,8 @@ scope of its creation. For example, the following lambda:
 
 ```lua
 local constant = 3.14
-local l = f.lambda "3*constant"
-print(l())
+local l = f.lambda "() => constant"
+print(l()) --> nil
 ```
 
 Will print out `nil`: `constant` is an undefined variable from the lambda's point of view, so
@@ -262,26 +259,21 @@ You can get around this and set the desired environment for a lambda as follows:
 
 ```lua
 local constant = 3.14
-local l = f.lambda("3*con", {con=constant})
-print(l())
+local l = f.lambda("() => 3*con", {con=constant})
+print(l()) --> 9.42
+```
+
+Or, as a shorthand:
+
+```lua
+local constant = 3.14
+local l = f.lambda{"() => 3*con", con = constant}
+print(l()) --> 9.42
 ```
 
 Of course you could use (almost) any name you wish for the lambda environment variables.
 In this case, we chose to distinguish the names for `con` and `constant` for the sake of clarity
 for what is and isn't in the lambda scope.
-
-### Lambda parameter aliases
-
-The following aliases are defined for use inside any lambda:
-
-- `v`, or `_` for `_1`
-- `x`, `y`, and `z` for `_1`, `_2`, and `_3`
-- `a`, `b`, ..., and `i` for `_1`, `_2`, ..., and `_9`
-
-These aliases can all be overwritten with the environment table, **as long as its value is neither
-false or nil**. Due to how the code checks for an existing `env` overwrite, `nil` and `false` would
-not go through. Therefore, if you try to set `v` to `false`, for example, the lambda constructor
-itself will error to avoid unexpected behavior at runtime.
 
 ## You don't need `:to_array()` (probably)
 In most cases, unless you specifically need an array, you can use the iterator itself in a for
@@ -398,9 +390,11 @@ casts can be quite verbose, and this is something the library is meant
 to remedy!
 
 For that, there are 3 aliases for common function types:
-- `consumer<T>: function(T)`
-- `producer<T>: function(): T`
-- `mapping<U, V>: function(U): V`
+Alias|Explicit Teal type
+:---:|:----------------:
+`consumer<T>`|`function(T)`
+`producer<T>`|`function(): T`
+`mapping<U, V>`|`function(U): V`
 
 Short story long: consumers take in a value and return nothing; producers
 take in nothing and produce a value; and mappings take a value and transform

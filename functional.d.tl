@@ -132,6 +132,9 @@ local record module
   lambda: function(string, {string: any}): function
   lambda: function({string: any}): function
 
+  lambda2: function(string, {string:any}): function
+  lambda2: function({string:any}): function
+
   clambda: function(string, {string: any}): function
   clambda: function({string: any}): function
 

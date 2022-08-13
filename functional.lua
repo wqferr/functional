@@ -768,6 +768,114 @@ function exports.identity(...)
   return ...
 end
 
+--- Create a lambda function from a given definition string.
+-- <p><em>DO NOT USE THIS WITH UNTRUSTED AND/OR UNKNOWN STRINGS!</em></p>
+-- <p>This and @{clambda} are meant to facilitate the creation of inline
+-- functions, given the vanilla Lua syntax is quite verbose (especially with
+-- higher order functions).</p>
+-- <p>To attempt limit user error and naïve attacks, some restrictions are put
+-- in place with respect to the definition:</p>
+-- <ul>
+-- <li>It must be of the form <code>(arglist) => body</code>, where
+-- <code>body</code> is either another lambda definition or an expression that
+-- could normally be put inside parenthesis in Lua.</li>
+-- <li>The <code>()=></code> chain must not be longer than 10 steps.</li>
+-- <li>The environment <code>env</code> must not contain more than 150 string keys.</li>
+-- <li>The definition string must not be longer than 100 bytes.</li>
+-- <li>The definition string must not contain a newline ("<code>\n</code>") character.</li>
+-- <li>The definition string must not contain the substring "<code>--</code>".</li>
+-- <li>The definition string must not contain the word "<code>end</code>".</li>
+-- </ul>
+-- @usage
+-- local add = f.lambda "(x, y) => x + y"
+-- print(add(2, 3)) --> 5
+-- local emphasis = f.lambda("(x)=>x..suffix", {suffix = "!!"})
+-- -- f.lambda can even create higher order functions easily
+-- local linear_combinator = f.lambda "(m) => (x, y) => m*x + y"
+-- local comb2 = linear_combinator(2)
+-- print(comb2(3, 4)) --> 10
+-- -- lambdas can "see" variables given in their environment
+-- local emphasis = f.lambda("(x)=>x..suffix", {suffix = "!!"})
+-- emphasis = f.lambda{"(x)=>x..suffix", suffix = "!!"} -- alternative way to define environment
+-- print(emphasis("Hello")) --> Hello!!
+-- @tparam string|table lambda_def the definition to be made into a function
+-- @tparam[opt={}] table env the function environment
+-- @treturn function the generated function
+-- @see clambda
+-- @function lambda
+function exports.lambda(lambda_def, env, token)
+  -- token is for internal use only
+  local calling_from_clambda = (token == internal.proof_clambda_call)
+  local err_level = calling_from_clambda and 3 or 2
+  assert(load or loadstring) -- sanity check
+  if type(lambda_def) == "table" then
+    lambda_def, env = lambda_def[1], lambda_def
+    env[1] = nil
+  end
+
+  lambda_def, env = internal.sanitize_lambda(lambda_def, env, err_level)
+
+  local lambda_lines = internal.expand_lambda(lambda_def, 1, "")
+  local lambda_body = table.concat(lambda_lines, "\n")
+
+  local ctx = debug.getinfo(err_level, "nSl")
+  local chunk_name = ("lambda(%s:%s)"):format(ctx.source, ctx.currentline)
+  local chunk
+  if loadstring then
+    -- Lua 5.1 and LuaJIT support
+    chunk = loadstring(lambda_body, chunk_name)
+  else
+    chunk = load(lambda_body, chunk_name, "t", env)
+  end
+
+  if not chunk then
+    error("Load failed for lambda:\n" .. lambda_body, err_level)
+  end
+
+  local f = chunk()
+
+  if setfenv then
+    setfenv(f, env)
+  end
+  local lbd = {}
+  lbd.func = f
+  lbd.expr = lambda_def
+  lbd.body = lambda_body:match "^return%s*(.*)$"
+  setmetatable(lbd, lambda_function__meta)
+  return lbd
+end
+
+--- Create a context-aware lambda function.
+-- <p><em>DO NOT USE THIS WITH UNTRUSTED AND/OR UNKNOWN STRINGS!</em></p>
+-- <p>This works similarly to @{lambda}, except it automatically adds
+-- any globals and locals visible to the calling context into its environment.</p>
+-- <p>See @{lambda} for more information on restrictions and usage.</p>
+-- @usage
+-- local angle = math.pi / 3
+-- local offset_sin = f.clambda "(x) => math.sin(x + angle)"
+-- print(offset_sin(math.pi)) --> -0.866
+-- print(offset_sin(2 * math.pi / 3)) --> 0
+-- local alternative = f.clambda("(x)=>sin(x + angle)", {sin=math.sin})
+-- local or_even = f.clambda{"(x)=>sin(x+angle)", sin=math.sin}
+-- @tparam string|table expr the expression to be made into a function
+-- @tparam table extra_env additional values to insert into the environment
+-- @see lambda
+-- @function clambda
+function exports.clambda(expr, extra_env)
+  if type(expr) == "table" then
+    expr, extra_env = expr[1], expr
+    extra_env[1] = nil
+  end
+  local env = {}
+
+  internal.merge_env(env, _G)
+  internal.merge_env(env, internal.get_locals(2))
+  internal.merge_env(env, extra_env or {})
+
+  return exports.lambda(expr, env, internal.proof_clambda_call)
+end
+internal.proof_clambda_call = {}
+
 --- Create a lambda function from a given expression string.
 -- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
 -- <p>This is meant to facilitate writing inline functions, since
@@ -821,8 +929,7 @@ end
 -- @tparam[opt={}] table env the function environment
 -- @treturn function the generated function
 -- @see clambda
--- @function lambda
-function exports.lambda(expr, env)
+local function lambda_old(expr, env)
   -- Just making sure I didn't forget any major version
   assert(load or loadstring)
 
@@ -872,9 +979,50 @@ end]]
   return lbd
 end
 
+function internal.indent_str(levels)
+  return ("  "):rep(levels)
+end
+
+-- syntax: (optional arguments) => <anything>
+function internal.lambda_split_params(def)
+  local arrow_after_parens = def:find "^%s*%([^%)]*%)%s*=>%s*"
+  if not arrow_after_parens then
+    -- just the lambda body
+    return nil, def
+  end
+  local arrow_start, arrow_end = def:find "%s*=>%s*"
+  local before_arrow = def:sub(1, arrow_start-1)
+  local body = def:sub(arrow_end+1)
+  local _, param_list_start = before_arrow:find "^%s*%("
+  local param_list = before_arrow:match("%(([%w%s,]*)%)", param_list_start)
+  return param_list, body
+end
+
+-- for use with new lambda only
+-- returns list of lines
+function internal.expand_lambda(def, level, indent)
+  -- this is an attack, stop now
+  if level > 10 then
+    error("Lambda function tried to nest too deep", level + 2)
+  end
+  def = internal.trim(def)
+  local param_list, body = internal.lambda_split_params(def)
+  if param_list then
+    body = internal.expand_lambda(body, level + 1, indent .. "  ")
+    local lambda_start = indent .. ("return function(%s)"):format(param_list)
+    local lambda_end = indent .. "end"
+    table.insert(body, 1, lambda_start)
+    table.insert(body, lambda_end)
+    return body
+  else
+    -- body of last level of lambda
+    return {indent .."return " .. body}
+  end
+end
+
 -- level 1 = caller's frame
 -- level 0 = get_locals itself
-local function get_locals(level)
+function internal.get_locals(level)
   level = level + 1
   local vars = {}
   local i = 1
@@ -909,8 +1057,7 @@ end
 -- @tparam string expr the expression to be made into a function
 -- @tparam table extra_env additional values to insert into the environment
 -- @see lambda
--- @function clambda
-function exports.clambda(expr, extra_env)
+local function clambda_old(expr, extra_env)
   if type(expr) == "table" then
     expr, extra_env = expr[1], expr
     extra_env[1] = nil
@@ -931,6 +1078,14 @@ function exports.clambda(expr, extra_env)
   end
 
   return exports.lambda(expr, env)
+end
+
+function internal.merge_env(env, new)
+  for k, v in pairs(new) do
+    if type(k) == "string" then
+      env[k] = v
+    end
+  end
 end
 
 internal.lambda_invalid_env_var_names_pattern = "^_%d?$"
@@ -1201,7 +1356,11 @@ function internal.pack(...)
   return {...}
 end
 
-function internal.sanitize_lambda(expr, env)
+function internal.trim(s)
+  return s:gsub("^%s*(.-)%s*$", "%1")
+end
+
+local function sanitize_lambda_old(expr, env)
   env = env or {}
   if type(expr) ~= "string" then
     error("Expected string for expr, got " .. type(expr), 2)
@@ -1229,7 +1388,7 @@ function internal.sanitize_lambda(expr, env)
 
   -- Trim from PiL2 20.4
   -- Found here: http://lua-users.org/wiki/StringTrim
-  expr = expr:gsub("^%s*(.-)%s*$", "%1")
+  expr = internal.trim(expr)
 
   if expr:find "\n" then
     error("Lambda function bodies cannot contain newlines", 3)
@@ -1250,6 +1409,50 @@ function internal.sanitize_lambda(expr, env)
   end
 
   return expr, proper_env
+end
+
+function internal.sanitize_lambda(def, env, parent_err_level)
+  local err_level = parent_err_level + 1
+  env = env or {}
+  if type(def) ~= "string" then
+    error("Expected string for lambda definition, got " .. type(def), err_level)
+  elseif type(env) ~= "table" then
+    error("Expected table for env, got " .. type(env), err_level)
+  elseif #def > 100 then -- Possible attack
+    error("Lambda definition is too long", err_level)
+  end
+
+  local proper_env = {}
+  local num_env_variables = 0
+  for k, v in pairs(env) do
+    if type(k) == "string" then
+      proper_env[k] = v
+      num_env_variables = num_env_variables + 1
+      if num_env_variables > 150 then -- Possible attack
+        error("Lambda environment has too many variables", err_level)
+      end
+    end
+  end
+
+  def = internal.trim(def)
+
+  if def:find "\n" then
+    error("Lambda function definitions cannot contain line breaks", err_level)
+  elseif not def:find "^%s*%(.-%)%s*=>" then
+    error("Lambda function definitions must start with '(arguments) =>'", err_level)
+  elseif def:find "%-%-" then
+    error("Lambda function definitions cannot contain comments", err_level)
+  elseif def:find "%f[%w]end%f[%W]" then
+    error("Lambda function definitions cannot include the word `end`", err_level)
+  end
+
+  local encased_def = ("(%s)"):format(def)
+  local s, e = encased_def:find "%b()"
+  if s ~= 1 or e ~= #encased_def then
+    error("Definition has unbalanced parenthesis: " .. def, err_level)
+  end
+
+  return def, proper_env
 end
 
 -- ITER FUNCTIONS --

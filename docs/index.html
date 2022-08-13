@@ -80,7 +80,7 @@
     <h3>Info:</h3>
     <ul>
         <li><strong>Copyright</strong>: 2021</li>
-        <li><strong>Release</strong>: 1.5.1</li>
+        <li><strong>Release</strong>: 1.6.0</li>
         <li><strong>License</strong>: MIT</li>
         <li><strong>Author</strong>: William Quelho Ferreira</li>
     </ul>
@@ -165,8 +165,8 @@
 	<td class="summary">Returns its arguments in the same order.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#lambda">lambda (expr[, env={}])</a></td>
-	<td class="summary">Create a lambda function from a given expression string.</td>
+	<td class="name" nowrap><a href="#lambda">lambda (lambda_def[, env={}])</a></td>
+	<td class="summary">Create a lambda function from a given definition string.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#clambda">clambda (expr, extra_env)</a></td>
@@ -950,60 +950,34 @@
 </dd>
     <dt>
     <a name = "lambda"></a>
-    <strong>lambda (expr[, env={}])</strong>
+    <strong>lambda (lambda_def[, env={}])</strong>
     </dt>
     <dd>
-    Create a lambda function from a given expression string.
- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
- <p>This is meant to facilitate writing inline functions, since
- the vanilla Lua way is very verbose.</p>
- <p>The expression must abide by several criteria:</p>
+    Create a lambda function from a given definition string.
+ <p><em>DO NOT USE THIS WITH UNTRUSTED AND/OR UNKNOWN STRINGS!</em></p>
+ <p>This and <a href="index.html#clambda">clambda</a> are meant to facilitate the creation of inline
+ functions, given the vanilla Lua syntax is quite verbose (especially with
+ higher order functions).</p>
+ <p>To attempt limit user error and naïve attacks, some restrictions are put
+ in place with respect to the definition:</p>
  <ul>
- <li>It <em>must</em> be an expression that would make sense if put inside parenthesis in vanilla Lua;
- <li>It <em>must not</em> start with the word "return";
- <li>It <em>must not</em> contain any newlines (if you need multiple lines, it shouldn't be a lambda);
- <li>It <em>must not</em> contain comments, or the sequence <code>--</code> inside strings;
- <li>It <em>must not</em> contain the words "end" or "_ENV", <em>even inside strings</em>.
- </ul>
- <p>If any of the above criteria fail to be met, the lambda creator will error.</p>
- <p>Even with these measures, it is still not safe to create lambdas from untrusted sources.
- These are attempts to prevent the most basic and naïve attacks, as well as mistakes on the part
- of the programmer.</p>
- <p>Inside the expression, the names <code>_1</code>, <code>_2</code>, <code>_3</code>, <code>_4</code>,
- <code>_5</code>, <code>_6</code>, <code>_7</code>, <code>_8</code>, and <code>_9</code> can be used
- to refer to the arguments given to the function. Alternatively, the letters <code>a</code> through
- <code>i</code> can also be used. For the first 3 arguments, an additional alias exists: <code>x</code>,
- <code>y</code>, and <code>z</code>. And lastly, for the first argument, simply <code>_</code> or <code>v</code> may be used.</p>
- <p>The lambda function is isolated into a sandboxed environment. That means it cannot read or write
- to local or global variables. If the function must access variables that are not given as arguments,
- you must add them to the <code>env</code> table. Setting a key <code>k</code> of that table to a
- value <code>v</code> will provide the given lambda with a variable called <code>k</code>
- with value <code>v</code>.</p>
- <p>When using <code>env</code> to overwrite the parameter name aliases (i.e., <code>a-i</code>,
- <code>x-z</code>, and <code>v</code>), it is important that the new value is neither <code>nil</code> nor <code>false</code>.
- Due to the internal mechanism used to detect when to set these aliases, having a falsy value counts
- as not being defined. In order to minimize debugging and frustration in this niche use case of <code>env</code>,
- the lambda will not be created and instead it will error stating which alias would fail to be set.</p>
- <p>Examples:</p>
- <ul>
- <li> <code>add = f.lambda "_1 + _2" -- adds its 2 arguments</code>
- <li> <code>add = f.lambda "a + b" -- same as above</code>
- <li> <code>add = f.lambda "x + y" -- same as above</code>
- <li> <code>inc = f.lambda "_1 + 1" -- adds 1 to its argument</code>
- <li> <code>inc = f.lambda "a + 1" -- same as above</code>
- <li> <code>inc = f.lambda "x + 1" -- same as above</code>
- <li> <code>inc = f.lambda "_ + 1" -- same as above</code>
- <li> <code>double_plus_one = f.lambda("_ + inc(_)", {inc = inc}) -- lets lambda "see" inc exists</code>
- <li> <code>valid_env = f.lambda("v + 2*i", {i = complex.i}) -- defines i as complex.i instead of an alias for _9</code>
- <li> <code>invalid_env = f.lambda("v and not f", {f = false}) -- ERROR! f cannot be assigned a falsy value because it's an alias for _6</code>
+ <li>It must be of the form <code>(arglist) => body</code>, where
+ <code>body</code> is either another lambda definition or an expression that
+ could normally be put inside parenthesis in Lua.</li>
+ <li>The <code>()=></code> chain must not be longer than 10 steps.</li>
+ <li>The environment <code>env</code> must not contain more than 150 string keys.</li>
+ <li>The definition string must not be longer than 100 bytes.</li>
+ <li>The definition string must not contain a newline ("<code>\n</code>") character.</li>
+ <li>The definition string must not contain the substring "<code>--</code>".</li>
+ <li>The definition string must not contain the word "<code>end</code>".</li>
  </ul>
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">expr</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
-         the expression to be made into a function
+        <li><span class="parameter">lambda_def</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+         the definition to be made into a function
         </li>
         <li><span class="parameter">env</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
@@ -1025,6 +999,20 @@
          <a href="index.html#clambda">clambda</a>
     </ul>
 
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> add = f.lambda <span class="string">"(x, y) =&gt; x + y"</span>
+<span class="global">print</span>(add(<span class="number">2</span>, <span class="number">3</span>)) <span class="comment">--&gt; 5
+</span><span class="keyword">local</span> emphasis = f.lambda(<span class="string">"(x)=&gt;x..suffix"</span>, {suffix = <span class="string">"!!"</span>})
+<span class="comment">-- f.lambda can even create higher order functions easily
+</span><span class="keyword">local</span> linear_combinator = f.lambda <span class="string">"(m) =&gt; (x, y) =&gt; m*x + y"</span>
+<span class="keyword">local</span> comb2 = linear_combinator(<span class="number">2</span>)
+<span class="global">print</span>(comb2(<span class="number">3</span>, <span class="number">4</span>)) <span class="comment">--&gt; 10
+</span><span class="comment">-- lambdas can "see" variables given in their environment
+</span><span class="keyword">local</span> emphasis = f.lambda(<span class="string">"(x)=&gt;x..suffix"</span>, {suffix = <span class="string">"!!"</span>})
+emphasis = f.lambda{<span class="string">"(x)=&gt;x..suffix"</span>, suffix = <span class="string">"!!"</span>} <span class="comment">-- alternative way to define environment
+</span><span class="global">print</span>(emphasis(<span class="string">"Hello"</span>)) <span class="comment">--&gt; Hello!!</span></pre>
+    </ul>
 
 </dd>
     <dt>
@@ -1033,7 +1021,7 @@
     </dt>
     <dd>
     Create a context-aware lambda function.
- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
+ <p><em>DO NOT USE THIS WITH UNTRUSTED AND/OR UNKNOWN STRINGS!</em></p>
  <p>This works similarly to <a href="index.html#lambda">lambda</a>, except it automatically adds
  any non-<code>false</code> and non-<code>nil</code> locals and globals
  into its environment. As a flip-side, its environment is now read-only.</p>
@@ -1043,7 +1031,7 @@
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">expr</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a> or <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
          the expression to be made into a function
         </li>
         <li><span class="parameter">extra_env</span>
@@ -1062,9 +1050,11 @@
     <h3>Usage:</h3>
     <ul>
         <pre class="example"><span class="keyword">local</span> angle = <span class="global">math</span>.pi / <span class="number">3</span>
-<span class="keyword">local</span> offset_sin = f.clambda <span class="string">"math.sin(x + angle)"</span>
-<span class="global">print</span>(offset_sin(<span class="global">math</span>.pi))
-<span class="global">print</span>(offset_sin(<span class="number">2</span> * <span class="global">math</span>.pi / <span class="number">3</span>))</pre>
+<span class="keyword">local</span> offset_sin = f.clambda <span class="string">"(x) =&gt; math.sin(x + angle)"</span>
+<span class="global">print</span>(offset_sin(<span class="global">math</span>.pi)) <span class="comment">--&gt; -0.866
+</span><span class="global">print</span>(offset_sin(<span class="number">2</span> * <span class="global">math</span>.pi / <span class="number">3</span>)) <span class="comment">--&gt; 0
+</span><span class="keyword">local</span> alternative = f.clambda(<span class="string">"(x)=&gt;sin(x + angle)"</span>, {sin=<span class="global">math</span>.sin})
+<span class="keyword">local</span> or_even = f.clambda{<span class="string">"(x)=&gt;sin(x+angle)"</span>, sin=<span class="global">math</span>.sin}</pre>
     </ul>
 
 </dd>
@@ -2399,7 +2389,7 @@ f.from(my_counter):foreach(<span class="global">print</span>) <span class="comme
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-08-03 09:34:18 </i>
+<i style="float:right;">Last updated 2022-08-13 17:30:57 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

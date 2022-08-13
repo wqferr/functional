@@ -21,7 +21,7 @@ local it = f.range(100)
   :take_last(5)
 
 it:clone()
-  :map(f.lambda "2*x" as f.mapping<integer, integer>)
+  :map(f.lambda "(x) => 2*x" as f.mapping<integer, integer>)
   :foreach(print as f.consumer<integer>)
 
 print()
