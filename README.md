@@ -390,9 +390,11 @@ casts can be quite verbose, and this is something the library is meant
 to remedy!
 
 For that, there are 3 aliases for common function types:
-- `consumer<T>: function(T)`
-- `producer<T>: function(): T`
-- `mapping<U, V>: function(U): V`
+Alias|Explicit Teal type
+:---:|:----------------:
+`consumer<T>`|`function(T)`
+`producer<T>`|`function(): T`
+`mapping<U, V>`|`function(U): V`
 
 Short story long: consumers take in a value and return nothing; producers
 take in nothing and produce a value; and mappings take a value and transform

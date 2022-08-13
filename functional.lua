@@ -803,7 +803,9 @@ end
 -- @treturn function the generated function
 -- @see clambda
 -- @function lambda
-function exports.lambda(lambda_def, env, calling_from_clambda)
+function exports.lambda(lambda_def, env, token)
+  -- token is for internal use only
+  local calling_from_clambda = (token == internal.proof_clambda_call)
   local err_level = calling_from_clambda and 3 or 2
   assert(load or loadstring) -- sanity check
   if type(lambda_def) == "table" then
@@ -871,8 +873,9 @@ function exports.clambda(expr, extra_env)
   internal.merge_env(env, internal.get_locals(2))
   internal.merge_env(env, extra_env or {})
 
-  return exports.lambda(expr, env, true)
+  return exports.lambda(expr, env, internal.proof_clambda_call)
 end
+internal.proof_clambda_call = {}
 
 --- Create a lambda function from a given expression string.
 -- <p><em>DO NOT USE THIS WITH UNTRUSTED OR UNKNOWN STRINGS!</em></p>
